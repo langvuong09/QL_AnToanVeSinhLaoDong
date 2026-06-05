@@ -1,9 +1,7 @@
 'use client'
 
-import PasswordInput from "@/src/components/form/PasswordInput";
 import TextInput from "@/src/components/form/TextInput";
 import Button from "@/src/components/ui/Button";
-import Link from "next/link";
 
 export default function LoginPage() {
 
@@ -22,39 +20,17 @@ export default function LoginPage() {
         </div>
 
         {/* title */}
-        <div className="flex flex-col items-center font-bold py-3 text-2xl">
-          <h1>Phần Mềm Quản Lý - Tạo Lập Cơ Sở Dữ Liệu</h1>
-          <h1>An Toàn Vệ Sinh Lao Động</h1>
-        </div>
+        <h1 className="font-bold py-3 text-2xl text-primary">QUÊN MẬT KHẨU</h1>
 
 
         <div className="flex flex-col gap-4 w-full">
-          <h2 className="text-primary font-bold text-xl">Đăng nhập</h2>
+          <p className="">Vui lòng nhập email đã đăng ký tài khoản</p>
 
           <TextInput
-            label="Tài khoản"
+            label="Email"
             placeholder="Nhập tài khoản"
             required={true}
           />
-
-          <PasswordInput
-            label="Mật khẩu"
-            required={true}
-          />
-
-          <div className="flex justify-between ">
-            <div className="flex gap-3">
-              <input type="checkbox" name="" id="" />
-              <p>Nhớ đăng nhập</p>
-            </div>
-
-            <Link
-              className="text-primary font-medium"
-              href={'/forget'}
-            >
-              Quên mật khẩu
-            </Link>
-          </div>
 
           {/* buttons */}
           <div className="flex flex-col gap-2 py-3">
