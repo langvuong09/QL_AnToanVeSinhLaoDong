@@ -1,26 +1,40 @@
 import { ReactNode } from "react"
+import clsx from "clsx"
 
 type FormFieldProps = {
   label: string,
   required?: boolean,
-  children: ReactNode
+  children: ReactNode,
+  error?: string
 }
 
 export default function FormField({
   label,
   required,
-  children
+  children,
+  error
 }: FormFieldProps) {
   return (
-    <fieldset className="border border-gray-400 rounded text-sm">
-      <legend className="ml-1.5 px-1 text-gray-500">
-        {label}
-        {required && (
-          <span className="text-red-500">*</span>
-        )}
-      </legend>
+    <div>
+      <fieldset className={clsx(
+        "border rounded text-sm",
+        {
+          "border-gray-400": !error,
+          "border-red-500": error
+        }
+      )}>
+        <legend className="ml-1.5 px-1 text-gray-500">
+          {label}
+          {required && (
+            <span className="text-red-500">*</span>
+          )}
+        </legend>
 
-      {children}
-    </fieldset>
+        {children}
+      </fieldset>
+      {error && (
+        <p className="text-red-500 text-xs mt-1">{error}</p>
+      )}
+    </div>
   )
 }

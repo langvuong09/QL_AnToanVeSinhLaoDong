@@ -2,16 +2,18 @@ export default function DashboardLayout({ children }: Readonly<{ children: React
   return (
     <div className="flex justify-center h-screen">
       {/* hinh minh hoa */}
-      <div className="">
+      <div className="w-1/2">
         <img
-          className="w-full h-full"
+          className="w-full h-full object-cover"
           src="login.png"
           alt="login image"
         />
       </div>
 
       {/* pages (login/signup)*/}
-      {children}
+      <div className="w-1/2">
+        {children}
+      </div>
     </div>
   )
 }
