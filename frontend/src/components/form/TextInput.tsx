@@ -37,7 +37,7 @@ export default function TextInput({
         onChange={onChange}
         disabled={disabled}
         className={clsx(
-          "outline-none px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed",
+          "outline-none ps-4 pt-1 py-2.5 w-full disabled:bg-gray-100 disabled:cursor-not-allowed",
           {
             "border-red-500": error
           },

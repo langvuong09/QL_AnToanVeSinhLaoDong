@@ -78,10 +78,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="shadow-lg p-8 flex flex-col justify-center items-center rounded-2xl w-full max-w-md">
+      <div className="shadow-3drops p-8 flex flex-col justify-center items-center rounded-2xl ">
 
         {/* logo */}
-        <div className="h-20 w-20">
+        <div className="h-30 w-30">
           <img
             className="h-full w-full"
             src="quochuy.png"
@@ -90,7 +90,7 @@ export default function LoginPage() {
         </div>
 
         {/* title */}
-        <div className="flex flex-col items-center font-bold py-3 text-2xl">
+        <div className="flex flex-col items-center font-bold py-3 text-2xl my-8">
           <h1 className="text-center">Phần Mềm Quản Lý - Tạo Lập Cơ Sở Dữ Liệu</h1>
           <h1>An Toàn Vệ Sinh Lao Động</h1>
         </div>
@@ -107,8 +107,8 @@ export default function LoginPage() {
         </div>
 
         {/* form login */}
-        <form onSubmit={handleLogin} className="flex flex-col gap-4 w-full">
-          <h2 className="text-primary font-bold text-xl">ĐĂNG NHẬP</h2>
+        <form onSubmit={handleLogin} className="flex flex-col gap-5 w-full">
+          <h2 className="text-primary font-bold text-lg">ĐĂNG NHẬP</h2>
 
           <TextInput
             label="Tài khoản"
@@ -144,9 +144,9 @@ export default function LoginPage() {
                 id="rememberMe"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="cursor-pointer"
+                className="cursor-pointer w-5 h-5"
               />
-              <label htmlFor="rememberMe" className="text-sm cursor-pointer">Nhớ đăng nhập</label>
+              <label htmlFor="rememberMe" className="ps-3 cursor-pointer">Nhớ đăng nhập</label>
             </div>
 
             <Link

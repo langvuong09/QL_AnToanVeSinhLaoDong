@@ -30,11 +30,11 @@ export default function PasswordInput({
       required={required}
       error={error}
     >
-      <div className="flex justify-between items-center px-2 pb-1">
+      <div className="relative">
         <input
           placeholder="Nhập mật khẩu"
           className={clsx(
-            "outline-none py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed",
+            "outline-none ps-4 pt-1 py-2.5 w-full disabled:bg-gray-100 disabled:cursor-not-allowed",
             {
               "border-red-500": error
             },
@@ -50,7 +50,7 @@ export default function PasswordInput({
           onClick={() => setShowPassword(!showPassword)}
           type="button"
           disabled={disabled}
-          className="disabled:opacity-50"
+          className="disabled:opacity-50 absolute top-1/2 right-0 translate-y-[-60%] me-4"
         >
           {showPassword ? (
             <Eye
