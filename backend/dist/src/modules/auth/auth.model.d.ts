@@ -16,8 +16,9 @@ export declare class CurrentUser {
 }
 export declare class LoginModel {
     token: string;
+    refreshToken?: string;
     user?: CurrentUser;
     views: any;
-    constructor(token: string, loginModel?: Partial<LoginModel>, keys?: string[]);
+    constructor(token: string, refreshToken?: string | null, loginModel?: Partial<LoginModel>, keys?: string[]);
 }
 export {};

@@ -7,6 +7,7 @@ import { join } from 'path';
 import { DataSource } from 'typeorm';
 
 import { AppModule } from './app.module';
+import cookieParser from 'cookie-parser';
 
 async function runSqlScript(dataSource: DataSource, filePath: string) {
   const sql = readFileSync(filePath, 'utf-8');
@@ -45,6 +46,7 @@ async function seedSampleData(app: any) {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(cookieParser());
   app.setGlobalPrefix('api/v1');
   app.enableCors({
     origin: '*',

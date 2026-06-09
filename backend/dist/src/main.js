@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const common_1 = require("@nestjs/common");
@@ -8,6 +11,7 @@ const fs_1 = require("fs");
 const path_1 = require("path");
 const typeorm_1 = require("typeorm");
 const app_module_1 = require("./app.module");
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 async function runSqlScript(dataSource, filePath) {
     const sql = (0, fs_1.readFileSync)(filePath, 'utf-8');
     const statements = sql
@@ -40,6 +44,7 @@ async function seedSampleData(app) {
 }
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.use((0, cookie_parser_1.default)());
     app.setGlobalPrefix('api/v1');
     app.enableCors({
         origin: '*',

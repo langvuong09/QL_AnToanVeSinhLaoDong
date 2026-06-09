@@ -5,10 +5,11 @@ class role {
     id;
     role;
     name;
-    constructor(role, keys = ["id", "role", "name"]) {
-        role && keys.forEach(key => {
-            role[key] !== undefined && (this[key] = role[key]);
-        });
+    constructor(role, keys = ['id', 'role', 'name']) {
+        role &&
+            keys.forEach((key) => {
+                role[key] !== undefined && (this[key] = role[key]);
+            });
     }
 }
 class CurrentUser {
@@ -19,27 +20,44 @@ class CurrentUser {
     realRole;
     avatar;
     role;
-    constructor(user, keys = ["id", "username", "fullname", "realRole", "role", "avatar", "unitId", "workUnit"]) {
-        user && keys.forEach(key => {
-            if (key == "role") {
-                user[key] !== undefined && (this[key] = new role(user[key]));
-            }
-            else {
-                user[key] !== undefined && (this[key] = user[key]);
-            }
-        });
+    constructor(user, keys = [
+        'id',
+        'username',
+        'fullname',
+        'realRole',
+        'role',
+        'avatar',
+        'unitId',
+        'workUnit',
+    ]) {
+        user &&
+            keys.forEach((key) => {
+                if (key == 'role') {
+                    user[key] !== undefined && (this[key] = new role(user[key]));
+                }
+                else {
+                    user[key] !== undefined && (this[key] = user[key]);
+                }
+            });
     }
 }
 exports.CurrentUser = CurrentUser;
 class LoginModel {
     token;
+    refreshToken;
     user;
     views;
-    constructor(token, loginModel, keys = ["token", "views", "user"]) {
+    constructor(token, refreshToken, loginModel, keys = ['token', 'refreshToken', 'views', 'user']) {
         this.token = token;
-        loginModel && keys.forEach(key => {
-            loginModel[key] !== undefined && (this[key] = loginModel[key]);
-        });
+        if (refreshToken) {
+            this.refreshToken = refreshToken;
+        }
+        loginModel &&
+            keys.forEach((key) => {
+                if (loginModel[key] !== undefined) {
+                    this[key] = loginModel[key];
+                }
+            });
     }
 }
 exports.LoginModel = LoginModel;

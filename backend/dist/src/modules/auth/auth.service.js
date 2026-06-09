@@ -88,12 +88,19 @@ let AuthService = class AuthService {
                 doet: _doet,
             });
             const roleId = user.role?.id ?? 0;
-            const [views, token] = await Promise.all([
-                await this.viewService.getViewsByRoleId(roleId),
-                await this.jwtService.sign({ ...user }),
-            ]);
-            const rs = new auth_model_1.LoginModel(token, {
-                views: (0, lodash_1.get)(views, 'data.items', []),
+            const userPayload = JSON.parse(JSON.stringify(user));
+            const accessTtl = this.configService.get('JWT_ACCESS_EXPIRES_IN') || '15m';
+            const refreshTtl = this.configService.get('JWT_REFRESH_EXPIRES_IN') || '7d';
+            const accessToken = this.jwtService.sign(userPayload, {
+                expiresIn: accessTtl,
+            });
+            const refreshToken = this.jwtService.sign({ id: user.id }, {
+                secret: this.configService.get('JWT_REFRESH_SECRET'),
+                expiresIn: refreshTtl,
+            });
+            const viewsResponse = await this.viewService.getViewsByRoleId(roleId);
+            const rs = new auth_model_1.LoginModel(accessToken, refreshToken, {
+                views: (0, lodash_1.get)(viewsResponse, 'data.items', []),
             });
             return response_1.default.get(rs);
         }
@@ -103,22 +110,26 @@ let AuthService = class AuthService {
     }
     async validateToken(token, doet) {
         try {
-            const _doet = doet && doet.id ? doet.id : null;
+            const isBlacklisted = await this.redis.get(`blacklist:${token}`);
+            if (isBlacklisted) {
+                throw new Error('Token đã bị thu hồi (đăng xuất)');
+            }
             const decodedData = await this.jwtService.verifyAsync(token);
+            const _doet = doet && doet.id ? doet.id : null;
             const user = new auth_model_1.CurrentUser({
                 ...decodedData,
                 doet: _doet,
             });
             const roleId = user.role?.id ?? 0;
             const views = await this.viewService.getViewsByRoleId(roleId);
-            const rs = new auth_model_1.LoginModel(token, {
+            const rs = new auth_model_1.LoginModel(token, null, {
                 user,
                 views: (0, lodash_1.get)(views, 'data.items', []),
             });
             return response_1.default.get(rs);
         }
         catch (error) {
-            throw response_1.default.errorInternal(error);
+            throw response_1.default.errorInternal('Token không hợp lệ hoặc đã hết hạn');
         }
     }
     async forgotPassword(email) {
@@ -177,6 +188,41 @@ let AuthService = class AuthService {
         }
         catch (e) {
             return response_1.default.errorInternal('Token không hợp lệ hoặc đã hết hạn');
+        }
+    }
+    async logout(token) {
+        try {
+            const decoded = this.jwtService.decode(token);
+            if (!decoded || !decoded.exp)
+                return response_1.default.errorInternal('Token không hợp lệ');
+            const ttl = Math.floor(decoded.exp - Date.now() / 1000);
+            if (ttl > 0) {
+                await this.redis.set(`blacklist:${token}`, 'true', 'EX', ttl);
+            }
+            return response_1.default.SUCCESSFULLY;
+        }
+        catch (error) {
+            throw response_1.default.errorInternal(error);
+        }
+    }
+    async refreshToken(oldRefreshToken) {
+        try {
+            const decoded = this.jwtService.verify(oldRefreshToken, {
+                secret: this.configService.get('JWT_REFRESH_SECRET'),
+            });
+            const user = await this.dataSource.manager.findOne(user_entity_1.User, {
+                where: { id: decoded.id },
+            });
+            if (!user)
+                return response_1.default.errorNotFound('User không tồn tại');
+            const newAccessToken = this.jwtService.sign({
+                id: user.id,
+                email: user.email,
+            });
+            return response_1.default.get({ accessToken: newAccessToken });
+        }
+        catch (error) {
+            throw response_1.default.errorInternal('Refresh token đã hết hạn hoặc không hợp lệ');
         }
     }
 };

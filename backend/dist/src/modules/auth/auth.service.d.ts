@@ -30,4 +30,12 @@ export declare class AuthService {
         message: string;
         success: boolean;
     }>;
+    logout(token: string): Promise<import("../../commons/error").SomethingException | {
+        code: import("@nestjs/common").HttpStatus;
+        message: string;
+        success: boolean;
+    }>;
+    refreshToken(oldRefreshToken: string): Promise<import("../../commons/error").NotFoundException | ResponseData<{
+        accessToken: string;
+    }>>;
 }
