@@ -1,5 +1,8 @@
 import { LoginModel } from './auth.model';
 import { AuthService } from './auth.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config/dist/config.service';
 export declare class AuthController {
@@ -7,20 +10,20 @@ export declare class AuthController {
     private configService;
     constructor(authService: AuthService, configService: ConfigService);
     login(req: any, response: Response): Promise<import("../../commons").ResponseData<LoginModel>>;
-    forgotPassword(email: string): Promise<import("../../commons/error").NotFoundException | {
+    forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<{
         code: import("@nestjs/common").HttpStatus;
         message: string;
         success: boolean;
     }>;
-    verifyOtp(email: string, otp: string): Promise<import("../../commons/error").NotFoundException | import("../../commons/error").SomethingException | import("../../commons").ResponseData<{
+    verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<import("../../commons").ResponseData<{
         resetToken: string;
     }>>;
-    resetPassword(token: string, newPassword: string, confirmPassword: string): Promise<import("../../commons/error").SomethingException | {
+    resetPassword(resetPasswordDto: ResetPasswordDto): Promise<{
         code: import("@nestjs/common").HttpStatus;
         message: string;
         success: boolean;
     }>;
-    refreshToken(req: any, response: Response): Promise<import("../../commons/error").NotFoundException | import("../../commons").ResponseData<{
+    refreshToken(req: any, response: Response): Promise<import("../../commons").ResponseData<{
         accessToken: string;
     }>>;
     logout(req: any, response: Response): Promise<{

@@ -8,6 +8,7 @@ import { DataSource } from 'typeorm';
 
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { AllExceptionsFilter } from './commons/filters/http-exception.filter';
 
 async function runSqlScript(dataSource: DataSource, filePath: string) {
   const sql = readFileSync(filePath, 'utf-8');
@@ -26,7 +27,7 @@ async function seedSampleData(app: any) {
 
   try {
     const seedFiles = ['role.sql', 'doets.sql', 'user.sql', 'view.sql'];
-    
+
     for (const fileName of seedFiles) {
       const filePath = join(__dirname, 'sql', fileName);
       if (existsSync(filePath)) {
@@ -43,10 +44,10 @@ async function seedSampleData(app: any) {
   }
 }
 
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.setGlobalPrefix('api/v1');
   app.enableCors({
     origin: '*',
@@ -69,7 +70,13 @@ async function bootstrap() {
     }),
   );
 
-  // app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   await seedSampleData(app);
 

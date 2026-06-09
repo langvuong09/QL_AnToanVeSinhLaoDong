@@ -41,19 +41,14 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LocalStrategy = void 0;
 const passport_local_1 = require("passport-local");
 const passport_1 = require("@nestjs/passport");
 const common_1 = require("@nestjs/common");
 const user_service_1 = require("../../modules/user/user.service");
-const response_1 = __importDefault(require("../../modules/response"));
 const lodash_1 = require("lodash");
 const argon = __importStar(require("argon2"));
-const error_1 = require("../../modules/error");
 let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)(passport_local_1.Strategy) {
     userService;
     constructor(userService) {
@@ -63,33 +58,26 @@ let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)
         this.userService = userService;
     }
     async validate(request, username, password) {
-        try {
-            const _where = {
-                username: username,
-            };
-            if (request.doet && request.doet.id) {
-                _where.doet_id = request.doet.id;
-            }
-            const { data } = await this.userService.get({
-                where: JSON.stringify(_where),
-                relation: JSON.stringify(["role"])
-            });
-            const user = (0, lodash_1.get)(data, "items[0]");
-            if (!user) {
-                throw new error_1.NotFoundException('Account not found');
-            }
-            if (user.status === false) {
-                throw new error_1.NotAcceptableException('Account is locked');
-            }
-            const isMatch = await argon.verify(user.password, password);
-            if (!isMatch) {
-                throw response_1.default.errorBad(response_1.default.WRONG_PASS);
-            }
-            return user;
+        const _where = { username: username };
+        if (request.doet?.id) {
+            _where.doet_id = request.doet.id;
         }
-        catch (error) {
-            throw response_1.default.errorInternal(error);
+        const { data } = await this.userService.get({
+            where: JSON.stringify(_where),
+            relation: JSON.stringify(["role"])
+        });
+        const user = (0, lodash_1.get)(data, "items[0]");
+        if (!user) {
+            throw new common_1.NotFoundException({ code: 3033, message: 'Account not found' });
         }
+        if (user.status === false) {
+            throw new common_1.NotAcceptableException({ code: 3035, message: 'Account is locked' });
+        }
+        const isMatch = await argon.verify(user.password, password);
+        if (!isMatch) {
+            throw new common_1.UnauthorizedException({ code: 3034, message: 'Wrong password' });
+        }
+        return user;
     }
 };
 exports.LocalStrategy = LocalStrategy;

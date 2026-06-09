@@ -81,149 +81,119 @@ let AuthService = class AuthService {
         this.redis = redis;
     }
     async login(data, doet) {
-        try {
-            const _doet = doet && doet.id ? doet.id : null;
-            const user = new auth_model_1.CurrentUser({
-                ...data,
-                doet: _doet,
-            });
-            const roleId = user.role?.id ?? 0;
-            const userPayload = JSON.parse(JSON.stringify(user));
-            const accessTtl = this.configService.get('JWT_ACCESS_EXPIRES_IN') || '15m';
-            const refreshTtl = this.configService.get('JWT_REFRESH_EXPIRES_IN') || '7d';
-            const accessToken = this.jwtService.sign(userPayload, {
-                expiresIn: accessTtl,
-            });
-            const refreshToken = this.jwtService.sign({ id: user.id }, {
-                secret: this.configService.get('JWT_REFRESH_SECRET'),
-                expiresIn: refreshTtl,
-            });
-            const viewsResponse = await this.viewService.getViewsByRoleId(roleId);
-            const rs = new auth_model_1.LoginModel(accessToken, refreshToken, {
-                views: (0, lodash_1.get)(viewsResponse, 'data.items', []),
-            });
-            return response_1.default.get(rs);
-        }
-        catch (error) {
-            throw response_1.default.errorInternal(error);
-        }
+        const _doet = doet && doet.id ? doet.id : null;
+        const user = new auth_model_1.CurrentUser({
+            ...data,
+            doet: _doet,
+        });
+        const roleId = user.role?.id ?? 0;
+        const userPayload = JSON.parse(JSON.stringify(user));
+        const accessTtl = this.configService.get('JWT_ACCESS_EXPIRES_IN') || '15m';
+        const refreshTtl = this.configService.get('JWT_REFRESH_EXPIRES_IN') || '7d';
+        const accessToken = this.jwtService.sign(userPayload, {
+            expiresIn: accessTtl,
+        });
+        const refreshToken = this.jwtService.sign({ id: user.id }, {
+            secret: this.configService.get('JWT_REFRESH_SECRET'),
+            expiresIn: refreshTtl,
+        });
+        const viewsResponse = await this.viewService.getViewsByRoleId(roleId);
+        const rs = new auth_model_1.LoginModel(accessToken, refreshToken, {
+            views: (0, lodash_1.get)(viewsResponse, 'data.items', []),
+        });
+        return response_1.default.get(rs);
     }
     async validateToken(token, doet) {
-        try {
-            const isBlacklisted = await this.redis.get(`blacklist:${token}`);
-            if (isBlacklisted) {
-                throw new Error('Token đã bị thu hồi (đăng xuất)');
-            }
-            const decodedData = await this.jwtService.verifyAsync(token);
-            const _doet = doet && doet.id ? doet.id : null;
-            const user = new auth_model_1.CurrentUser({
-                ...decodedData,
-                doet: _doet,
-            });
-            const roleId = user.role?.id ?? 0;
-            const views = await this.viewService.getViewsByRoleId(roleId);
-            const rs = new auth_model_1.LoginModel(token, null, {
-                user,
-                views: (0, lodash_1.get)(views, 'data.items', []),
-            });
-            return response_1.default.get(rs);
+        const isBlacklisted = await this.redis.get(`blacklist:${token}`);
+        if (isBlacklisted) {
+            throw new Error('Token đã bị thu hồi (đăng xuất)');
         }
-        catch (error) {
-            throw response_1.default.errorInternal('Token không hợp lệ hoặc đã hết hạn');
-        }
+        const decodedData = await this.jwtService.verifyAsync(token);
+        const _doet = doet && doet.id ? doet.id : null;
+        const user = new auth_model_1.CurrentUser({
+            ...decodedData,
+            doet: _doet,
+        });
+        const roleId = user.role?.id ?? 0;
+        const views = await this.viewService.getViewsByRoleId(roleId);
+        const rs = new auth_model_1.LoginModel(token, null, {
+            user,
+            views: (0, lodash_1.get)(views, 'data.items', []),
+        });
+        return response_1.default.get(rs);
     }
     async forgotPassword(email) {
-        try {
-            const manage = this.dataSource.manager;
-            const user = await manage.findOne(user_entity_1.User, {
-                where: {
-                    email: email,
-                },
-            });
-            if (!user) {
-                return response_1.default.errorNotFound('Not found email');
-            }
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            const redisKey = (0, otp_enum_1.getOtpKey)(otp_enum_1.OtpType.FORGOT_PASSWORD, user.id);
-            const ttl = this.configService.get('OTP_EXPIRATION_TIME') || 300;
-            await this.redis.set(redisKey, otp, 'EX', ttl);
-            const templatePath = path.join(process.cwd(), 'src', 'templates', 'forgot-password.html');
-            let template = fs.readFileSync(templatePath, { encoding: 'utf-8' });
-            template = template.split('$1').join(user.fullName);
-            template = template.split('$2').join(otp);
-            template = template.split('$3').join((ttl / 60).toString());
-            await this.emailService.sendMail(email, 'Mã xác thực lấy lại mật khẩu', template);
-            return response_1.default.SUCCESSFULLY;
+        const manage = this.dataSource.manager;
+        const user = await manage.findOne(user_entity_1.User, {
+            where: {
+                email: email,
+            },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Not found email');
         }
-        catch (error) {
-            throw response_1.default.errorInternal(error);
-        }
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const redisKey = (0, otp_enum_1.getOtpKey)(otp_enum_1.OtpType.FORGOT_PASSWORD, user.id);
+        const ttl = this.configService.get('OTP_EXPIRATION_TIME') || 300;
+        await this.redis.set(redisKey, otp, 'EX', ttl);
+        const templatePath = path.join(process.cwd(), 'src', 'templates', 'forgot-password.html');
+        let template = fs.readFileSync(templatePath, { encoding: 'utf-8' });
+        template = template.split('$1').join(user.fullName);
+        template = template.split('$2').join(otp);
+        template = template.split('$3').join((ttl / 60).toString());
+        await this.emailService.sendMail(email, 'Mã xác thực lấy lại mật khẩu', template);
+        return response_1.default.SUCCESSFULLY;
     }
     async verifyOtp(email, otp) {
         const user = await this.dataSource.manager.findOne(user_entity_1.User, {
             where: { email },
         });
         if (!user) {
-            return response_1.default.errorNotFound('Not found email');
+            throw new common_1.NotFoundException('Not found email');
         }
         const redisKey = (0, otp_enum_1.getOtpKey)(otp_enum_1.OtpType.FORGOT_PASSWORD, user.id);
         const savedOtp = await this.redis.get(redisKey);
         if (!savedOtp || savedOtp !== otp) {
-            return response_1.default.errorInternal('OTP không đúng hoặc đã hết hạn');
+            throw new common_1.BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
         }
         const resetToken = this.jwtService.sign({ email, id: user.id }, { expiresIn: '3m' });
         return response_1.default.get({ resetToken });
     }
     async resetPassword(resetToken, newPassword, confirmPassword) {
-        try {
-            const decoded = this.jwtService.verify(resetToken);
-            if (newPassword !== confirmPassword) {
-                return response_1.default.errorInternal('Mật khẩu xác nhận không khớp');
-            }
-            const hashedPassword = await argon.hash(newPassword);
-            await this.dataSource.manager.update(user_entity_1.User, decoded.id, {
-                password: hashedPassword,
-            });
-            return response_1.default.SUCCESSFULLY;
+        const decoded = this.jwtService.verify(resetToken);
+        if (newPassword !== confirmPassword) {
+            throw new common_1.BadRequestException('Mật khẩu xác nhận không khớp');
         }
-        catch (e) {
-            return response_1.default.errorInternal('Token không hợp lệ hoặc đã hết hạn');
-        }
+        const hashedPassword = await argon.hash(newPassword);
+        await this.dataSource.manager.update(user_entity_1.User, decoded.id, {
+            password: hashedPassword,
+        });
+        return response_1.default.SUCCESSFULLY;
     }
     async logout(token) {
-        try {
-            const decoded = this.jwtService.decode(token);
-            if (!decoded || !decoded.exp)
-                return response_1.default.errorInternal('Token không hợp lệ');
-            const ttl = Math.floor(decoded.exp - Date.now() / 1000);
-            if (ttl > 0) {
-                await this.redis.set(`blacklist:${token}`, 'true', 'EX', ttl);
-            }
-            return response_1.default.SUCCESSFULLY;
+        const decoded = this.jwtService.decode(token);
+        if (!decoded || !decoded.exp)
+            throw new common_1.BadRequestException('Token không hợp lệ');
+        const ttl = Math.floor(decoded.exp - Date.now() / 1000);
+        if (ttl > 0) {
+            await this.redis.set(`blacklist:${token}`, 'true', 'EX', ttl);
         }
-        catch (error) {
-            throw response_1.default.errorInternal(error);
-        }
+        return response_1.default.SUCCESSFULLY;
     }
     async refreshToken(oldRefreshToken) {
-        try {
-            const decoded = this.jwtService.verify(oldRefreshToken, {
-                secret: this.configService.get('JWT_REFRESH_SECRET'),
-            });
-            const user = await this.dataSource.manager.findOne(user_entity_1.User, {
-                where: { id: decoded.id },
-            });
-            if (!user)
-                return response_1.default.errorNotFound('User không tồn tại');
-            const newAccessToken = this.jwtService.sign({
-                id: user.id,
-                email: user.email,
-            });
-            return response_1.default.get({ accessToken: newAccessToken });
-        }
-        catch (error) {
-            throw response_1.default.errorInternal('Refresh token đã hết hạn hoặc không hợp lệ');
-        }
+        const decoded = this.jwtService.verify(oldRefreshToken, {
+            secret: this.configService.get('JWT_REFRESH_SECRET'),
+        });
+        const user = await this.dataSource.manager.findOne(user_entity_1.User, {
+            where: { id: decoded.id },
+        });
+        if (!user)
+            throw new common_1.NotFoundException('Not found email');
+        const newAccessToken = this.jwtService.sign({
+            id: user.id,
+            email: user.email,
+        });
+        return response_1.default.get({ accessToken: newAccessToken });
     }
 };
 exports.AuthService = AuthService;
