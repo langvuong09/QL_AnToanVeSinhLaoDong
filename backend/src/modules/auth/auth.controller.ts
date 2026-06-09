@@ -60,26 +60,24 @@ export class AuthController {
   @Post('forgot-password')
   @ApiBody({ type: ForgotPasswordDto })
   @ApiOperation({ summary: 'Gửi mã OTP về email' })
-  async forgotPassword(@Body('email') email: string) {
-    return this.authService.forgotPassword(email);
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
   @Post('verify-otp')
   @ApiBody({ type: VerifyOtpDto })
   @ApiOperation({ summary: 'Xác thực mã OTP' })
-  async verifyOtp(@Body('email') email: string, @Body('otp') otp: string) {
-    return this.authService.verifyOtp(email, otp);
+  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
+    return this.authService.verifyOtp(verifyOtpDto.email, verifyOtpDto.otp);
   }
 
   @Post('reset-password')
   @ApiBody({ type: ResetPasswordDto })
   @ApiOperation({ summary: 'Đổi mật khẩu bằng Reset Token' })
   async resetPassword(
-    @Body('token') token: string,
-    @Body('newPassword') newPassword: string,
-    @Body('confirmPassword') confirmPassword: string,
+   @Body() resetPasswordDto: ResetPasswordDto
   ) {
-    return this.authService.resetPassword(token, newPassword, confirmPassword);
+    return this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.newPassword, resetPasswordDto.confirmPassword);
   }
 
   @Post('refresh-token')
@@ -90,9 +88,7 @@ export class AuthController {
   ) {
     const oldRefreshToken = req.cookies['refreshToken'];
     if (!oldRefreshToken) {
-      throw new UnauthorizedException(
-        'Refresh token không tồn tại',
-      );
+      throw new UnauthorizedException('Refresh token không tồn tại');
     }
     if (!oldRefreshToken) {
       return { success: false, message: 'Missing refresh token' };

@@ -1,11 +1,9 @@
 import { Strategy } from "passport-local";
 import { PassportStrategy } from "@nestjs/passport";
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException, NotAcceptableException } from "@nestjs/common";
 import { UserService } from "src/modules/user/user.service";
-import Response from "../../modules/response";
 import { get } from "lodash";
 import * as argon from "argon2";
-import { NotAcceptableException, NotFoundException } from "../../modules/error";
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -20,35 +18,30 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     username: string,
     password: string
   ): Promise<any> {
-    try {
-      const _where: {
-        username: string,
-        doet_id?: any,
-      } = {
-        username: username,
-      };
-      if (request.doet && request.doet.id) {
-        _where.doet_id = request.doet.id;
-      }
-      const { data } = await this.userService.get({
-        where: JSON.stringify(_where),
-        relation: JSON.stringify(["role"])
-      });
-
-      const user = get(data, "items[0]");
-      if (!user) {
-        throw new NotFoundException('Account not found');
-      }
-      if (user.status === false) {
-        throw new NotAcceptableException('Account is locked');
-      }
-      const isMatch = await argon.verify(user.password, password);
-      if (!isMatch) {
-        throw Response.errorBad(Response.WRONG_PASS);
-      }
-      return user;
-    } catch (error) {
-      throw Response.errorInternal(error);
+    const _where: any = { username: username };
+    if (request.doet?.id) {
+      _where.doet_id = request.doet.id;
     }
+
+    const { data } = await this.userService.get({
+      where: JSON.stringify(_where),
+      relation: JSON.stringify(["role"])
+    });
+
+    const user = get(data, "items[0]");
+    if (!user) {
+      throw new NotFoundException({ code: 3033, message: 'Account not found' });
+    }
+    
+    if (user.status === false) {
+      throw new NotAcceptableException({ code: 3035, message: 'Account is locked' });
+    }
+
+    const isMatch = await argon.verify(user.password, password);
+    if (!isMatch) {
+      throw new UnauthorizedException({ code: 3034, message: 'Wrong password' });
+    }
+
+    return user;
   }
 }

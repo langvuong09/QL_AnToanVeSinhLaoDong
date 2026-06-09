@@ -11,17 +11,22 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VerifyOtpDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
+const class_validator_1 = require("class-validator");
 class VerifyOtpDto {
     email;
     otp;
 }
 exports.VerifyOtpDto = VerifyOtpDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'user@example.com' }),
+    (0, swagger_1.ApiProperty)({ example: 'user@example.com', description: 'Email của người dùng' }),
+    (0, class_validator_1.IsEmail)({}, { message: 'Định dạng email không hợp lệ' }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Email không được để trống' }),
     __metadata("design:type", String)
 ], VerifyOtpDto.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '123456' }),
+    (0, swagger_1.ApiProperty)({ example: '123456', description: 'Mã OTP gồm 6 chữ số' }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Mã OTP không được để trống' }),
+    (0, class_validator_1.Length)(6, 6, { message: 'Mã OTP phải có đúng 6 ký tự' }),
     __metadata("design:type", String)
 ], VerifyOtpDto.prototype, "otp", void 0);
 //# sourceMappingURL=verify-otp.dto.js.map

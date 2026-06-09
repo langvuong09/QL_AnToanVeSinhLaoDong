@@ -48,14 +48,14 @@ let AuthController = class AuthController {
         }
         return result;
     }
-    async forgotPassword(email) {
-        return this.authService.forgotPassword(email);
+    async forgotPassword(forgotPasswordDto) {
+        return this.authService.forgotPassword(forgotPasswordDto.email);
     }
-    async verifyOtp(email, otp) {
-        return this.authService.verifyOtp(email, otp);
+    async verifyOtp(verifyOtpDto) {
+        return this.authService.verifyOtp(verifyOtpDto.email, verifyOtpDto.otp);
     }
-    async resetPassword(token, newPassword, confirmPassword) {
-        return this.authService.resetPassword(token, newPassword, confirmPassword);
+    async resetPassword(resetPasswordDto) {
+        return this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.newPassword, resetPasswordDto.confirmPassword);
     }
     async refreshToken(req, response) {
         const oldRefreshToken = req.cookies['refreshToken'];
@@ -93,30 +93,27 @@ __decorate([
     (0, common_1.Post)('forgot-password'),
     (0, swagger_1.ApiBody)({ type: forgot_password_dto_1.ForgotPasswordDto }),
     (0, swagger_1.ApiOperation)({ summary: 'Gửi mã OTP về email' }),
-    __param(0, (0, common_1.Body)('email')),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "forgotPassword", null);
 __decorate([
     (0, common_1.Post)('verify-otp'),
     (0, swagger_1.ApiBody)({ type: verify_otp_dto_1.VerifyOtpDto }),
     (0, swagger_1.ApiOperation)({ summary: 'Xác thực mã OTP' }),
-    __param(0, (0, common_1.Body)('email')),
-    __param(1, (0, common_1.Body)('otp')),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [verify_otp_dto_1.VerifyOtpDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyOtp", null);
 __decorate([
     (0, common_1.Post)('reset-password'),
     (0, swagger_1.ApiBody)({ type: reset_password_dto_1.ResetPasswordDto }),
     (0, swagger_1.ApiOperation)({ summary: 'Đổi mật khẩu bằng Reset Token' }),
-    __param(0, (0, common_1.Body)('token')),
-    __param(1, (0, common_1.Body)('newPassword')),
-    __param(2, (0, common_1.Body)('confirmPassword')),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "resetPassword", null);
 __decorate([

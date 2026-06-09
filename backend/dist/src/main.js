@@ -12,6 +12,7 @@ const path_1 = require("path");
 const typeorm_1 = require("typeorm");
 const app_module_1 = require("./app.module");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const http_exception_filter_1 = require("./commons/filters/http-exception.filter");
 async function runSqlScript(dataSource, filePath) {
     const sql = (0, fs_1.readFileSync)(filePath, 'utf-8');
     const statements = sql
@@ -45,6 +46,7 @@ async function seedSampleData(app) {
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.use((0, cookie_parser_1.default)());
+    app.useGlobalFilters(new http_exception_filter_1.AllExceptionsFilter());
     app.setGlobalPrefix('api/v1');
     app.enableCors({
         origin: '*',
@@ -62,6 +64,11 @@ async function bootstrap() {
     app.use((0, express_1.urlencoded)({
         extended: true,
         limit: '50mb',
+    }));
+    app.useGlobalPipes(new common_1.ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
     }));
     await seedSampleData(app);
     const port = process.env.VNA_PORT || 3000;
