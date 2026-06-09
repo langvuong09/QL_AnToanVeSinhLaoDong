@@ -45,7 +45,7 @@ export class Base {
         );
     }
 
-    protected async execute<T>(config: AxiosRequestConfig): Promise<ApiResponse> {
+    protected async execute<T>(config: AxiosRequestConfig): Promise<ApiResponse<T | null>> {
         try {
             const response = await this.api.request<ApiResponse<T>>(config);
 

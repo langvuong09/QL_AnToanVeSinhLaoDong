@@ -3,12 +3,19 @@
 import { useEffect, useState } from 'react'
 import { Jwt } from '../api/types/jwt'
 import { parseAccessToken } from '../utils/jwt-parser'
+import { Auth } from '../api/Auth';
 
 export default function UserFooter() {
   const [user, setUser] = useState<Jwt | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [isClicked, setIsClicked] = useState<boolean>(false);
+
+  const handleLogout =  async () => {
+    const auth = new Auth();
+    await auth.Logout();
+
+  }
 
   useEffect(() => {
     try {

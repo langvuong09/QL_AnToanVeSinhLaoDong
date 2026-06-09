@@ -6,13 +6,9 @@ import Alert from "@/src/components/ui/Alert";
 import Button from "@/src/components/ui/Button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Auth } from "@/src/api/Auth";
-
-type FormErrors = {
-  account?: string;
-  password?: string;
-}
+import { NotificateContext } from "@/src/contexts/notificate/notificate";
 
 type ViewActivity = {
   get: boolean;
@@ -43,45 +39,16 @@ type LoginResponse = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const notificate = useContext(NotificateContext);
 
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
   const [alert, setAlert] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
-    const newErrors: FormErrors = {};
-
-    if (!account.trim()) {
-      newErrors.account = "Vui lòng nhập tài khoản";
-    }
-
-    if (!password.trim()) {
-      newErrors.password = "Vui lòng nhập mật khẩu";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }
-
-  const clearAccountError = () => {
-    if (errors.account) {
-      setErrors((prev) => ({
-        ...prev,
-        account: undefined
-      }));
-    }
-  }
-
-  const clearPasswordError = () => {
-    if (errors.password) {
-      setErrors((prev) => ({
-        ...prev,
-        password: undefined
-      }));
-    }
+    return account.trim() !== "" && password.trim() !== "";
   }
 
   const saveAuthData = (data: LoginResponse["data"]) => {
@@ -96,10 +63,8 @@ export default function LoginPage() {
   const handleLoginSuccess = (result: LoginResponse) => {
     saveAuthData(result.data);
 
-    setAlert({
-      type: "success",
-      message: "Đăng nhập thành công!"
-    });
+    notificate?.showNotification({ type: "error", message: "Vui lòng điền đầy đủ thông tin" });
+
 
     setAccount("");
     setPassword("");
@@ -111,10 +76,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!validateForm()) {
-      setAlert({
-        type: "error",
-        message: "Vui lòng nhập đầy đủ thông tin"
-      });
+      notificate?.showNotification({ type: "error", message: "Vui lòng điền đầy đủ thông tin" });
       return;
     }
 
@@ -132,18 +94,12 @@ export default function LoginPage() {
 
       if (isValid) {
         handleLoginSuccess(result);
-        return;
       }
 
-      setAlert({
-        type: "error",
-        message: "Tài khoản hoặc mật khẩu không đúng. Vui lòng nhập lại"
-      });
-    } catch (error) {
-      setAlert({
-        type: "error",
-        message: "Có lỗi xảy ra. Vui lòng thử lại sau"
-      });
+    } catch (error: unknown) {
+
+      notificate?.showNotification({ type: "error", message: "Tài khoản hoặc mật khẩu không đúng. Xin vui lòng thử lại" });
+
     } finally {
       setLoading(false);
     }
@@ -190,9 +146,7 @@ export default function LoginPage() {
             value={account}
             onChange={(e) => {
               setAccount(e.target.value);
-              clearAccountError();
             }}
-            error={errors.account}
           />
 
           <PasswordInput
@@ -201,9 +155,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              clearPasswordError();
             }}
-            error={errors.password}
           />
 
           <div className="flex justify-between items-center">
