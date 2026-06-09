@@ -5,15 +5,22 @@ import { LocalStrategy } from 'src/commons/guards/localStrategy';
 import { UserModule } from '../user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ViewModule } from '../view/view.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { jwtOptions } from 'src/config';
 
 @Global()
 @Module({
   imports: [
+    ConfigModule,
     UserModule,
     ViewModule,
-    JwtModule.register({
-      secret: '47213a34-365f-11ec-8d3d-0242ac130003',
-      signOptions: { expiresIn: '1d', issuer: 'vna@group.com.vn' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        ...(await jwtOptions(configService)),
+        signOptions: { expiresIn: '1d', issuer: 'vna@group.com.vn' },
+      }),
     }),
   ],
   controllers: [AuthController],

@@ -1,7 +1,7 @@
 import { Body, ClassSerializerInterceptor, Controller, Get, Param, Post, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { User } from "./user.entity";
 import { UserService } from "./user.service";
-import { AuthGuard } from "src/guards/auth.guard";
+import { AuthGuard } from "../../commons/guards/authGuard";
 import ResponseInterceptor from "src/interceptors/response.interceptor";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { GetAllDto } from "src/commons";

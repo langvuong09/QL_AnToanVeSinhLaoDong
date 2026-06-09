@@ -12,14 +12,14 @@ import {
   Delete,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
-import { DeleteResult, UpdateResult } from 'typeorm';
-import { ResponseInterceptor } from '..';
+import { DeleteResult, ObjectLiteral, UpdateResult } from 'typeorm';
 import { ResponseData } from '../response';
 
 import { GetAllDto } from './baseDto';
 import { BaseService } from './baseService';
+import ResponseInterceptor from 'src/interceptors/response.interceptor';
 
-export class BaseController<T, F extends BaseService<T>> {
+export class BaseController<T extends ObjectLiteral, F extends BaseService<T>> {
   private readonly baseService: F;
   constructor(baseService: F) {
     this.baseService = baseService;

@@ -1,37 +1,37 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import {  GetAllDto } from "src/commons";
-import Response from "src/commons/response";
-import { EntityManager, DataSource, ILike, In, Not, Repository } from "typeorm";
-import { CurrentUser } from "../auth/auth.model";
-import { User } from "./user.entity";
-import * as argon from "argon2";
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { GetAllDto } from '../../commons';
+import Response from '../../commons/response';
+import { EntityManager, DataSource, ILike, In, Not, Repository } from 'typeorm';
+import { CurrentUser } from '../auth/auth.model';
+import { User } from './user.entity';
+import * as argon from 'argon2';
 
 @Injectable()
-export class UserService  {
+export class UserService {
   manager: EntityManager;
 
   constructor(
     private readonly dataSource: DataSource,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
   ) {
     this.manager = this.dataSource.createEntityManager();
   }
 
   async checkUsername(
-    username: string
+    username: string,
   ): Promise<{ username: string; existed: boolean }> {
     try {
       const foundedUser = await this.userRepository.findOne({
         where: {
-          username
-        }
+          username,
+        },
       });
       const result = !!foundedUser;
       return {
         username,
-        existed: result
+        existed: result,
       };
     } catch (error) {
       throw Response.errorInternal(error);
@@ -41,13 +41,13 @@ export class UserService  {
   async import(currentUser: CurrentUser, users: any): Promise<any> {
     try {
       let result: {
-      success: number;
-      err: number;
-      username: string[];
+        success: number;
+        err: number;
+        username: string[];
       } = {
         success: 0,
         err: 0,
-        username: []
+        username: [],
       };
       for (const user of users) {
         const existed = await this.checkUsername(user.username);
@@ -60,8 +60,8 @@ export class UserService  {
               ...user,
               password: user.password,
               createdBy: currentUser.id,
-              createdAt: new Date()
-            })
+              createdAt: new Date(),
+            }),
           );
           result.success += 1;
         }
@@ -78,7 +78,14 @@ export class UserService  {
 
       const select = (query.select && JSON.parse(query.select)) || null;
 
-      const relations = (query.relation && JSON.parse(query.relation)) || null;
+      let relations: any =
+        (query.relation && JSON.parse(query.relation)) || null;
+      if (Array.isArray(relations)) {
+        relations = relations.reduce((acc, curr) => {
+          acc[curr] = true;
+          return acc;
+        }, {});
+      }
 
       const province = (query.province && JSON.parse(query.province)) || null;
 
@@ -86,22 +93,22 @@ export class UserService  {
       if (where instanceof Array) {
         for (const item of where) {
           Object.keys(item).forEach((key) => {
-            if (item[key].operation === "like") {
+            if (item[key].operation === 'like') {
               item[key] = ILike(item[key].value);
-            } else if (item[key].operation === "in") {
+            } else if (item[key].operation === 'in') {
               item[key] = In(item[key].value);
-            } else if (item[key].operation === "notIn") {
+            } else if (item[key].operation === 'notIn') {
               item[key] = Not(In(item[key].value));
             }
           });
         }
       } else {
         Object.keys(where).forEach((key) => {
-          if (where[key].operation === "like") {
+          if (where[key].operation === 'like') {
             where[key] = ILike(where[key].value);
-          } else if (where[key].operation === "in") {
+          } else if (where[key].operation === 'in') {
             where[key] = In(where[key].value);
-          } else if (where[key].operation === "notIn") {
+          } else if (where[key].operation === 'notIn') {
             where[key] = Not(In(where[key].value));
           }
         });
@@ -110,10 +117,10 @@ export class UserService  {
         where,
         relations,
         select,
-        order: { ...JSON.parse(order || "{}") },
+        order: { ...JSON.parse(order || '{}') },
         skip: pageNumber,
         take: pageSize,
-        withDeleted: true
+        withDeleted: true,
       });
       if (!!province) {
         items = items.filter((x) => x.province?.key === province.key);
@@ -121,8 +128,8 @@ export class UserService  {
       return Response.getList({
         items: items as any,
         count,
-        pageSize: + pageSize!,
-        pageNumber: + pageNumber!
+        pageSize: +pageSize!,
+        pageNumber: +pageNumber!,
       });
     } catch (error) {
       throw Response.errorInternal(error);
@@ -135,25 +142,32 @@ export class UserService  {
                                   "deletedAt" = null
                               where id = '${user_id}'`);
     return {
-      success: true
+      success: true,
     };
   }
 
   async resetPassword(user_id) {
-    const _newPassword = await argon.hash("12345678");
-    await this.manager
-      .query(`update users
+    const _newPassword = await argon.hash('12345678');
+    await this.manager.query(`update users
               set password = '${_newPassword}'
               where id = '${user_id}'`);
     return {
-      success: true
+      success: true,
     };
   }
 
   async get(query: { where: string; relation?: string }) {
     try {
       const where = (query.where && JSON.parse(query.where)) || {};
-      const relations = (query.relation && JSON.parse(query.relation)) || null;
+      let relations: any =
+        (query.relation && JSON.parse(query.relation)) || null;
+
+      if (Array.isArray(relations)) {
+        relations = relations.reduce((acc, curr) => {
+          acc[curr] = true;
+          return acc;
+        }, {});
+      }
 
       const [items, count] = await this.userRepository.findAndCount({
         where,
@@ -165,7 +179,7 @@ export class UserService  {
         data: {
           items,
           count,
-        }
+        },
       };
     } catch (error) {
       throw Response.errorInternal(error);

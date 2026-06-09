@@ -5,31 +5,36 @@ import { ViewService } from "../view/view.service";
 import { CurrentUser, LoginModel } from "./auth.model";
 import { get } from "lodash";
 import { User } from "../user/user.entity";
-import { getManager } from "typeorm";
-import { extractHostname } from "src/commons/helper/Domain";
+import { DataSource } from "typeorm";
+import { extractHostname } from "../../helper/Domain";
 import * as fs from "fs";
 import * as path from "path";
-// import Email from "../../commons/helper/Email";
 import * as argon from "argon2";
+import { Doet } from "../doet/doet.entity";
+import Email from "src/helper/Email";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly viewService: ViewService
+    private readonly viewService: ViewService,
+    private readonly dataSource: DataSource
   ) {
   }
 
   async login(data: any, doet: Doet | null): Promise<ResponseData<LoginModel>> {
     try {
       const _doet = doet && doet.id ? doet.id : null;
-      const user = new CurrentUser(_doet, data);
+      const user = new CurrentUser({
+        ...data,
+        doet: _doet
+      });
+      const roleId = user.role?.id ?? 0;
       const [views, token] = await Promise.all([
-        await this.viewService.getViewsByRoleId(user.role.id),
+        await this.viewService.getViewsByRoleId(roleId),
         await this.jwtService.sign({ ...user })
       ]);
-      const rs = new LoginModel({
-        token,
+      const rs = new LoginModel(token, {
         views: get(views, "data.items", [])
       });
       return Response.get<LoginModel>(rs);
@@ -41,9 +46,14 @@ export class AuthService {
   async validateToken(token: string, doet: Doet | null): Promise<ResponseData<LoginModel>> {
     try {
       const _doet = doet && doet.id ? doet.id : null;
-      const user = new CurrentUser(_doet, await this.jwtService.verifyAsync(token));
-      const views = await this.viewService.getViewsByRoleId(user.role.id);
-      const rs = new LoginModel({
+      const decodedData = await this.jwtService.verifyAsync(token);
+      const user = new CurrentUser({
+        ...decodedData,
+        doet: _doet
+      });
+      const roleId = user.role?.id ?? 0;
+      const views = await this.viewService.getViewsByRoleId(roleId);
+      const rs = new LoginModel(token, {
         user,
         views: get(views, "data.items", [])
       });
@@ -56,7 +66,7 @@ export class AuthService {
 
   async forgotPassword(email: string, domain: string) {
     try {
-      const manage = getManager();
+      const manage = this.dataSource.manager;
       const user = await manage.findOne(User, {
         where: {
           email: email
@@ -95,7 +105,7 @@ export class AuthService {
   async resetPassword(code: string) {
     try {
       const data: any = this.jwtService.decode(code);
-      const manage = getManager();
+      const manage = this.dataSource.manager;
       const user = await manage.findOne(User, {
         where: {
           id: data.id

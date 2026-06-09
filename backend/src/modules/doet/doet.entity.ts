@@ -23,26 +23,26 @@ export class Doet extends BaseAddressEntity {
   }
 
   @PrimaryGeneratedColumn("increment")
-  id: number;
+  id!: number;
 
   @Column({ nullable: false })
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
-  name2: string;
+  name2!: string;
 
   @Column({ nullable: true })
-  domain: string;
+  domain!: string;
 
   @Column({ nullable: true })
-  parentId: number;
+  parentId!: number;
 
   @Column({ nullable: true })
-  logo: string;
+  logo!: string;
 
   @Column({ nullable: true })
-  favicon: string;
+  favicon!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  province2: KeyValue;
+  province2!: KeyValue;
 }

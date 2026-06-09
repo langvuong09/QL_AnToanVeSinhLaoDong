@@ -10,10 +10,12 @@ import {
   Get,
   Query
 } from "@nestjs/common";
-import { ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { LocalAuthGuard } from "../../commons/guards/localAuthGuard";
 import { LoginModel } from "./auth.model";
 import { AuthService } from "./auth.service";
+import { LoginDto } from "./dto/login.dto";
+import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -28,12 +30,15 @@ export class AuthController {
   @ApiOperation({
     summary: "Login with username and password"
   })
+  @ApiBody({ type: LoginDto })
   async login(@Request() req) {
     return this.authService.login(req.user, req.doet);
-}
+  }
+
 
   @Post("forgot-password")
   @UseInterceptors(ClassSerializerInterceptor)
+  @ApiBody({ type: ForgotPasswordDto })
   async forgotPassword(
     @Body("email") email: string,
     @Req() req: any

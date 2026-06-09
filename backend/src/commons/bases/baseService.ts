@@ -5,6 +5,7 @@ import {
   ILike,
   In,
   Not,
+  ObjectLiteral,
   Repository,
   UpdateResult
 } from "typeorm";
@@ -28,7 +29,7 @@ const ignoreDoet = [
 ];
 
 @Injectable()
-export class BaseService<T> {
+export class BaseService<T extends ObjectLiteral> {
   private readonly baseRepository: Repository<T>;
   private readonly newEntity: Function;
 
@@ -39,7 +40,10 @@ export class BaseService<T> {
 
   async get(getAllDto: GetAllDto, doet: Doet | null = null): Promise<ResponseData<List<T[]>>> {
     try {
-      let { pageSize, pageNumber, order } = getAllDto;
+      const pageSize = Number(getAllDto.pageSize || 10);
+      const pageNumber = Number(getAllDto.pageNumber || 0);
+      const order = getAllDto.order;
+
       const select = (getAllDto.select && JSON.parse(getAllDto.select)) || null;
       const relations =
         (getAllDto.relation && JSON.parse(getAllDto.relation)) || null;
@@ -178,9 +182,13 @@ export class BaseService<T> {
     itemDto: T
   ): Promise<ResponseData<T>> {
     try {
-      const item = await this.baseRepository.findOne(id);
-      Object.keys(itemDto).forEach((x) => {
-        item[x] = [...itemDto[x]];
+      const item = await this.baseRepository.findOne({ where: { id } as any });
+      if (!item) {
+        throw Response.errorNotFound(Response.NOT_FOUND("Item"));
+      }
+      const updateItem = item as any;
+      Object.keys(itemDto as object).forEach((x) => {
+        updateItem[x] = [...(itemDto as any)[x]];
       });
       const result = await this.baseRepository.save({
         ...item,

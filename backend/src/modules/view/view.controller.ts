@@ -1,9 +1,10 @@
 import {ClassSerializerInterceptor, Controller, Get, Param, UseGuards, UseInterceptors,} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { List, ResponseData, ResponseInterceptor } from 'src/commons';
 import { BaseController } from 'src/commons/bases';
 import { AuthGuard } from 'src/commons/guards/authGuard';
 import { View } from './view.entity';
+import ResponseInterceptor from 'src/interceptors/response.interceptor';
+import { List, ResponseData } from 'src/commons/response';
 import { ViewService } from './view.service';
 
 @ApiTags('Views')
