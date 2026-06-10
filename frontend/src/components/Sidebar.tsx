@@ -133,7 +133,7 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="py-3 space-y-5 bg-[#14317F] text-white h-screen flex flex-col">
+    <div className="py-3 space-y-5 bg-[#14317F] text-white h-screen flex flex-col w-xs">
       {/* Header */}
       <div className="flex items-center gap-5 px-5">
         <div className="w-15 h-15">
@@ -152,7 +152,7 @@ export default function Sidebar() {
       </div>
 
       {/* Body */}
-      <div className="flex-1 border-b border-t border-[#FFFFFF] py-3 space-y-6">
+      <div className="flex-1 border-t border-[#FFFFFF] py-3 space-y-6">
         {sidebarMenus.map((menu) => (
           <nav key={menu.id} className="space-y-4">
             <div className="flex items-center justify-between px-5">

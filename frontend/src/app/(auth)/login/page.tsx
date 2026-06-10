@@ -11,9 +11,16 @@ import { Auth } from "@/src/api/Auth";
 import { AuthData } from "@/src/api/types/auth";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 
+type FormErrors = {
+  account?: string;
+  password?: string;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const notificate = useContext(NotificateContext);
+
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +29,37 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
-    return account.trim() !== "" && password.trim() !== "";
+    const newErrors: FormErrors = {};
+
+    if (!account.trim()) {
+      newErrors.account = "Vui lòng nhập tài khoản";
+    }
+
+    if (!password.trim()) {
+      newErrors.password = "Vui lòng nhập mật khẩu";
+    }
+
+    setErrors(newErrors);
+
+    return account.trim() !== "" && password.trim() !== "" && Object.keys(newErrors).length === 0;;
+  }
+
+  const clearAccountError = () => {
+    if (errors.account) {
+      setErrors((prev) => ({
+        ...prev,
+        account: undefined
+      }));
+    }
+  }
+
+  const clearPasswordError = () => {
+    if (errors.password) {
+      setErrors((prev) => ({
+        ...prev,
+        password: undefined
+      }));
+    }
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -56,7 +93,7 @@ export default function LoginPage() {
         setPassword("");
 
         setTimeout(() => {
-          router.replace("/dashboard"); 
+          router.replace("/dashboard");
         }, 200);
 
         return;
@@ -114,7 +151,10 @@ export default function LoginPage() {
             value={account}
             onChange={(e) => {
               setAccount(e.target.value);
+              clearAccountError();
             }}
+
+            error={errors.account}
           />
 
           <PasswordInput
@@ -123,7 +163,10 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
+              clearPasswordError();
             }}
+
+            error={errors.password}
           />
 
           <div className="flex justify-between items-center">

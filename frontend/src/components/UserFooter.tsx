@@ -6,6 +6,7 @@ import { parseAccessToken } from '../utils/jwt-parser'
 import { Auth } from '../api/Auth';
 import { useRouter } from 'next/navigation';
 import { NotificateContext } from '../contexts/notificate/notificate';
+import ChangePassword from './ChangePassword';
 
 export default function UserFooter() {
   const router = useRouter();
@@ -14,6 +15,8 @@ export default function UserFooter() {
   const [user, setUser] = useState<Jwt | null>(null);
 
   const [isClicked, setIsClicked] = useState<boolean>(false);
+
+  const [isOpenChangePassword, setIsChangePassword] = useState<boolean>(false);
 
   const handleLogout = async () => {
     const auth = new Auth();
@@ -59,7 +62,10 @@ export default function UserFooter() {
                 <span>Thông tin tài khoản</span>
               </button>
             </li>
-            <li className="text-[14px] text-black font-semibold">
+            <li className="text-[14px] text-black font-semibold" onClick={() => {
+              setIsChangePassword(true);
+              setIsClicked(false);
+            }}>
               <button className="flex items-center gap-4 hover:bg-gray-200 w-full px-5 py-2">
                 <i className="fa-solid fa-key text-gray-500 text-2xl"></i>
                 <span>Đổi mật khẩu</span>
@@ -78,7 +84,7 @@ export default function UserFooter() {
         </div>
       )}
 
-      <div className="flex items-center gap-5 py-2 px-5 cursor-pointer hover:bg-[#2447a5]" onClick={() => setIsClicked(prev => !prev)}>
+      <div className="flex items-center gap-5 py-4 px-5 cursor-pointer hover:bg-[#2447a5] border-t  border-b border-[#FFFFFF]" onClick={() => setIsClicked(prev => !prev)}>
         <div className="w-10 h-10 rounded-full bg-white overflow-hidden">
           {user?.avatar ? (
             <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
@@ -99,6 +105,10 @@ export default function UserFooter() {
           </button>
         </div>
       </div>
+
+      {isOpenChangePassword && (
+        <ChangePassword onClose={() => setIsChangePassword(false)} />
+      )}
     </div>
   )
 }
