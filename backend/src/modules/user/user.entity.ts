@@ -22,7 +22,7 @@ export class User {
   @Column({ nullable: true })
   avatar!: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true , unique: true})
   email!: string;
 
   @Column({ nullable: true })
