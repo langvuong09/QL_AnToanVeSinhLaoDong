@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import TopHero from '@/src/components/TopHero'
+import InputLegend from '@/src/components/InputLegend'
+import SelectLegend from '@/src/components/SelectLegend'
 
 type IndustryLevel = 1 | 2 | 3 | 4
 
@@ -87,76 +89,56 @@ function IndustryModal({
 
         {/* Form Body */}
         <div className="px-6 py-5 space-y-4">
-          {/* Mã ngành */}
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">
-              Mã ngành <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.code}
-              onChange={(e) => onChange('code', e.target.value)}
-              placeholder="Nhập mã ngành"
-              className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#5B2DE1] transition-colors ${
-                errors.code ? 'border-red-400' : 'border-gray-300'
-              }`}
+          <div className="grid grid-cols-1 gap-4">
+            <InputLegend
+              label="Mã ngành"
+              require={true}
+              input={{
+                type: 'text',
+                placeholder: 'Nhập mã ngành',
+                value: form.code,
+                onChange: (e) => onChange('code', (e.target as HTMLInputElement).value),
+              }}
+              errorMess={errors.code}
             />
-            {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code}</p>}
-          </div>
 
-          {/* Tên ngành */}
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">
-              Tên ngành <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => onChange('name', e.target.value)}
-              placeholder="Nhập tên ngành"
-              className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#5B2DE1] transition-colors ${
-                errors.name ? 'border-red-400' : 'border-gray-300'
-              }`}
+            <InputLegend
+              label="Tên ngành"
+              require={true}
+              input={{
+                type: 'text',
+                placeholder: 'Nhập tên ngành',
+                value: form.name,
+                onChange: (e) => onChange('name', (e.target as HTMLInputElement).value),
+              }}
+              errorMess={errors.name}
             />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-          </div>
 
-          {/* Nhóm ngành cha */}
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">Nhóm ngành cha</label>
-            <div className="relative">
-              <select
-                value={form.parentId}
-                onChange={(e) => onChange('parentId', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#5B2DE1] appearance-none bg-white transition-colors"
-              >
-                <option value="">-- Không có (Cấp 1) --</option>
-                {parentOptions.map((opt) => (
-                  <option key={opt.id} value={String(opt.id)}>
-                    {opt.code} - {opt.name}
-                  </option>
-                ))}
-              </select>
-              <i className="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
-            </div>
-          </div>
+            <SelectLegend
+              label="Nhóm ngành cha"
+              select={{
+                value: form.parentId,
+                onChange: (e) => onChange('parentId', (e.target as HTMLSelectElement).value),
+              }}
+            >
+              <option value="">-- Không có (Cấp 1) --</option>
+              {parentOptions.map((opt) => (
+                <option key={opt.id} value={String(opt.id)}>
+                  {opt.code} - {opt.name}
+                </option>
+              ))}
+            </SelectLegend>
 
-          {/* Trạng thái */}
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">
-              Trạng thái <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <select
-                value={form.status}
-                onChange={(e) => onChange('status', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#5B2DE1] appearance-none bg-white transition-colors"
-              >
-                <option value="true">Sử dụng</option>
-                <option value="false">Ngừng sử dụng</option>
-              </select>
-              <i className="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
-            </div>
+            <SelectLegend
+              label="Trạng thái"
+              select={{
+                value: form.status,
+                onChange: (e) => onChange('status', (e.target as HTMLSelectElement).value),
+              }}
+            >
+              <option value="true">Sử dụng</option>
+              <option value="false">Ngừng sử dụng</option>
+            </SelectLegend>
           </div>
         </div>
 
@@ -289,15 +271,15 @@ export default function BusinessIndustriesPage() {
   const paginatedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
-    <main className="space-y-0">
+    <main className="space-y-5">
       <TopHero
         lable="Danh sách ngành nghề kinh doanh"
         component={
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => {}}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              onClick={() => { }}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded text-sm text-primary hover:bg-gray-50 transition-colors"
             >
               <i className="fa-solid fa-upload text-xs" />
               <span>Thêm từ file</span>
@@ -314,158 +296,157 @@ export default function BusinessIndustriesPage() {
         }
       />
 
-      <div className="bg-white">
-        {/* Filter Row */}
-        <div className="grid grid-cols-[auto_auto_120px_1fr_120px] gap-0 border-b border-gray-200">
-          <div className="flex items-center px-4 py-3 border-r border-gray-200">
-            <input
-              type="checkbox"
-              className="w-4 h-4 accent-blue-600 cursor-pointer"
-              checked={selectedIds.length === filteredRows.length && filteredRows.length > 0}
-              onChange={(e) => handleSelectAll(e.target.checked)}
-            />
+      <div>
+        <div className="bg-[#F4F6F8] py-3 px-3">
+          <div className="flex font-semibold gap-3 pb-6">
+            <div className="flex-1" />
+            <div className="w-10" />
+            <div className="flex-1">Mã ngành</div>
+            <div className="flex-4">Tên ngành nghề</div>
+            <div className="flex-1">Cấp</div>
           </div>
-          {/* Edit icon col header */}
-          <div className="flex items-center px-3 py-3 border-r border-gray-200 w-10" />
-          {/* Code filter */}
-          <div className="flex items-center px-3 py-3 border-r border-gray-200">
-            <input
-              type="text"
-              placeholder="Mã ngành"
-              value={filterCode}
-              onChange={(e) => setFilterCode(e.target.value)}
-              className="w-full border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-blue-400"
-            />
-          </div>
-          {/* Name filter */}
-          <div className="flex items-center px-3 py-3 border-r border-gray-200">
-            <input
-              type="text"
-              placeholder="Tên ngành nghề"
-              value={filterName}
-              onChange={(e) => setFilterName(e.target.value)}
-              className="w-full border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-blue-400"
-            />
-          </div>
-          {/* Level filter */}
-          <div className="flex items-center px-3 py-3">
-            <div className="relative w-full">
-              <select
-                value={filterLevel}
-                onChange={(e) => setFilterLevel(e.target.value)}
-                className="w-full border border-gray-300 rounded px-2 py-1 text-sm outline-none appearance-none bg-white"
+
+          <div className="flex gap-3">
+            <div className="flex-1" />
+            <div className="w-10" />
+            <div className="flex-1">
+              <InputLegend
+                input={{
+                  type: 'text',
+                  placeholder: 'Mã ngành',
+                  value: filterCode,
+                  onChange: (e) => setFilterCode((e.target as HTMLInputElement).value),
+                }}
+              />
+            </div>
+            <div className="flex-4">
+              <InputLegend
+                input={{
+                  type: 'text',
+                  placeholder: 'Tên ngành nghề',
+                  value: filterName,
+                  onChange: (e) => setFilterName((e.target as HTMLInputElement).value),
+                }}
+              />
+            </div>
+            <div className="flex-1">
+              <SelectLegend
+                select={{
+                  value: filterLevel,
+                  onChange: (e) => setFilterLevel((e.target as HTMLSelectElement).value),
+                }}
               >
                 <option value="">Tất cả</option>
                 <option value="1">Cấp 1</option>
                 <option value="2">Cấp 2</option>
                 <option value="3">Cấp 3</option>
                 <option value="4">Cấp 4</option>
-              </select>
-              <i className="fa-solid fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
+              </SelectLegend>
             </div>
           </div>
         </div>
 
-        {/* Column Headers */}
-        <div className="grid grid-cols-[auto_auto_120px_1fr_120px] gap-0 text-sm font-semibold text-gray-600 border-b border-gray-200">
-          <div className="px-4 py-3 border-r border-gray-100" />
-          <div className="px-3 py-3 border-r border-gray-100 w-10" />
-          <div className="px-3 py-3 border-r border-gray-100">Mã ngành</div>
-          <div className="px-3 py-3 border-r border-gray-100">Tên ngành nghề</div>
-          <div className="px-3 py-3">Cấp</div>
-        </div>
+        <div className="bg-white">
+          <div className="grid grid-cols-[auto_auto_120px_1fr_120px] gap-0 text-sm font-semibold text-gray-600 border-b border-gray-200">
+            <div className="px-4 py-3 border-r border-gray-100" />
+            <div className="px-3 py-3 border-r border-gray-100 w-10" />
+            <div className="px-3 py-3 border-r border-gray-100">Mã ngành</div>
+            <div className="px-3 py-3 border-r border-gray-100">Tên ngành nghề</div>
+            <div className="px-3 py-3">Cấp</div>
+          </div>
 
-        {/* Data Rows */}
-        {paginatedRows.map((item) => (
-          <div
-            key={item.id}
-            className="grid grid-cols-[auto_auto_120px_1fr_120px] gap-0 border-b border-gray-100 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center px-4 py-3 border-r border-gray-100">
-              <input
-                type="checkbox"
-                className="w-4 h-4 accent-blue-600 cursor-pointer"
-                checked={selectedIds.includes(item.id)}
-                onChange={() => handleSelectOne(item.id)}
-              />
+          {/* Data Rows */}
+          {paginatedRows.map((item) => (
+            <div
+              key={item.id}
+              className="grid grid-cols-[auto_auto_120px_1fr_120px] gap-0 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center px-4 py-3 border-r border-gray-100">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 accent-blue-600 cursor-pointer"
+                  checked={selectedIds.includes(item.id)}
+                  onChange={() => handleSelectOne(item.id)}
+                />
+              </div>
+              <div className="flex items-center px-3 py-3 border-r border-gray-100 w-10">
+                <button
+                  type="button"
+                  onClick={() => openEdit(item)}
+                  className="text-blue-400 hover:text-blue-600 transition-colors"
+                  title="Chỉnh sửa"
+                >
+                  <i className="fa-solid fa-pen text-xs" />
+                </button>
+              </div>
+              <div className="flex items-center px-3 py-3 border-r border-gray-100 text-sm text-gray-700">
+                {item.code}
+              </div>
+              <div className={`flex items-center px-3 py-3 border-r border-gray-100 text-sm text-gray-700 ${getLevelIndent(item.level)}`}>
+                <span>
+                  {getLevelPrefix(item.level)}
+                  {item.level === 1 ? (
+                    <span className="font-bold uppercase">{item.name}</span>
+                  ) : (
+                    item.name
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center px-3 py-3 text-sm text-gray-700">
+                {getLevelLabel(item.level)}
+              </div>
             </div>
-            <div className="flex items-center px-3 py-3 border-r border-gray-100 w-10">
+          ))}
+
+          {/* Pagination */}
+          <div className="flex items-center justify-end gap-3 px-4 py-3 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <select
+                value={pageSize}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1) }}
+                className="border border-gray-300 rounded px-2 py-1 text-sm outline-none"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+            <span>
+              {filteredRows.length === 0 ? '0' : `${(currentPage - 1) * pageSize + 1}`} - {Math.min(currentPage * pageSize, filteredRows.length)} of {filteredRows.length}
+            </span>
+            <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => openEdit(item)}
-                className="text-blue-400 hover:text-blue-600 transition-colors"
-                title="Chỉnh sửa"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded disabled:opacity-40 hover:bg-gray-100 transition-colors"
               >
-                <i className="fa-solid fa-pen text-xs" />
+                <i className="fa-solid fa-chevron-left text-xs" />
+              </button>
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded disabled:opacity-40 hover:bg-gray-100 transition-colors"
+              >
+                <i className="fa-solid fa-chevron-right text-xs" />
               </button>
             </div>
-            <div className="flex items-center px-3 py-3 border-r border-gray-100 text-sm text-gray-700">
-              {item.code}
-            </div>
-            <div className={`flex items-center px-3 py-3 border-r border-gray-100 text-sm text-gray-700 ${getLevelIndent(item.level)}`}>
-              <span>
-                {getLevelPrefix(item.level)}
-                {item.level === 1 ? (
-                  <span className="font-bold uppercase">{item.name}</span>
-                ) : (
-                  item.name
-                )}
-              </span>
-            </div>
-            <div className="flex items-center px-3 py-3 text-sm text-gray-700">
-              {getLevelLabel(item.level)}
-            </div>
-          </div>
-        ))}
-
-        {/* Pagination */}
-        <div className="flex items-center justify-end gap-3 px-4 py-3 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <select
-              value={pageSize}
-              onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1) }}
-              className="border border-gray-300 rounded px-2 py-1 text-sm outline-none"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-          </div>
-          <span>
-            {filteredRows.length === 0 ? '0' : `${(currentPage - 1) * pageSize + 1}`} - {Math.min(currentPage * pageSize, filteredRows.length)} of {filteredRows.length}
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded disabled:opacity-40 hover:bg-gray-100 transition-colors"
-            >
-              <i className="fa-solid fa-chevron-left text-xs" />
-            </button>
-            <button
-              type="button"
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded disabled:opacity-40 hover:bg-gray-100 transition-colors"
-            >
-              <i className="fa-solid fa-chevron-right text-xs" />
-            </button>
           </div>
         </div>
-      </div>
 
-      {/* Modal */}
-      <IndustryModal
-        isOpen={isModalOpen}
-        editingItem={editingItem}
-        allIndustries={data}
-        form={form}
-        errors={errors}
-        onClose={closeModal}
-        onSave={handleSave}
-        onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
-      />
+        {/* Modal */}
+        <IndustryModal
+          isOpen={isModalOpen}
+          editingItem={editingItem}
+          allIndustries={data}
+          form={form}
+          errors={errors}
+          onClose={closeModal}
+          onSave={handleSave}
+          onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
+        />
+      </div>
     </main>
   )
 }
