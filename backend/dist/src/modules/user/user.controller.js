@@ -11,16 +11,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
 const authGuard_1 = require("../../commons/guards/authGuard");
-const response_interceptor_1 = __importDefault(require("../../interceptors/response.interceptor"));
-const commons_1 = require("../../commons");
 const user_decorator_1 = require("../../commons/guards/user.decorator");
 const auth_model_1 = require("../auth/auth.model");
 const change_password_1 = require("./dto/change-password");
@@ -30,58 +25,11 @@ let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
     }
-    async checkUsername(username) {
-        return await this.userService.checkUsername(username);
-    }
-    async getAll(query) {
-        return await this.userService.getAll(query);
-    }
-    async import(req, users) {
-        return await this.userService.import(req.user, users);
-    }
-    async recovery(user_id) {
-        return await this.userService.recovery(user_id);
-    }
     async resetPassword(currentUser, changePasswordDto) {
         return await this.userService.resetPassword(currentUser.id, changePasswordDto);
     }
 };
 exports.UserController = UserController;
-__decorate([
-    (0, common_1.Get)("checkUsername"),
-    (0, common_1.UseInterceptors)(response_interceptor_1.default, common_1.ClassSerializerInterceptor),
-    (0, swagger_1.ApiOperation)({ summary: "Get items" }),
-    __param(0, (0, common_1.Query)("username")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], UserController.prototype, "checkUsername", null);
-__decorate([
-    (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: "Get items" }),
-    __param(0, (0, common_1.Query)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [commons_1.GetAllDto]),
-    __metadata("design:returntype", Promise)
-], UserController.prototype, "getAll", null);
-__decorate([
-    (0, common_1.Post)("import"),
-    (0, common_1.UseInterceptors)(response_interceptor_1.default, common_1.ClassSerializerInterceptor),
-    (0, swagger_1.ApiOperation)({ summary: "Get items" }),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Body)("users")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], UserController.prototype, "import", null);
-__decorate([
-    (0, common_1.Post)("recovery"),
-    (0, swagger_1.ApiOperation)({ summary: "recovery account" }),
-    __param(0, (0, common_1.Body)("user_id")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], UserController.prototype, "recovery", null);
 __decorate([
     (0, common_1.Post)("reset-password"),
     (0, swagger_1.ApiBody)({ type: change_password_1.ChangePasswordDto }),

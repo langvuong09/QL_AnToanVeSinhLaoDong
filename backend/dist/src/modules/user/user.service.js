@@ -64,125 +64,6 @@ let UserService = class UserService {
         this.userRepository = userRepository;
         this.manager = this.dataSource.createEntityManager();
     }
-    async checkUsername(username) {
-        try {
-            const foundedUser = await this.userRepository.findOne({
-                where: {
-                    username,
-                },
-            });
-            const result = !!foundedUser;
-            return {
-                username,
-                existed: result,
-            };
-        }
-        catch (error) {
-            throw response_1.default.errorInternal(error);
-        }
-    }
-    async import(currentUser, users) {
-        try {
-            let result = {
-                success: 0,
-                err: 0,
-                username: [],
-            };
-            for (const user of users) {
-                const existed = await this.checkUsername(user.username);
-                if (existed.existed) {
-                    result.err += 1;
-                    result.username.push(user.username);
-                }
-                else {
-                    await this.userRepository.save(Object.assign(new user_entity_1.User(), {
-                        ...user,
-                        password: user.password,
-                        createdBy: currentUser.id,
-                        createdAt: new Date(),
-                    }));
-                    result.success += 1;
-                }
-            }
-            return result;
-        }
-        catch (error) {
-            throw response_1.default.errorInternal(error);
-        }
-    }
-    async getAll(query) {
-        try {
-            let { pageSize, pageNumber, order } = query;
-            const select = (query.select && JSON.parse(query.select)) || null;
-            let relations = (query.relation && JSON.parse(query.relation)) || null;
-            if (Array.isArray(relations)) {
-                relations = relations.reduce((acc, curr) => {
-                    acc[curr] = true;
-                    return acc;
-                }, {});
-            }
-            const province = (query.province && JSON.parse(query.province)) || null;
-            const where = (query.where && JSON.parse(query.where)) || {};
-            if (where instanceof Array) {
-                for (const item of where) {
-                    Object.keys(item).forEach((key) => {
-                        if (item[key].operation === 'like') {
-                            item[key] = (0, typeorm_2.ILike)(item[key].value);
-                        }
-                        else if (item[key].operation === 'in') {
-                            item[key] = (0, typeorm_2.In)(item[key].value);
-                        }
-                        else if (item[key].operation === 'notIn') {
-                            item[key] = (0, typeorm_2.Not)((0, typeorm_2.In)(item[key].value));
-                        }
-                    });
-                }
-            }
-            else {
-                Object.keys(where).forEach((key) => {
-                    if (where[key].operation === 'like') {
-                        where[key] = (0, typeorm_2.ILike)(where[key].value);
-                    }
-                    else if (where[key].operation === 'in') {
-                        where[key] = (0, typeorm_2.In)(where[key].value);
-                    }
-                    else if (where[key].operation === 'notIn') {
-                        where[key] = (0, typeorm_2.Not)((0, typeorm_2.In)(where[key].value));
-                    }
-                });
-            }
-            let [items, count] = await this.userRepository.findAndCount({
-                where,
-                relations,
-                select,
-                order: { ...JSON.parse(order || '{}') },
-                skip: pageNumber,
-                take: pageSize,
-                withDeleted: true,
-            });
-            if (!!province) {
-                items = items.filter((x) => x.province?.key === province.key);
-            }
-            return response_1.default.getList({
-                items: items,
-                count,
-                pageSize: +pageSize,
-                pageNumber: +pageNumber,
-            });
-        }
-        catch (error) {
-            throw response_1.default.errorInternal(error);
-        }
-    }
-    async recovery(user_id) {
-        await this.manager.query(`update users
-                              set "deletedBy" = NULL,
-                                  "deletedAt" = null
-                              where id = '${user_id}'`);
-        return {
-            success: true,
-        };
-    }
     async resetPassword(user_id, changePasswordDto) {
         const user = await this.manager.findOne(user_entity_1.User, {
             where: { id: user_id },
@@ -202,7 +83,7 @@ let UserService = class UserService {
         await this.manager.update(user_entity_1.User, user_id, {
             password: hashedPassword,
         });
-        return response_1.default.SUCCESSFULLY;
+        return { success: true };
     }
     async get(query) {
         try {

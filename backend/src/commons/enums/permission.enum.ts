@@ -1,0 +1,7 @@
+export enum PermissionCode {
+  USER_VIEW = 'USER_VIEW',
+  USER_CREATE = 'USER_CREATE',
+  USER_UPDATE = 'USER_UPDATE',
+  DOET_VIEW = 'DOET_VIEW',
+  DOET_CREATE = 'DOET_CREATE',
+}

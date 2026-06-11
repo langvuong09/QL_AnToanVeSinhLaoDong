@@ -1,9 +1,9 @@
 class role {
   id?: number;
-  role?: string;
+  code?: string;
   name?: string;
 
-  constructor(role?: Partial<role>, keys: string[] = ['id', 'role', 'name']) {
+  constructor(role?: Partial<role>, keys: string[] = ['id', 'code', 'name']) {
     role &&
       keys.forEach((key) => {
         role[key] !== undefined && (this[key] = role[key]);
@@ -16,31 +16,18 @@ export class CurrentUser {
   doet?: number | null;
   username?: string;
   fullname?: string;
-  realRole?: string;
   avatar?: string;
-  role?: role;
+  role!: role; 
 
-  constructor(
-    user?: Partial<CurrentUser>,
-    keys: string[] = [
-      'id',
-      'username',
-      'fullname',
-      'realRole',
-      'role',
-      'avatar',
-      'unitId',
-      'workUnit',
-    ],
-  ) {
-    user &&
-      keys.forEach((key) => {
-        if (key == 'role') {
-          user[key] !== undefined && (this[key] = new role(user[key]));
-        } else {
-          user[key] !== undefined && (this[key] = user[key]);
-        }
-      });
+  constructor(user?: Partial<CurrentUser>) {
+    this.role = new role(); 
+    
+    if (user) {
+      Object.assign(this, user);
+      if (user.role) {
+        this.role = new role(user.role);
+      }
+    }
   }
 }
 

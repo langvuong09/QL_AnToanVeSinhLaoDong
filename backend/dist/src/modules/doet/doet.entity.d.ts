@@ -1,12 +1,20 @@
-import { BaseAddressEntity, KeyValue } from "../../commons/bases/baseAddressEntity";
+import { BaseAddressEntity } from "../../commons/bases/baseAddressEntity";
+import { FileEntity } from "../media/media.entity";
+import { BusinessType } from "../bussinessType/business-type.entity";
+import { Industry } from "../industry/industry.entity";
+import { Report } from "../report/report.entity";
 export declare class Doet extends BaseAddressEntity {
-    constructor(doet: Partial<Doet>);
     id: number;
     name: string;
-    name2: string;
-    domain: string;
-    parentId: number;
-    logo: string;
-    favicon: string;
-    province2: KeyValue;
+    taxCode: string;
+    issuedDate: Date;
+    businessTypeId: number;
+    businessType: BusinessType;
+    industryId: number;
+    industry: Industry;
+    foreignName: string;
+    representative: string;
+    repPhone: string;
+    files: FileEntity[];
+    reports: Report[];
 }

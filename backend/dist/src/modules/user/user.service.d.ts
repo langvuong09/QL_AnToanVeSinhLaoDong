@@ -1,6 +1,4 @@
-import { GetAllDto } from '../../commons';
 import { EntityManager, DataSource, Repository } from 'typeorm';
-import { CurrentUser } from '../auth/auth.model';
 import { User } from './user.entity';
 import { ChangePasswordDto } from './dto/change-password';
 export declare class UserService {
@@ -8,18 +6,7 @@ export declare class UserService {
     private readonly userRepository;
     manager: EntityManager;
     constructor(dataSource: DataSource, userRepository: Repository<User>);
-    checkUsername(username: string): Promise<{
-        username: string;
-        existed: boolean;
-    }>;
-    import(currentUser: CurrentUser, users: any): Promise<any>;
-    getAll(query: GetAllDto): Promise<import("../../commons").ResponseData<import("../../commons").List<unknown[]>>>;
-    recovery(user_id: string): Promise<{
-        success: boolean;
-    }>;
     resetPassword(user_id: string, changePasswordDto: ChangePasswordDto): Promise<{
-        code: import("@nestjs/common").HttpStatus;
-        message: string;
         success: boolean;
     }>;
     get(query: {

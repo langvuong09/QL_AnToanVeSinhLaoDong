@@ -12,35 +12,44 @@ import { AllExceptionsFilter } from './commons/filters/http-exception.filter';
 
 async function runSqlScript(dataSource: DataSource, filePath: string) {
   const sql = readFileSync(filePath, 'utf-8');
-  const statements = sql
-    .split(';')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
+  // Chia nhỏ file theo dấu chấm phẩy
+  const statements = sql.split(';').filter(s => s.trim().length > 0);
 
   for (const statement of statements) {
-    await dataSource.query(statement);
+    try {
+      await dataSource.query(statement);
+    } catch (err: any) {
+      // Nếu lỗi là do trùng lặp (ON CONFLICT), ta có thể bỏ qua log lỗi này
+      Logger.debug(`Skipping statement: ${err.message}`);
+    }
   }
+  Logger.log(`Finished: ${filePath}`);
 }
 
 async function seedSampleData(app: any) {
   const dataSource = app.get(DataSource);
+  
+  // Đường dẫn khớp chính xác với Dockerfile của bạn: dist/src/sql
+  const sqlDir = join(process.cwd(), 'dist', 'src', 'sql'); 
 
-  try {
-    const seedFiles = ['role.sql', 'doets.sql', 'user.sql', 'view.sql'];
+  // Đổi tên file theo prefix (01_, 02_...) để chắc chắn chạy đúng thứ tự
+  const seedFiles = [
+    '00_industry_bussinessType.sql',
+    '01_group-permissions.sql',
+    '02_role.sql', 
+    '03_doets.sql',  
+    '04_permission.sql',  
+    '05_user.sql',              
+    '06_view.sql'            
+  ];
 
-    for (const fileName of seedFiles) {
-      const filePath = join(__dirname, 'sql', fileName);
-      if (existsSync(filePath)) {
-        Logger.log(`Seeding ${fileName}...`);
-        await runSqlScript(dataSource, filePath);
-      } else {
-        Logger.warn(`Seed file not found: ${filePath}`);
-      }
+  for (const fileName of seedFiles) {
+    const filePath = join(sqlDir, fileName);
+    if (existsSync(filePath)) {
+      await runSqlScript(dataSource, filePath);
+    } else {
+      Logger.warn(`Không tìm thấy file: ${filePath}`);
     }
-
-    Logger.log('Sample data check & seeding completed');
-  } catch (error) {
-    Logger.error('Failed to seed sample data:', error);
   }
 }
 

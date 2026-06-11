@@ -1,48 +1,37 @@
-import { BaseAddressEntity, KeyValue } from "src/commons/bases/baseAddressEntity";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BaseAddressEntity } from "src/commons/bases/baseAddressEntity";
+import { Column, Entity, ManyToOne, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { FileEntity } from "../media/media.entity";
+import { BusinessType } from "../bussinessType/business-type.entity";
+import { Industry } from "../industry/industry.entity";
+import { Report } from "../report/report.entity";
 
 @Entity("doets")
 export class Doet extends BaseAddressEntity {
-  constructor(doet: Partial<Doet>) {
-    super(doet);
-    const keys = [
-      "id",
-      "name",
-      "name2",
-      "parentId",
-      "domain",
-      "logo",
-      "favicon",
-      "province",
-      "province2",
-    ];
-    doet &&
-    keys.forEach((key) => {
-      doet[key] !== undefined && (this[key] = doet[key]);
-    });
-  }
+  @PrimaryGeneratedColumn("increment") id!: number;
 
-  @PrimaryGeneratedColumn("increment")
-  id!: number;
+  @Column() name!: string;
+  @Column({ unique: true }) taxCode!: string; 
+  @Column() issuedDate!: Date;
 
-  @Column({ nullable: false })
-  name!: string;
+  @Column() businessTypeId!: number;
+  
+  @ManyToOne(() => BusinessType, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'businessTypeId' })
+  businessType!: BusinessType;
 
-  @Column({ nullable: true })
-  name2!: string;
+  @Column() industryId!: number;
+  
+  @ManyToOne(() => Industry, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'industryId' })
+  industry!: Industry;
 
-  @Column({ nullable: true })
-  domain!: string;
+  @Column({ nullable: true }) foreignName!: string;
+  @Column({ nullable: true }) representative!: string; 
+  @Column({ nullable: true }) repPhone!: string;       
 
-  @Column({ nullable: true })
-  parentId!: number;
+  @OneToMany(() => FileEntity, (file) => file.doet)
+  files!: FileEntity[];
 
-  @Column({ nullable: true })
-  logo!: string;
-
-  @Column({ nullable: true })
-  favicon!: string;
-
-  @Column({ type: 'jsonb', nullable: true })
-  province2!: KeyValue;
+  @OneToMany(() => Report, (report) => report.doet)
+  reports!: Report[];
 }

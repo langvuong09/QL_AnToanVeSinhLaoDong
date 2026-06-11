@@ -1,6 +1,6 @@
 declare class role {
     id?: number;
-    role?: string;
+    code?: string;
     name?: string;
     constructor(role?: Partial<role>, keys?: string[]);
 }
@@ -9,10 +9,9 @@ export declare class CurrentUser {
     doet?: number | null;
     username?: string;
     fullname?: string;
-    realRole?: string;
     avatar?: string;
-    role?: role;
-    constructor(user?: Partial<CurrentUser>, keys?: string[]);
+    role: role;
+    constructor(user?: Partial<CurrentUser>);
 }
 export declare class LoginModel {
     token: string;

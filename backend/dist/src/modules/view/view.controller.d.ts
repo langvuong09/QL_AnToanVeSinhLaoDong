@@ -5,5 +5,5 @@ import { ViewService } from './view.service';
 export declare class ViewController extends BaseController<View, ViewService> {
     private readonly viewService;
     constructor(viewService: ViewService);
-    getViewsByRoleId(id: number): Promise<ResponseData<List<View[]>>>;
+    getViewsByRoleCode(id: string): Promise<ResponseData<List<View[]>>>;
 }

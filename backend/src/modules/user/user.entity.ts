@@ -1,55 +1,46 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Role } from "../role/role.entity";
+import { Doet } from "../doet/doet.entity";
 import * as argon from "argon2";
+import { FileEntity } from "../media/media.entity";
+import { BaseAddressEntity } from "src/commons/bases/baseAddressEntity";
 
-@Entity(`users`)
-export class User {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string;
+@Entity("users")
+export class User extends BaseAddressEntity {
+  @PrimaryGeneratedColumn("uuid") id!: string;
 
-  @Column("varchar", { unique: true })
-  username!: string;
+  @Column("varchar", { unique: true }) username!: string;
 
-  @Column("varchar")
-  password!: string;
+  @Column("varchar") password!: string;
 
-  @Column({ nullable: true })
-  fullName!: string;
+  @Column({ nullable: true }) fullName!: string;
 
-  @Column("varchar", { nullable: true })
-  realRole!: string;
+  @Column({ nullable: true, unique: true }) email!: string;
 
-  @Column({ nullable: true })
-  avatar!: string;
+  @Column({ type: "date", nullable: true }) dateOfBirth!: Date;
 
-  @Column({ nullable: true , unique: true})
-  email!: string;
+  @Column({ default: true }) status!: boolean;
 
-  @Column({ nullable: true })
-  dateOfBirth!: Date;
-
-  @Column({ nullable: true })
-  status!: boolean;
-
-  @Column({ nullable: true })
-  unitId!: number;
-
-  @Column({ nullable: true })
-  deletedAt!: Date;
-
-  @Column({ nullable: true })
-  doet_id!: number;
-
-  @ManyToOne(() => Role, (role: Role) => role.users)
+  @Column({ nullable: true }) roleId!: number;
+  @ManyToOne(() => Role, (role) => role.users, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: "roleId" })
   role?: Role;
-  province: any;
+
+  @Column({ nullable: true }) avatarId!: string;
+  @ManyToOne(() => FileEntity, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: "avatarId" })
+  avatar?: FileEntity;
+
+  @Column({ nullable: true }) doetId!: number;
+  @ManyToOne(() => Doet, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: "doetId" })
+  doet?: Doet;
 
   @BeforeInsert()
+  @BeforeUpdate()
   async hashPassword() {
-    this.password = await argon.hash(this.password);
+    if (this.password && !this.password.startsWith('$argon2')) {
+      this.password = await argon.hash(this.password);
+    }
   }
-
-  @Column({ nullable: true })
-  workUnit?: string;
 }

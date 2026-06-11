@@ -1,0 +1,1 @@
+INSERT INTO group_permissions (id, name, code) VALUES (1, 'Hệ thống', 'SYSTEM') ON CONFLICT (id) DO NOTHING;

@@ -12,33 +12,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Doet = void 0;
 const baseAddressEntity_1 = require("../../commons/bases/baseAddressEntity");
 const typeorm_1 = require("typeorm");
+const media_entity_1 = require("../media/media.entity");
+const business_type_entity_1 = require("../bussinessType/business-type.entity");
+const industry_entity_1 = require("../industry/industry.entity");
+const report_entity_1 = require("../report/report.entity");
 let Doet = class Doet extends baseAddressEntity_1.BaseAddressEntity {
-    constructor(doet) {
-        super(doet);
-        const keys = [
-            "id",
-            "name",
-            "name2",
-            "parentId",
-            "domain",
-            "logo",
-            "favicon",
-            "province",
-            "province2",
-        ];
-        doet &&
-            keys.forEach((key) => {
-                doet[key] !== undefined && (this[key] = doet[key]);
-            });
-    }
     id;
     name;
-    name2;
-    domain;
-    parentId;
-    logo;
-    favicon;
-    province2;
+    taxCode;
+    issuedDate;
+    businessTypeId;
+    businessType;
+    industryId;
+    industry;
+    foreignName;
+    representative;
+    repPhone;
+    files;
+    reports;
 };
 exports.Doet = Doet;
 __decorate([
@@ -46,35 +37,56 @@ __decorate([
     __metadata("design:type", Number)
 ], Doet.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Doet.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
-], Doet.prototype, "name2", void 0);
+], Doet.prototype, "taxCode", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Doet.prototype, "domain", void 0);
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Date)
+], Doet.prototype, "issuedDate", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
-], Doet.prototype, "parentId", void 0);
+], Doet.prototype, "businessTypeId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => business_type_entity_1.BusinessType, { onDelete: 'RESTRICT' }),
+    (0, typeorm_1.JoinColumn)({ name: 'businessTypeId' }),
+    __metadata("design:type", business_type_entity_1.BusinessType)
+], Doet.prototype, "businessType", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Doet.prototype, "industryId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => industry_entity_1.Industry, { onDelete: 'RESTRICT' }),
+    (0, typeorm_1.JoinColumn)({ name: 'industryId' }),
+    __metadata("design:type", industry_entity_1.Industry)
+], Doet.prototype, "industry", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
-], Doet.prototype, "logo", void 0);
+], Doet.prototype, "foreignName", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
-], Doet.prototype, "favicon", void 0);
+], Doet.prototype, "representative", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', nullable: true }),
-    __metadata("design:type", baseAddressEntity_1.KeyValue)
-], Doet.prototype, "province2", void 0);
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Doet.prototype, "repPhone", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => media_entity_1.FileEntity, (file) => file.doet),
+    __metadata("design:type", Array)
+], Doet.prototype, "files", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => report_entity_1.Report, (report) => report.doet),
+    __metadata("design:type", Array)
+], Doet.prototype, "reports", void 0);
 exports.Doet = Doet = __decorate([
-    (0, typeorm_1.Entity)("doets"),
-    __metadata("design:paramtypes", [Object])
+    (0, typeorm_1.Entity)("doets")
 ], Doet);
 //# sourceMappingURL=doet.entity.js.map

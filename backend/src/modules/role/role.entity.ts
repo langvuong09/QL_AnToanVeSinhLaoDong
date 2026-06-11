@@ -1,32 +1,23 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn, JoinTable } from "typeorm";
 import { User } from "../user/user.entity";
+import { Permission } from "../permission/permission.entity";
 
-@Entity('roles')
+@Entity("roles")
 export class Role {
-    constructor(role?: Partial<Role>, keys: string[] = ["id", "role", "name", "type", "status"]) {
-        role && keys.forEach(key => {
-            role[key] !== undefined && (this[key] = role[key]);
-        });
-    }
-    
-    @PrimaryGeneratedColumn()
-    id!: number;
+  @PrimaryGeneratedColumn("increment") id!: number;
 
-    @Column({ unique: true })
-    role!: string;
+  @Column() name!: string; 
+  
+  @Column({ unique: true }) code!: string; 
 
-    @Column('varchar', { nullable: true })
-    name!: string;
+  @OneToMany(() => User, (user) => user.role)
+  users!: User[];
 
-    @Column('varchar', { nullable: true })
-    type!: string;
-
-    @Column('varchar', { nullable: true })
-    status!: boolean;
-
-    @OneToMany(() => User, (user: User) => user.role, {
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-    })
-    users!: Array<User>;
+  @ManyToMany(() => Permission, (permission) => permission.roles, { cascade: true })
+  @JoinTable({
+    name: "role_permissions",
+    joinColumn: { name: "roleId", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "permissionId", referencedColumnName: "id" }
+  })
+  permissions!: Permission[];
 }

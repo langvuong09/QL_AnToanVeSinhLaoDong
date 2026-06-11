@@ -11,24 +11,22 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthGuard = void 0;
 const common_1 = require("@nestjs/common");
-const auth_service_1 = require("../../modules/auth/auth.service");
+const jwt_1 = require("@nestjs/jwt");
 let AuthGuard = class AuthGuard {
-    authService;
-    constructor(authService) {
-        this.authService = authService;
+    jwtService;
+    constructor(jwtService) {
+        this.jwtService = jwtService;
     }
     async canActivate(context) {
         const req = context.switchToHttp().getRequest();
         const authHeader = req.headers['authorization'];
-        common_1.Logger.debug(`Authorization header: ${authHeader}`);
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             throw new common_1.UnauthorizedException('Missing or invalid Authorization header');
         }
-        const jwt = authHeader.split(' ')[1];
+        const token = authHeader.split(' ')[1];
         try {
-            const rs = await this.authService.validateToken(jwt, req.doet);
-            Object.assign(req, rs.data);
-            common_1.Logger.debug(`User authenticated: ${rs.data?.user?.username}`);
+            const payload = await this.jwtService.verifyAsync(token);
+            req.user = payload;
             return true;
         }
         catch (error) {
@@ -39,6 +37,6 @@ let AuthGuard = class AuthGuard {
 exports.AuthGuard = AuthGuard;
 exports.AuthGuard = AuthGuard = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [jwt_1.JwtService])
 ], AuthGuard);
 //# sourceMappingURL=authGuard.js.map

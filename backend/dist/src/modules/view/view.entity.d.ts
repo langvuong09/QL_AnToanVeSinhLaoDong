@@ -1,12 +1,12 @@
-import { Activity } from "./view.models";
+import { Permission } from '../permission/permission.entity';
 export declare class View {
-    constructor(view?: Partial<View>, keys?: string[]);
     id: number;
     name: string;
-    activities: Activity[];
     url: string;
+    requiredPermissions: Permission[];
+    parentId: number;
+    parent?: View;
+    children: View[];
     icon: string;
-    parentId: string;
-    doet_id: number;
     order: number;
 }

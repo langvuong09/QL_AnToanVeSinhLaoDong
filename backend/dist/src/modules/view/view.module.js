@@ -12,12 +12,13 @@ const typeorm_1 = require("@nestjs/typeorm");
 const view_controller_1 = require("../view/view.controller");
 const view_entity_1 = require("./view.entity");
 const view_service_1 = require("./view.service");
+const permission_module_1 = require("../permission/permission.module");
 let ViewModule = class ViewModule {
 };
 exports.ViewModule = ViewModule;
 exports.ViewModule = ViewModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([view_entity_1.View])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([view_entity_1.View]), permission_module_1.PermissionModule],
         providers: [view_service_1.ViewService],
         controllers: [view_controller_1.ViewController],
         exports: [view_service_1.ViewService],

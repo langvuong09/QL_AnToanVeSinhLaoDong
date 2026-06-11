@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import Response, { ResponseData } from 'src/commons/response';
 import { ViewService } from '../view/view.service';
@@ -29,12 +34,15 @@ export class AuthService {
   ) {}
 
   async login(data: any, doet: Doet | null): Promise<ResponseData<LoginModel>> {
-    const _doet = doet && doet.id ? doet.id : null;
+    if (!data.role || !data.role.code) {
+      throw new BadRequestException('User không có thông tin Role hợp lệ');
+    }
+    const doetId = data.doetId || (doet ? doet.id : null);
     const user = new CurrentUser({
       ...data,
-      doet: _doet,
+      doet: doetId,
     });
-    const roleId = user.role?.id ?? 0;
+    const roleCode: string = user.role.code!;
     const userPayload = JSON.parse(JSON.stringify(user));
 
     const accessTtl =
@@ -44,17 +52,13 @@ export class AuthService {
     const accessToken = this.jwtService.sign(userPayload, {
       expiresIn: accessTtl,
     } as JwtSignOptions);
-    // const refreshSecret =
-    //   this.configService.get<string>('JWT_REFRESH_SECRET');
-    // if (!refreshSecret) {
-    //   throw new Error('JWT_REFRESH_SECRET is not defined in .env');
-    // }
+
     const refreshToken = this.jwtService.sign({ id: user.id }, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       expiresIn: refreshTtl,
     } as JwtSignOptions);
 
-    const viewsResponse = await this.viewService.getViewsByRoleId(roleId);
+    const viewsResponse = await this.viewService.getViewsByRoleCode(roleCode);
     const rs = new LoginModel(accessToken, refreshToken, {
       views: get(viewsResponse, 'data.items', []),
     });
@@ -78,8 +82,11 @@ export class AuthService {
       doet: _doet,
     });
 
-    const roleId = user.role?.id ?? 0;
-    const views = await this.viewService.getViewsByRoleId(roleId);
+    if (!user.role || !user.role.code) {
+      throw new BadRequestException('User không có thông tin Role hợp lệ');
+    }
+    const roleCode = user.role.code;
+    const views = await this.viewService.getViewsByRoleCode(roleCode);
 
     const rs = new LoginModel(token, null, {
       user,

@@ -1,10 +1,9 @@
 import { User } from "../user/user.entity";
+import { Permission } from "../permission/permission.entity";
 export declare class Role {
-    constructor(role?: Partial<Role>, keys?: string[]);
     id: number;
-    role: string;
     name: string;
-    type: string;
-    status: boolean;
-    users: Array<User>;
+    code: string;
+    users: User[];
+    permissions: Permission[];
 }

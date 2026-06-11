@@ -1,19 +1,20 @@
 import { Role } from "../role/role.entity";
-export declare class User {
+import { Doet } from "../doet/doet.entity";
+import { FileEntity } from "../media/media.entity";
+import { BaseAddressEntity } from "../../commons/bases/baseAddressEntity";
+export declare class User extends BaseAddressEntity {
     id: string;
     username: string;
     password: string;
     fullName: string;
-    realRole: string;
-    avatar: string;
     email: string;
     dateOfBirth: Date;
     status: boolean;
-    unitId: number;
-    deletedAt: Date;
-    doet_id: number;
+    roleId: number;
     role?: Role;
-    province: any;
+    avatarId: string;
+    avatar?: FileEntity;
+    doetId: number;
+    doet?: Doet;
     hashPassword(): Promise<void>;
-    workUnit?: string;
 }

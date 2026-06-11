@@ -25,6 +25,6 @@ import { jwtOptions } from 'src/config';
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy],
-  exports: [AuthService],
+  exports: [AuthService,JwtModule],
 })
 export class AuthModule {}

@@ -28,8 +28,8 @@ let ViewController = class ViewController extends bases_1.BaseController {
         super(viewService);
         this.viewService = viewService;
     }
-    async getViewsByRoleId(id) {
-        return await this.viewService.getViewsByRoleId(id);
+    async getViewsByRoleCode(id) {
+        return await this.viewService.getViewsByRoleCode(id);
     }
 };
 exports.ViewController = ViewController;
@@ -37,12 +37,12 @@ __decorate([
     (0, common_1.Get)('roles/:id'),
     (0, common_1.UseGuards)(authGuard_1.AuthGuard),
     (0, common_1.UseInterceptors)(response_interceptor_1.default, common_1.ClassSerializerInterceptor),
-    (0, swagger_1.ApiOperation)({ summary: 'Get items by roleId' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiOperation)({ summary: 'Get items by role code' }),
+    __param(0, (0, common_1.Param)('code')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], ViewController.prototype, "getViewsByRoleId", null);
+], ViewController.prototype, "getViewsByRoleCode", null);
 exports.ViewController = ViewController = __decorate([
     (0, swagger_1.ApiTags)('Views'),
     (0, common_1.Controller)('views'),

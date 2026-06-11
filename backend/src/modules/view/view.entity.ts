@@ -1,36 +1,43 @@
-import { Entity, PrimaryGeneratedColumn } from "typeorm";
-import { Column } from "typeorm/browser";
-import { Activity } from "./view.models";
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Permission } from '../permission/permission.entity';
 
-@Entity("views")
+@Entity('views')
 export class View {
-    constructor(view?: Partial<View>, keys: string[] = ["id", "name", "activities", "url", "icon", "parentId", "doet_id", "order"]) {
-        view && keys.forEach(key => {
-            view[key] !== undefined && (this[key] = view[key]);
-        });
-    }
+  @PrimaryGeneratedColumn('increment') id!: number;
 
-  @PrimaryGeneratedColumn('increment')
-  id!: number;
+  @Column() name!: string;
+  @Column() url!: string;
 
-  @Column({ nullable: false })
-  name!: string;
+  @ManyToMany(() => Permission, { onDelete: 'CASCADE' })
+  @JoinTable({
+    name: 'view_permissions',
+    joinColumn: { name: 'viewId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permissionId', referencedColumnName: 'id' },
+  })
+  requiredPermissions!: Permission[];
 
-  @Column({ type: 'jsonb', nullable: true })
-  activities!: Activity[];
+  @Column({ nullable: true }) parentId!: number;
+  @ManyToOne(() => View, (view) => view.children)
+  @JoinColumn({ name: 'parentId' })
+  parent?: View;
 
-  @Column({ nullable: true })
-  url!: string;
+  @OneToMany(() => View, (view) => view.parent)
+  children!: View[];
 
   @Column({ nullable: true })
   icon!: string;
 
-  @Column({ nullable: true })
-  parentId!: string;
-
-  @Column({ nullable: true })
-  doet_id!: number;
-
-  @Column({ nullable: true })
+  @Column({ type: 'int', default: 0 })
   order!: number;
 }

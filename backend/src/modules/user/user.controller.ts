@@ -17,39 +17,6 @@ export class UserController {
   constructor(private readonly userService: UserService) {
   }
 
-  @Get("checkUsername")
-  @UseInterceptors(ResponseInterceptor, ClassSerializerInterceptor)
-  @ApiOperation({ summary: "Get items" })
-  async checkUsername(
-    @Query("username") username: string
-  ): Promise<{ username: string; existed: boolean }> {
-    return await this.userService.checkUsername(username);
-  }
-
-  @Get()
-  @ApiOperation({ summary: "Get items" })
-  async getAll(@Query() query: GetAllDto): Promise<any> {
-    return await this.userService.getAll(query);
-  }
-
-  @Post("import")
-  @UseInterceptors(ResponseInterceptor, ClassSerializerInterceptor)
-  @ApiOperation({ summary: "Get items" })
-  async import(
-    @Req() req: any,
-    @Body("users") users: any
-  ): Promise<{ success: number; err: number; username: [] }> {
-    return await this.userService.import(req.user, users);
-  }
-
-  @Post("recovery")
-  @ApiOperation({ summary: "recovery account" })
-  async recovery(
-    @Body("user_id") user_id: string
-  ): Promise<{ success: boolean }> {
-    return await this.userService.recovery(user_id);
-  }
-
   @Post("reset-password")
   @ApiBody({ type: ChangePasswordDto })
   @ApiOperation({ summary: "reset password account" })

@@ -1,0 +1,2 @@
+INSERT INTO business_types (id, name , code) VALUES (1, 'Nhà nước', 'BUSINESS_TYPE_001') ON CONFLICT (id) DO NOTHING;
+INSERT INTO industries (id, name , code) VALUES (1, 'Hành chính sự nghiệp', 'INDUSTRY_001') ON CONFLICT (id) DO NOTHING;

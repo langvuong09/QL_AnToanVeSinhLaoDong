@@ -15,32 +15,37 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const http_exception_filter_1 = require("./commons/filters/http-exception.filter");
 async function runSqlScript(dataSource, filePath) {
     const sql = (0, fs_1.readFileSync)(filePath, 'utf-8');
-    const statements = sql
-        .split(';')
-        .map((statement) => statement.trim())
-        .filter(Boolean);
+    const statements = sql.split(';').filter(s => s.trim().length > 0);
     for (const statement of statements) {
-        await dataSource.query(statement);
+        try {
+            await dataSource.query(statement);
+        }
+        catch (err) {
+            common_1.Logger.debug(`Skipping statement: ${err.message}`);
+        }
     }
+    common_1.Logger.log(`Finished: ${filePath}`);
 }
 async function seedSampleData(app) {
     const dataSource = app.get(typeorm_1.DataSource);
-    try {
-        const seedFiles = ['role.sql', 'doets.sql', 'user.sql', 'view.sql'];
-        for (const fileName of seedFiles) {
-            const filePath = (0, path_1.join)(__dirname, 'sql', fileName);
-            if ((0, fs_1.existsSync)(filePath)) {
-                common_1.Logger.log(`Seeding ${fileName}...`);
-                await runSqlScript(dataSource, filePath);
-            }
-            else {
-                common_1.Logger.warn(`Seed file not found: ${filePath}`);
-            }
+    const sqlDir = (0, path_1.join)(process.cwd(), 'dist', 'src', 'sql');
+    const seedFiles = [
+        '00_industry_bussinessType.sql',
+        '01_group-permissions.sql',
+        '02_role.sql',
+        '03_doets.sql',
+        '04_permission.sql',
+        '05_user.sql',
+        '06_view.sql'
+    ];
+    for (const fileName of seedFiles) {
+        const filePath = (0, path_1.join)(sqlDir, fileName);
+        if ((0, fs_1.existsSync)(filePath)) {
+            await runSqlScript(dataSource, filePath);
         }
-        common_1.Logger.log('Sample data check & seeding completed');
-    }
-    catch (error) {
-        common_1.Logger.error('Failed to seed sample data:', error);
+        else {
+            common_1.Logger.warn(`Không tìm thấy file: ${filePath}`);
+        }
     }
 }
 async function bootstrap() {

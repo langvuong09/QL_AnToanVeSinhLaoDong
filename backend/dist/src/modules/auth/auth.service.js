@@ -81,12 +81,15 @@ let AuthService = class AuthService {
         this.redis = redis;
     }
     async login(data, doet) {
-        const _doet = doet && doet.id ? doet.id : null;
+        if (!data.role || !data.role.code) {
+            throw new common_1.BadRequestException('User không có thông tin Role hợp lệ');
+        }
+        const doetId = data.doetId || (doet ? doet.id : null);
         const user = new auth_model_1.CurrentUser({
             ...data,
-            doet: _doet,
+            doet: doetId,
         });
-        const roleId = user.role?.id ?? 0;
+        const roleCode = user.role.code;
         const userPayload = JSON.parse(JSON.stringify(user));
         const accessTtl = this.configService.get('JWT_ACCESS_EXPIRES_IN') || '15m';
         const refreshTtl = this.configService.get('JWT_REFRESH_EXPIRES_IN') || '7d';
@@ -97,7 +100,7 @@ let AuthService = class AuthService {
             secret: this.configService.get('JWT_REFRESH_SECRET'),
             expiresIn: refreshTtl,
         });
-        const viewsResponse = await this.viewService.getViewsByRoleId(roleId);
+        const viewsResponse = await this.viewService.getViewsByRoleCode(roleCode);
         const rs = new auth_model_1.LoginModel(accessToken, refreshToken, {
             views: (0, lodash_1.get)(viewsResponse, 'data.items', []),
         });
@@ -114,8 +117,11 @@ let AuthService = class AuthService {
             ...decodedData,
             doet: _doet,
         });
-        const roleId = user.role?.id ?? 0;
-        const views = await this.viewService.getViewsByRoleId(roleId);
+        if (!user.role || !user.role.code) {
+            throw new common_1.BadRequestException('User không có thông tin Role hợp lệ');
+        }
+        const roleCode = user.role.code;
+        const views = await this.viewService.getViewsByRoleCode(roleCode);
         const rs = new auth_model_1.LoginModel(token, null, {
             user,
             views: (0, lodash_1.get)(views, 'data.items', []),

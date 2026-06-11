@@ -12,20 +12,28 @@ export class UploadResponse {
   original_filename!: string;
   public_id!: string;
   public_url!: string;
+
   constructor(uploadResponse: Partial<UploadResponse>) {
     Object.assign(this, uploadResponse);
   }
 }
 
 export class FileUploadDto {
-  @ApiProperty({ type: 'string', format: 'binary' })
-  file: any;
+  @ApiProperty({ type: 'string', format: 'binary', description: 'Chọn file để upload' })
+  file!: any;
+}
+
+export enum FileType {
+  GPKD = 'GPKD',
+  AVATAR = 'AVATAR',
+  REPORT_ATTACHMENT = 'REPORT_ATTACHMENT',
+  OTHER = 'OTHER',
 }
 
 export enum Mimetype {
-  png = 'image/png',
-  jpeg = 'image/jpeg',
-  pdf = 'application/pdf',
-  'vnd.openxmlformats-officedocument.wordprocessingml.document' = '.docx',
-  'msword' = 'doc',
+  PNG = 'image/png',
+  JPEG = 'image/jpeg',
+  PDF = 'application/pdf',
+  DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  DOC = 'application/msword',
 }

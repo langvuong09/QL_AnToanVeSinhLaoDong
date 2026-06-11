@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Mimetype = exports.FileUploadDto = exports.UploadResponse = void 0;
+exports.Mimetype = exports.FileType = exports.FileUploadDto = exports.UploadResponse = void 0;
 const swagger_1 = require("@nestjs/swagger");
 class UploadResponse {
     width;
@@ -33,15 +33,22 @@ class FileUploadDto {
 }
 exports.FileUploadDto = FileUploadDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ type: 'string', format: 'binary' }),
+    (0, swagger_1.ApiProperty)({ type: 'string', format: 'binary', description: 'Chọn file để upload' }),
     __metadata("design:type", Object)
 ], FileUploadDto.prototype, "file", void 0);
+var FileType;
+(function (FileType) {
+    FileType["GPKD"] = "GPKD";
+    FileType["AVATAR"] = "AVATAR";
+    FileType["REPORT_ATTACHMENT"] = "REPORT_ATTACHMENT";
+    FileType["OTHER"] = "OTHER";
+})(FileType || (exports.FileType = FileType = {}));
 var Mimetype;
 (function (Mimetype) {
-    Mimetype["png"] = "image/png";
-    Mimetype["jpeg"] = "image/jpeg";
-    Mimetype["pdf"] = "application/pdf";
-    Mimetype["vnd.openxmlformats-officedocument.wordprocessingml.document"] = ".docx";
-    Mimetype["msword"] = "doc";
+    Mimetype["PNG"] = "image/png";
+    Mimetype["JPEG"] = "image/jpeg";
+    Mimetype["PDF"] = "application/pdf";
+    Mimetype["DOCX"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    Mimetype["DOC"] = "application/msword";
 })(Mimetype || (exports.Mimetype = Mimetype = {}));
 //# sourceMappingURL=media.model.js.map

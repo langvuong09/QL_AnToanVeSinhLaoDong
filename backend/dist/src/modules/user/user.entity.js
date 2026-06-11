@@ -45,26 +45,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const role_entity_1 = require("../role/role.entity");
+const doet_entity_1 = require("../doet/doet.entity");
 const argon = __importStar(require("argon2"));
-let User = class User {
+const media_entity_1 = require("../media/media.entity");
+const baseAddressEntity_1 = require("../../commons/bases/baseAddressEntity");
+let User = class User extends baseAddressEntity_1.BaseAddressEntity {
     id;
     username;
     password;
     fullName;
-    realRole;
-    avatar;
     email;
     dateOfBirth;
     status;
-    unitId;
-    deletedAt;
-    doet_id;
+    roleId;
     role;
-    province;
+    avatarId;
+    avatar;
+    doetId;
+    doet;
     async hashPassword() {
-        this.password = await argon.hash(this.password);
+        if (this.password && !this.password.startsWith('$argon2')) {
+            this.password = await argon.hash(this.password);
+        }
     }
-    workUnit;
 };
 exports.User = User;
 __decorate([
@@ -84,53 +87,52 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "fullName", void 0);
 __decorate([
-    (0, typeorm_1.Column)("varchar", { nullable: true }),
-    __metadata("design:type", String)
-], User.prototype, "realRole", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], User.prototype, "avatar", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ nullable: true, unique: true }),
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ type: "date", nullable: true }),
     __metadata("design:type", Date)
 ], User.prototype, "dateOfBirth", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], User.prototype, "status", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", Number)
-], User.prototype, "unitId", void 0);
+], User.prototype, "roleId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", Date)
-], User.prototype, "deletedAt", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", Number)
-], User.prototype, "doet_id", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => role_entity_1.Role, (role) => role.users),
+    (0, typeorm_1.ManyToOne)(() => role_entity_1.Role, (role) => role.users, { onDelete: 'RESTRICT' }),
     (0, typeorm_1.JoinColumn)({ name: "roleId" }),
     __metadata("design:type", role_entity_1.Role)
 ], User.prototype, "role", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "avatarId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => media_entity_1.FileEntity, { onDelete: 'SET NULL' }),
+    (0, typeorm_1.JoinColumn)({ name: "avatarId" }),
+    __metadata("design:type", media_entity_1.FileEntity)
+], User.prototype, "avatar", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], User.prototype, "doetId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => doet_entity_1.Doet, { onDelete: 'RESTRICT' }),
+    (0, typeorm_1.JoinColumn)({ name: "doetId" }),
+    __metadata("design:type", doet_entity_1.Doet)
+], User.prototype, "doet", void 0);
+__decorate([
     (0, typeorm_1.BeforeInsert)(),
+    (0, typeorm_1.BeforeUpdate)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], User.prototype, "hashPassword", null);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], User.prototype, "workUnit", void 0);
 exports.User = User = __decorate([
-    (0, typeorm_1.Entity)(`users`)
+    (0, typeorm_1.Entity)("users")
 ], User);
 //# sourceMappingURL=user.entity.js.map

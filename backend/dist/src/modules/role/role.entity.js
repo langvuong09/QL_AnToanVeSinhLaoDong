@@ -12,49 +12,41 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Role = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../user/user.entity");
+const permission_entity_1 = require("../permission/permission.entity");
 let Role = class Role {
-    constructor(role, keys = ["id", "role", "name", "type", "status"]) {
-        role && keys.forEach(key => {
-            role[key] !== undefined && (this[key] = role[key]);
-        });
-    }
     id;
-    role;
     name;
-    type;
-    status;
+    code;
     users;
+    permissions;
 };
 exports.Role = Role;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    (0, typeorm_1.PrimaryGeneratedColumn)("increment"),
     __metadata("design:type", Number)
 ], Role.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ unique: true }),
-    __metadata("design:type", String)
-], Role.prototype, "role", void 0);
-__decorate([
-    (0, typeorm_1.Column)('varchar', { nullable: true }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Role.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)('varchar', { nullable: true }),
+    (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
-], Role.prototype, "type", void 0);
+], Role.prototype, "code", void 0);
 __decorate([
-    (0, typeorm_1.Column)('varchar', { nullable: true }),
-    __metadata("design:type", Boolean)
-], Role.prototype, "status", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => user_entity_1.User, (user) => user.role, {
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-    }),
+    (0, typeorm_1.OneToMany)(() => user_entity_1.User, (user) => user.role),
     __metadata("design:type", Array)
 ], Role.prototype, "users", void 0);
+__decorate([
+    (0, typeorm_1.ManyToMany)(() => permission_entity_1.Permission, (permission) => permission.roles, { cascade: true }),
+    (0, typeorm_1.JoinTable)({
+        name: "role_permissions",
+        joinColumn: { name: "roleId", referencedColumnName: "id" },
+        inverseJoinColumn: { name: "permissionId", referencedColumnName: "id" }
+    }),
+    __metadata("design:type", Array)
+], Role.prototype, "permissions", void 0);
 exports.Role = Role = __decorate([
-    (0, typeorm_1.Entity)('roles'),
-    __metadata("design:paramtypes", [Object, Array])
+    (0, typeorm_1.Entity)("roles")
 ], Role);
 //# sourceMappingURL=role.entity.js.map

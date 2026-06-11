@@ -18,10 +18,10 @@ export class ViewController extends BaseController<View, ViewService> {
   @Get('roles/:id')
   @UseGuards(AuthGuard)
   @UseInterceptors(ResponseInterceptor, ClassSerializerInterceptor)
-  @ApiOperation({ summary: 'Get items by roleId' })
-  async getViewsByRoleId(
-    @Param('id') id: number,
+  @ApiOperation({ summary: 'Get items by role code' })
+  async getViewsByRoleCode(
+    @Param('code') id: string,
   ): Promise<ResponseData<List<View[]>>> {
-    return await this.viewService.getViewsByRoleId(id);
+    return await this.viewService.getViewsByRoleCode(id);
   }
 }

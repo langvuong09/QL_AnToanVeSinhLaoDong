@@ -3,9 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginModel = exports.CurrentUser = void 0;
 class role {
     id;
-    role;
+    code;
     name;
-    constructor(role, keys = ['id', 'role', 'name']) {
+    constructor(role, keys = ['id', 'code', 'name']) {
         role &&
             keys.forEach((key) => {
                 role[key] !== undefined && (this[key] = role[key]);
@@ -17,28 +17,16 @@ class CurrentUser {
     doet;
     username;
     fullname;
-    realRole;
     avatar;
     role;
-    constructor(user, keys = [
-        'id',
-        'username',
-        'fullname',
-        'realRole',
-        'role',
-        'avatar',
-        'unitId',
-        'workUnit',
-    ]) {
-        user &&
-            keys.forEach((key) => {
-                if (key == 'role') {
-                    user[key] !== undefined && (this[key] = new role(user[key]));
-                }
-                else {
-                    user[key] !== undefined && (this[key] = user[key]);
-                }
-            });
+    constructor(user) {
+        this.role = new role();
+        if (user) {
+            Object.assign(this, user);
+            if (user.role) {
+                this.role = new role(user.role);
+            }
+        }
     }
 }
 exports.CurrentUser = CurrentUser;
