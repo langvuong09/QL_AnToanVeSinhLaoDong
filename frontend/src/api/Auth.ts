@@ -11,17 +11,21 @@ export class Auth extends Base {
     }
 
     async Login(username: string, password: string): Promise<AuthData> {
-        const result = await this.execute<AuthData>({
-            url: "/login",
-            method: "POST",
-            data: { username: username, password: password }
-        });
+        try {
+            const result = await this.execute<AuthData>({
+                url: "/login",
+                method: "POST",
+                data: { username: username, password: password }
+            });
 
-        if (result?.data) {
-            return result.data;
+            if (result?.data) {
+                return result.data;
+            }
+        } catch {
+            throw Error("Thông tin đăng nhập không chính xác");
         }
 
-        throw Error(result?.message || "Thông tin đăng nhập không chính xác");
+        throw Error("Lỗi không xác định vui lòng thử lại sau");
     }
 
     async Logout(): Promise<void> {

@@ -1,9 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { ViewItem } from '../api/types/view'
+import { usePathname } from 'next/navigation'
+import { useMemo, useState } from 'react'
 import UserFooter from './UserFooter'
 
 type SidebarChildItem = {
@@ -19,183 +18,103 @@ type SidebarMenuItem = {
   items: SidebarChildItem[]
 }
 
+const menus: SidebarMenuItem[] = [
+  {
+    id: 1,
+    label: 'Quản trị phần mềm',
+    isOpen: true,
+    items: [
+      { id: 11, label: 'Quản lý người dùng', path: '/accounts' },
+      { id: 12, label: 'Quản lý doanh nghiệp', path: '/business-managements' },
+      { id: 13, label: 'Kỳ báo cáo', path: '/report-periods' },
+      { id: 14, label: 'Loại hình kinh doanh', path: '/business-types' },
+      { id: 15, label: 'Ngành nghề kinh doanh', path: '/business-industries' },
+    ],
+  },
+  {
+    id: 2,
+    label: 'Tai nạn lao động',
+    isOpen: true,
+    items: [
+      { id: 21, label: 'Danh mục chung', path: '/categories' },
+      { id: 22, label: 'TNLĐ theo HĐLĐ', path: '/aggreements' },
+    ],
+  },
+]
+
 export default function Sidebar() {
-  const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams();
+  const [sidebarMenus, setSidebarMenus] = useState<SidebarMenuItem[]>(menus)
 
-  const [views, setViews] = useState<ViewItem[]>([]);
-  const [sidebarMenus, setSidebarMenus] = useState<SidebarMenuItem[]>([]);
-  const [activeMenu, setActiveMenu] = useState<string>('');
-
-  // Transform views data into sidebar menu structure
-  const transformViewsToMenus = (viewsData: ViewItem[]): SidebarMenuItem[] => {
-    // Get parent items (parentId is null)
-    const parentItems = viewsData.filter(item => item.parentId === null).sort((a, b) => (a.order || 0) - (b.order || 0));
-
-    return parentItems.map((parent) => {
-      // Get child items for this parent
-      const childItems = viewsData
-        .filter(item => item.parentId === parent.id)
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-      return {
-        id: parent.id,
-        label: parent.name,
-        isOpen: true,
-        items: childItems.map(child => ({
-          id: child.id,
-          label: child.name,
-          path: child.url,
-        })),
-      };
-    });
-  };
-
-  useEffect(() => {
-    const stored = localStorage.getItem("views") || sessionStorage.getItem("views") || "[]";
-    try {
-      const parsed: ViewItem[] = JSON.parse(stored);
-      setViews(parsed);
-      const menus = transformViewsToMenus(parsed);
-      setSidebarMenus(menus);
-    } catch (error) {
-      console.error("Error parsing views data:", error);
-      setViews([]);
-      setSidebarMenus([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    setSidebarMenus((prevMenus) => {
-      if (prevMenus.length === 0) return prevMenus;
-
-      const allItems = prevMenus.flatMap((menu) => menu.items);
-      const validPaths = allItems.map((item) => item.path);
-
-      if (pathname === '/' || !validPaths.includes(pathname)) {
-        if (allItems.length > 0) {
-          router.replace(allItems[0].path);
-        }
-        return prevMenus;
-      }
-
-      const activeItem = allItems.find((item) => item.path === pathname);
-      if (activeItem) {
-        setActiveMenu(activeItem.id.toString());
-      }
-
-      return prevMenus.map((menu) => {
-        const menuStateFromUrl = searchParams.get(String(menu.id));
-
-        return {
-          ...menu,
-          isOpen:
-            menuStateFromUrl === null
-              ? menu.isOpen
-              : menuStateFromUrl === 'true',
-        }
-      });
-    });
-  }, [pathname, searchParams, router]);
+  const activeMenu = useMemo(() => {
+    const active = sidebarMenus
+      .flatMap((menu) => menu.items)
+      .find((item) => pathname?.startsWith(item.path))
+    return active?.id.toString() || ''
+  }, [pathname, sidebarMenus])
 
   const handleToggleMenu = (menuId: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    const currentMenu = sidebarMenus.find((menu) => menu.id === menuId);
-
-    if (!currentMenu) return;
-
-    const nextIsOpen = !currentMenu.isOpen;
-
-    params.set(String(menuId), String(nextIsOpen));
-
     setSidebarMenus((prevMenus) =>
       prevMenus.map((menu) =>
         menu.id === menuId
-          ? {
-            ...menu,
-            isOpen: nextIsOpen,
-          }
+          ? { ...menu, isOpen: !menu.isOpen }
           : menu
       )
-    );
-
-    router.replace(`${pathname}?${params.toString()}`, {
-      scroll: false,
-    });
-  }
-
-  const getMenuPath = (path: string) => {
-    const queryString = searchParams.toString();
-
-    return queryString ? `${path}?${queryString}` : path;
+    )
   }
 
   return (
-    <div className="py-3 space-y-5 bg-[#14317F] text-white h-screen flex flex-col w-xs">
-      {/* Header */}
-      <div className="flex items-center gap-5 px-5">
-        <div className="w-15 h-15">
-          <img src="quochuy.png" alt="" />
+    <div className="py-3 bg-[#14317F] text-white h-screen flex flex-col">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-4 pb-3">
+        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white overflow-hidden shrink-0">
+          <img src="/quochuy.png" alt="Logo" className="w-full h-full object-cover" />
         </div>
-
-        <h1 className="text-center font-semibold">
-          Ủy ban nhân dân thành phố
-          <br />
-          Hồ Chí Minh
-        </h1>
-
-        <button className="text-2xl font-semibold">
-          <i className="fa-solid fa-bars"></i>
-        </button>
+        <div>
+          <p className="text-xs font-semibold leading-tight">Ủy ban nhân dân thành phố</p>
+          <p className="text-xs leading-tight">Hồ Chí Minh</p>
+        </div>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 border-t border-[#FFFFFF] py-3 space-y-6">
+      {/* Menu Items */}
+      <div className="flex-1 border-t border-white/25 pt-2 overflow-y-auto">
         {sidebarMenus.map((menu) => (
-          <nav key={menu.id} className="space-y-4">
-            <div className="flex items-center justify-between px-5">
-              <div className="flex items-center">
-                <div className="w-5 flex justify-center">
-                  <i className="fa-solid fa-gear w-10 overflow-hidden"></i>
-                </div>
-
-                <span className="flex-1 ps-6">{menu.label}</span>
+          <div key={menu.id} className="mb-1">
+            {/* Group Header */}
+            <button
+              type="button"
+              className="w-full flex items-center justify-between px-4 py-2.5 text-left text-xs font-bold text-white hover:bg-white/10 transition-colors"
+              onClick={() => handleToggleMenu(menu.id)}
+            >
+              <div className="flex items-center gap-2">
+                <i className="fa-solid fa-gear text-[11px] text-white/80" />
+                <span>{menu.label}</span>
               </div>
-
-              <button onClick={() => handleToggleMenu(menu.id)}>
-                <i
-                  className={`fa-solid ${menu.isOpen ? 'fa-angle-down' : 'fa-angle-right'
-                    }`}
-                ></i>
-              </button>
-            </div>
+              <i className={`fa-solid ${menu.isOpen ? 'fa-angle-down' : 'fa-angle-right'} text-xs`} />
+            </button>
 
             {menu.isOpen && (
               <ul>
                 {menu.items.map((item) => (
-                  <li
-                    key={item.id}
-                    className={`button menu-hover px-5 ${activeMenu === item.id.toString() ? 'menu-active' : ''
-                      }`}
-                  >
-                    <Link href={getMenuPath(item.path)} className="flex items-center py-3">
-                      <div className="w-5 flex justify-center">
-                        <i className="fa-solid fa-circle text-[5px] w-10 overflow-hidden"></i>
-                      </div>
-
-                      <span className="flex-1 ps-6">{item.label}</span>
+                  <li key={item.id}>
+                    <Link
+                      href={item.path}
+                      className={`flex items-center gap-2 px-5 py-2.5 text-xs transition-colors ${activeMenu === item.id.toString()
+                          ? 'bg-white/20 text-white font-semibold'
+                          : 'text-white/80 hover:bg-white/10'
+                        }`}
+                    >
+                      <i className="fa-solid fa-circle text-[5px]" />
+                      <span>{item.label}</span>
                     </Link>
                   </li>
                 ))}
               </ul>
             )}
-          </nav>
+          </div>
         ))}
       </div>
 
-      {/* Footer */}
       <UserFooter />
     </div>
   )

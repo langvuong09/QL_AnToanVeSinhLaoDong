@@ -33,77 +33,76 @@ li.menu-active {
   outline: none;
 }
 
-.checkbox-wrapper-3 input[type="checkbox"] {
+/* Start Checkbox Lengend */
+
+.checkbox-wrapper-64 input[type="checkbox"] {
   visibility: hidden;
   display: none;
 }
 
-.checkbox-wrapper-3 .toggle {
-  position: relative;
-  display: block;
-  width: 40px;
-  height: 20px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transform: translate3d(0, 0, 0);
+.checkbox-wrapper-64 *,
+.checkbox-wrapper-64 ::after,
+.checkbox-wrapper-64 ::before {
+  box-sizing: border-box;
 }
 
-.checkbox-wrapper-3 .toggle:before {
-  content: "";
+/* The switch - the box around the slider */
+.checkbox-wrapper-64 .switch {
+  font-size: 17px;
   position: relative;
-  top: 3px;
-  left: 3px;
-  width: 34px;
-  height: 14px;
-  display: block;
-  background: #9A9999;
-  border-radius: 8px;
-  transition: background 0.2s ease;
+  display: inline-block;
+  width: 3em;
+  height: 1.5em;
 }
 
-.checkbox-wrapper-3 .toggle span {
+/* Hide default HTML checkbox */
+.checkbox-wrapper-64 .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.checkbox-wrapper-64 .slider {
   position: absolute;
+  cursor: pointer;
   top: 0;
   left: 0;
-  width: 20px;
-  height: 20px;
-  display: block;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 3px 8px rgba(154, 153, 153, 0.5);
-  transition: all 0.2s ease;
+  right: 0;
+  bottom: 0;
+  background-color: #fff;
+  border: 1px solid #adb5bd;
+  transition: .1s;
+  border-radius: 30px;
 }
 
-.checkbox-wrapper-3 .toggle span:before {
-  content: "";
+.checkbox-wrapper-64 .slider:before {
   position: absolute;
-  display: block;
-  margin: -18px;
-  width: 56px;
-  height: 56px;
-  background: rgba(79, 46, 220, 0.5);
-  border-radius: 50%;
-  transform: scale(0);
-  opacity: 1;
-  pointer-events: none;
+  content: "";
+  height: 0.9em;
+  width: 0.9em;
+  border-radius: 20px;
+  left: 0.27em;
+  bottom: 0.25em;
+  background-color: #adb5bd;
+  transition: .4s;
 }
 
-.checkbox-wrapper-3 #cbx-3:checked+.toggle:before {
-  background: #947ADA;
+.checkbox-wrapper-64 input:checked+.slider {
+  background-color: #007bff;
+  border: 1px solid #007bff;
 }
 
-.checkbox-wrapper-3 #cbx-3:checked+.toggle span {
-  background: #4F2EDC;
-  transform: translateX(20px);
-  transition: all 0.2s cubic-bezier(0.8, 0.4, 0.3, 1.25), background 0.15s ease;
-  box-shadow: 0 3px 8px rgba(79, 46, 220, 0.2);
+.checkbox-wrapper-64 input:focus+.slider {
+  box-shadow: 0 0 1px #007bff;
 }
 
-.checkbox-wrapper-3 #cbx-3:checked+.toggle span:before {
-  transform: scale(1);
-  opacity: 0;
-  transition: all 0.4s ease;
+.checkbox-wrapper-64 input:checked+.slider:before {
+  transform: translateX(1.4em);
+  background-color: #fff;
 }
+
+/* End Checkbox Lengend */
 
 .shadow-3drops {
   box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
@@ -115,6 +114,7 @@ li.menu-active {
     opacity: 1;
     transform: translateY(-20px);
   }
+
   to {
     scale: 1;
     opacity: 0;
