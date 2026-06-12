@@ -1,6 +1,5 @@
 import { 
-  Body, Controller, Get, Param, Post, Put, Query, Patch, ParseIntPipe, UseGuards, UseInterceptors, ClassSerializerInterceptor, 
-  Delete
+  Body, Controller, Get, Param, Post, Put, Query, Patch, ParseIntPipe, UseGuards, UseInterceptors, ClassSerializerInterceptor
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { BusinessTypeService } from './business-type.service';
@@ -28,21 +27,28 @@ export class BusinessTypeController {
 
   @Get('admin')
   @RequirePermissions(PermissionCode.BUSINESS_TYPE_UPDATE)
-  @ApiOperation({ summary: 'Lấy danh sách loại hình doanh nghiệp (Dành cho Admin - Lấy hết)' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'pageSize', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Tìm kiếm theo tên hoặc mã code' })
-  async getAllForAdmin(@Query() query: any) {
+  @ApiOperation({ summary: 'Lấy danh sách loại hình doanh nghiệp (Dành cho Admin - Bộ lọc độc lập)' })
+  @ApiQuery({ name: 'page', required: false, example: 1, description: 'Số trang hiện tại' })
+  @ApiQuery({ name: 'pageSize', required: false, example: 10, description: 'Số lượng bản ghi trên một trang' })
+  @ApiQuery({ name: 'code', required: false, description: 'Tìm kiếm gần đúng theo mã loại hình (Ví dụ: 150)' })
+  @ApiQuery({ name: 'name', required: false, description: 'Tìm kiếm gần đúng theo tên loại hình (Ví dụ: Công ty TNHH)' })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean, description: 'Lọc trạng thái hoạt động (true = Đang hoạt động, false = Bị ẩn)' })
+  async getAllForAdmin(
+    @Query() query: { page?: number; pageSize?: number; code?: string; name?: string; isActive?: boolean }
+  ) {
     return await this.businessTypeService.getAllForAdmin(query);
   }
 
   @Get()
   @RequirePermissions(PermissionCode.BUSINESS_TYPE_VIEW)
-  @ApiOperation({ summary: 'Lấy danh sách loại hình doanh nghiệp đang hoạt động (Dành cho Doanh nghiệp)' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'pageSize', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Tìm kiếm theo tên hoặc mã code' })
-  async getAllForBusiness(@Query() query: any) {
+  @ApiOperation({ summary: 'Lấy danh sách loại hình doanh nghiệp đang hoạt động (Dành cho Doanh nghiệp - Lọc độc lập)' })
+  @ApiQuery({ name: 'page', required: false, example: 1, description: 'Số trang hiện tại' })
+  @ApiQuery({ name: 'pageSize', required: false, example: 10, description: 'Số lượng bản ghi trên một trang' })
+  @ApiQuery({ name: 'code', required: false, description: 'Tìm kiếm gần đúng theo mã loại hình' })
+  @ApiQuery({ name: 'name', required: false, description: 'Tìm kiếm gần đúng theo tên loại hình' })
+  async getAllForBusiness(
+    @Query() query: { page?: number; pageSize?: number; code?: string; name?: string }
+  ) {
     return await this.businessTypeService.getAllForBusiness(query);
   }
 

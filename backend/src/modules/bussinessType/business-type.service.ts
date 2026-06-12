@@ -27,36 +27,43 @@ export class BusinessTypeService {
     
     return await this.businessTypeRepository.save(newType);
   }
-
-  async getAllForAdmin(query: { page?: number; pageSize?: number; search?: string }) {
+  
+  async getAllForAdmin(query: { page?: number; pageSize?: number; code?: string; name?: string; isActive?: boolean }) {
     return this.getBusinessTypesBase(query, false);
   }
 
-  async getAllForBusiness(query: { page?: number; pageSize?: number; search?: string }) {
-    return this.getBusinessTypesBase(query, true);
+  async getAllForBusiness(query: { page?: number; pageSize?: number; code?: string; name?: string }) {
+    return this.getBusinessTypesBase({ ...query, isActive: true }, true);
   }
 
-  private async getBusinessTypesBase(query: { page?: number; pageSize?: number; search?: string }, onlyActive: boolean) {
+
+  private async getBusinessTypesBase(
+    query: { page?: number; pageSize?: number; code?: string; name?: string; isActive?: any }, 
+    onlyActive: boolean
+  ) {
     const page = Number(query.page) || 1;
     const pageSize = Number(query.pageSize) || 10;
-    const { search } = query;
+    const { code, name, isActive } = query;
 
     const queryBuilder = this.businessTypeRepository.createQueryBuilder('bt')
       .where('bt.deletedAt IS NULL');
 
     if (onlyActive) {
-      queryBuilder.andWhere('bt.isActive = :isActive', { isActive: true });
+      queryBuilder.andWhere('bt.isActive = :onlyActiveStatus', { onlyActiveStatus: true });
+    } else if (isActive !== undefined && isActive !== null && isActive !== '') {
+      const isActiveBool = isActive === 'true' || isActive === true;
+      queryBuilder.andWhere('bt.isActive = :isActiveBool', { isActiveBool });
+    }
+    if (code) {
+      queryBuilder.andWhere('bt.code ILike :code', { code: `%${code.trim()}%` });
     }
 
-    if (search) {
-      queryBuilder.andWhere(
-        '(bt.name ILike :search OR bt.code ILike :search)', 
-        { search: `%${search}%` }
-      );
+    if (name) {
+      queryBuilder.andWhere('bt.name ILike :name', { name: `%${name.trim()}%` });
     }
 
     const [items, count] = await queryBuilder
-      .orderBy('bt.id', 'ASC')
+      .orderBy('bt.code', 'ASC')
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .getManyAndCount();

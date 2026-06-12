@@ -1,6 +1,5 @@
 import { 
   Body, Controller, Get, Param, Post, Put, Query, Patch, ParseIntPipe, UseGuards, UseInterceptors, ClassSerializerInterceptor, 
-  Delete
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { IndustryService } from './industry.service';
@@ -13,7 +12,7 @@ import { RequirePermissions } from 'src/commons/guards/permission.decorator';
 
 @ApiTags('Industries (Ngành nghề kinh doanh)')
 @Controller('industries')
-@UseGuards(AuthGuard,PermissionGuard)
+@UseGuards(AuthGuard, PermissionGuard)
 @ApiBearerAuth()
 @UseInterceptors(ClassSerializerInterceptor)
 export class IndustryController {
@@ -29,22 +28,28 @@ export class IndustryController {
   @Get('admin')
   @RequirePermissions(PermissionCode.INDUSTRY_UPDATE)
   @ApiOperation({ summary: 'Lấy toàn bộ danh sách ngành nghề (Dành cho Admin - Có cả phần tử ẩn)' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'pageSize', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Tìm theo tên hoặc mã ngành' })
-  @ApiQuery({ name: 'parentId', required: false, description: 'Lọc các ngành con thuộc ID cha này' })
-  async getAllForAdmin(@Query() query: any) {
+  @ApiQuery({ name: 'page', required: false, example: 1, description: 'Số trang hiện tại' })
+  @ApiQuery({ name: 'pageSize', required: false, example: 10, description: 'Số lượng bản ghi trên một trang' })
+  @ApiQuery({ name: 'code', required: false, description: 'Tìm chính xác hoặc gần đúng theo Mã ngành (Ví dụ: 01, 0111)' })
+  @ApiQuery({ name: 'name', required: false, description: 'Tìm gần đúng theo Tên ngành nghề (Ví dụ: Trồng lúa)' })
+  @ApiQuery({ name: 'level', required: false, enum: [1, 2, 3, 4], description: 'Lọc đích danh theo cấp bậc ngành (1 -> 4)' })
+  async getAllForAdmin(
+    @Query() query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number }
+  ) {
     return await this.industryService.getAllForAdmin(query);
   }
 
   @Get()
   @RequirePermissions(PermissionCode.INDUSTRY_VIEW)
   @ApiOperation({ summary: 'Lấy danh sách ngành nghề đang hoạt động (Dành cho Doanh nghiệp)' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'pageSize', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false })
-  @ApiQuery({ name: 'parentId', required: false })
-  async getAllForBusiness(@Query() query: any) {
+  @ApiQuery({ name: 'page', required: false, example: 1, description: 'Số trang hiện tại' })
+  @ApiQuery({ name: 'pageSize', required: false, example: 10, description: 'Số lượng bản ghi trên một trang' })
+  @ApiQuery({ name: 'code', required: false, description: 'Tìm chính xác hoặc gần đúng theo Mã ngành' })
+  @ApiQuery({ name: 'name', required: false, description: 'Tìm gần đúng theo Tên ngành nghề' })
+  @ApiQuery({ name: 'level', required: false, enum: [1, 2, 3, 4], description: 'Lọc đích danh theo cấp bậc ngành (1 -> 4)' })
+  async getAllForBusiness(
+    @Query() query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number }
+  ) {
     return await this.industryService.getAllForBusiness(query);
   }
 

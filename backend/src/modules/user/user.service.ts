@@ -84,15 +84,18 @@ export class UserService {
   }
 
   async getAll(query: { 
-    page?: number, 
-    pageSize?: number, 
-    roleId?: number, 
-    position?: string,
-    search?: string 
+    page?: number; 
+    pageSize?: number; 
+    fullName?: string;    
+    username?: string;    
+    email?: string;       
+    roleId?: number;      
+    position?: string;    
+    status?: any;       
   }) {
     const page = Number(query.page) || 1;
     const pageSize = Number(query.pageSize) || 10;
-    const { roleId, position, search } = query;
+    const { fullName, username, email, roleId, position, status } = query;
 
     const queryBuilder = this.userRepository.createQueryBuilder('user')
       .leftJoinAndSelect('user.role', 'role')
@@ -100,16 +103,29 @@ export class UserService {
       .where('user.deletedAt IS NULL')
       .andWhere('user.doetId IS NULL');
 
+    if (fullName) {
+      queryBuilder.andWhere('user.fullName ILike :fullName', { fullName: `%${fullName.trim()}%` });
+    }
+
+    if (username) {
+      queryBuilder.andWhere('user.username ILike :username', { username: `%${username.trim()}%` });
+    }
+
+    if (email) {
+      queryBuilder.andWhere('user.email ILike :email', { email: `%${email.trim()}%` });
+    }
+
     if (roleId) {
       queryBuilder.andWhere('user.roleId = :roleId', { roleId });
     }
 
     if (position) {
-      queryBuilder.andWhere('user.position ILike :position', { position: `%${position}%` });
+      queryBuilder.andWhere('user.position ILike :position', { position: `%${position.trim()}%` });
     }
 
-    if (search) {
-      queryBuilder.andWhere('user.fullName ILike :search', { search: `%${search}%` });
+    if (status !== undefined && status !== null && status !== '') {
+      const statusBool = status === 'true' || status === true;
+      queryBuilder.andWhere('user.status = :statusBool', { statusBool });
     }
 
     const [items, count] = await queryBuilder
