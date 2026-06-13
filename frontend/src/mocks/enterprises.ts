@@ -1,3 +1,13 @@
+export type AttachmentGroupMock = {
+  groupName: string
+  files: {
+    id: number
+    name: string
+    size: string
+    url: string
+  }[]
+}
+
 export type Enterprise = {
   id: number
   companyName: string
@@ -18,6 +28,7 @@ export type Enterprise = {
   businessAddress: string
   representative: string
   representativePhone: string
+  attachments?: AttachmentGroupMock[]
 }
 
 export type AttachmentFile = {
@@ -47,6 +58,16 @@ export const enterprisesMock: Enterprise[] = [
     businessAddress: '123 Đường Kha Vạn Cân, Thủ Đức',
     representative: 'Nguyễn Văn An',
     representativePhone: '0932768093',
+    attachments: [
+      {
+        groupName: 'Giấy phép kinh doanh',
+        files: [{ id: 101, name: 'gpkd_an_lac_tay.pdf', size: '1.5 MB', url: '#' }]
+      },
+      {
+        groupName: 'Giấy tờ khác',
+        files: [{ id: 102, name: 'mat_bang.jpg', size: '2.1 MB', url: 'https://picsum.photos/800/600' }]
+      }
+    ]
   },
   {
     id: 2,

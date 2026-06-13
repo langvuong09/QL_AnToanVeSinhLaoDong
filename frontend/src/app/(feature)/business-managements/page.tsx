@@ -1,18 +1,45 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useContext } from 'react'
 import TopHero from '@/src/components/TopHero'
 import ToggleSwitch from '@/src/components/ToggleSwitch'
 import EnterpriseModal from '@/src/components/modals/EnterpriseModal'
-import { Enterprise, enterprisesMock } from '@/src/mocks/enterprises'
-import type { EnterpriseFormData } from '@/src/components/modals/EnterpriseStepOne'
+import PasswordResetModal from '@/src/components/modals/PasswordResetModal'
+import BulkDeleteBar from '@/src/components/common/BulkDeleteBar'
+import DeleteConfirmModal from '@/src/components/common/DeleteConfirmModal'
+import { Enterprise, enterprisesMock, AttachmentGroupMock } from '@/src/mocks/enterprises'
+import type { EnterpriseFormData, EnterpriseFormMode, AttachmentGroup } from '@/src/components/modals/EnterpriseStepOne'
+import { parseAccessToken } from '@/src/utils/jwt-parser'
+import { NotificateContext } from '@/src/contexts/notificate/notificate'
 
-const GRID_COLS = 'grid-cols-[40px_100px_1fr_120px_160px_180px_140px_80px]'
+const GRID_COLS = 'grid-cols-[40px_100px_1fr_120px_160px_180px_140px_100px]'
 
 export default function BusinessManagementsPage() {
+  const notificate = useContext(NotificateContext)
   const [data, setData] = useState<Enterprise[]>(enterprisesMock)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'list' | 'create' | 'edit' | 'view'>('list')
+  const [selectedEnterprise, setSelectedEnterprise] = useState<Enterprise | null>(null)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [userRole, setUserRole] = useState<string>('')
+
+  // Delete state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // Reset password state
+  const [showResetPassword, setShowResetPassword] = useState(false)
+  const [resetTarget, setResetTarget] = useState<Enterprise | null>(null)
+
+  // Detect user role
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+    if (accessToken) {
+      const parsed = parseAccessToken(accessToken)
+      if (parsed?.role?.name) {
+        setUserRole(parsed.role.name)
+      }
+    }
+  }, [])
 
   // Filter states
   const [filterName, setFilterName] = useState('')
@@ -27,37 +54,135 @@ export default function BusinessManagementsPage() {
   const [currentPage, setCurrentPage] = useState(1)
 
   const openNew = () => {
-    setIsModalOpen(true)
+    setSelectedEnterprise(null)
+    setViewMode('create')
   }
 
-  const closeModal = () => {
-    setIsModalOpen(false)
+  const handleEdit = (item: Enterprise) => {
+    setSelectedEnterprise(item)
+    setViewMode('edit')
   }
 
-  const handleSave = (form: EnterpriseFormData) => {
-    const nextItem: Enterprise = {
-      id: Math.max(0, ...data.map((item) => item.id)) + 1,
-      companyName: form.companyName,
-      taxCode: form.taxCode,
-      businessType: form.businessType,
-      industry: form.industry,
-      ward: form.gpkdWard,
-      status: true,
-      foreignName: form.foreignName,
-      email: form.email,
-      phone: form.phone,
-      gpkdDate: form.gpkdDate,
-      gpkdProvince: form.gpkdProvince,
-      gpkdWard: form.gpkdWard,
-      address: form.address,
-      businessProvince: form.businessProvince,
-      businessWard: form.businessWard,
-      businessAddress: form.businessAddress,
-      representative: form.representative,
-      representativePhone: form.representativePhone,
+  const handleView = (item: Enterprise) => {
+    setSelectedEnterprise(item)
+    setViewMode('view')
+  }
+
+  const handleOpenResetPassword = (item: Enterprise) => {
+    setResetTarget(item)
+    setShowResetPassword(true)
+  }
+
+  const handleConfirmResetPassword = (newPassword: string) => {
+    // In real app, call API here
+    console.log(`Reset password for ${resetTarget?.companyName} to ${newPassword}`)
+    
+    // Show success notification
+    notificate?.showNotification({
+      type: 'success',
+      message: `Đặt lại mật khẩu cho doanh nghiệp ${resetTarget?.companyName} thành công.`
+    })
+    
+    setShowResetPassword(false)
+    setResetTarget(null)
+  }
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      const count = selectedIds.length
+      setData((prev) => prev.filter((item) => !selectedIds.includes(item.id)))
+
+      notificate?.showNotification({
+        type: 'success',
+        message: count === 1 ? 'Xóa doanh nghiệp thành công.' : `Đã xóa thành công ${count} doanh nghiệp.`,
+      })
+
+      setSelectedIds([])
+    } catch (error) {
+      notificate?.showNotification({
+        type: 'error',
+        message: 'Không thể xóa doanh nghiệp. Vui lòng thử lại sau.',
+      })
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
     }
-    setData((prev) => [nextItem, ...prev])
-    closeModal()
+  }
+
+  const closeCreate = () => {
+    setViewMode('list')
+    setSelectedEnterprise(null)
+  }
+
+  const handleSave = (form: EnterpriseFormData, attachments: AttachmentGroup[]) => {
+    // Convert AttachmentGroup to AttachmentGroupMock for storage
+    const storedAttachments: AttachmentGroupMock[] = attachments.map(g => ({
+      groupName: g.groupName,
+      files: g.files.map(f => ({
+        id: f.id,
+        name: f.name,
+        size: f.size,
+        url: f.url || '#'
+      }))
+    }))
+
+    if (viewMode === 'edit' && selectedEnterprise) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === selectedEnterprise.id
+            ? {
+                ...item,
+                companyName: form.companyName,
+                taxCode: form.taxCode,
+                businessType: form.businessType,
+                industry: form.industry,
+                ward: form.gpkdWard,
+                foreignName: form.foreignName,
+                email: form.email,
+                phone: form.phone,
+                gpkdDate: form.gpkdDate,
+                gpkdProvince: form.gpkdProvince,
+                gpkdWard: form.gpkdWard,
+                address: form.address,
+                businessProvince: form.businessProvince,
+                businessWard: form.businessWard,
+                businessAddress: form.businessAddress,
+                representative: form.representative,
+                representativePhone: form.representativePhone,
+                attachments: storedAttachments,
+              }
+            : item
+        )
+      )
+    } else {
+      const nextItem: Enterprise = {
+        id: Math.max(0, ...data.map((item) => item.id)) + 1,
+        companyName: form.companyName,
+        taxCode: form.taxCode,
+        businessType: form.businessType,
+        industry: form.industry,
+        ward: form.gpkdWard,
+        status: true,
+        foreignName: form.foreignName,
+        email: form.email,
+        phone: form.phone,
+        gpkdDate: form.gpkdDate,
+        gpkdProvince: form.gpkdProvince,
+        gpkdWard: form.gpkdWard,
+        address: form.address,
+        businessProvince: form.businessProvince,
+        businessWard: form.businessWard,
+        businessAddress: form.businessAddress,
+        representative: form.representative,
+        representativePhone: form.representativePhone,
+        attachments: storedAttachments,
+      }
+      setData((prev) => [nextItem, ...prev])
+    }
   }
 
   const handleToggleStatus = (id: number) => {
@@ -101,6 +226,20 @@ export default function BusinessManagementsPage() {
   const uniqueBusinessTypes = [...new Set(data.map((d) => d.businessType))]
   const uniqueIndustries = [...new Set(data.map((d) => d.industry))]
 
+  // If in create/edit/view mode, render the enterprise page inline
+  if (viewMode !== 'list') {
+    return (
+      <EnterpriseModal
+        isOpen={true}
+        onClose={closeCreate}
+        onSave={handleSave}
+        mode={viewMode === 'list' ? 'create' : viewMode}
+        initialData={selectedEnterprise}
+        userRole={userRole}
+      />
+    )
+  }
+
   return (
     <main className="h-screen flex flex-col py-2">
       {/* TopHero */}
@@ -134,8 +273,15 @@ export default function BusinessManagementsPage() {
         {/* Table Header + Filter */}
         <div className="shrink-0 border-b border-gray-200">
           {/* Column titles */}
-          <div className={`grid ${GRID_COLS} text-xs text-gray-500 font-medium`}>
-            <div />
+          <div className={`grid ${GRID_COLS} text-xs text-gray-500 font-medium bg-gray-50/50`}>
+            <div className="flex items-center justify-center py-2">
+              <input
+                type="checkbox"
+                className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                checked={allSelected}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+              />
+            </div>
             <div className="px-2 py-2">Thao tác</div>
             <div className="px-3 py-2">Tên doanh nghiệp</div>
             <div className="px-3 py-2">Mã số thuế</div>
@@ -232,6 +378,7 @@ export default function BusinessManagementsPage() {
               <div className="flex items-center gap-2 px-2 py-2.5">
                 <button
                   type="button"
+                  onClick={() => handleView(item)}
                   className="text-gray-400 hover:text-primary transition-colors"
                   title="Xem chi tiết"
                 >
@@ -239,6 +386,7 @@ export default function BusinessManagementsPage() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => handleEdit(item)}
                   className="text-gray-400 hover:text-primary transition-colors"
                   title="Chỉnh sửa"
                 >
@@ -246,10 +394,11 @@ export default function BusinessManagementsPage() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => handleOpenResetPassword(item)}
                   className="text-gray-400 hover:text-primary transition-colors"
-                  title="Đính kèm file"
+                  title="Reset mật khẩu"
                 >
-                  <i className="fa-solid fa-paperclip text-xs" />
+                  <i className="fa-solid fa-key text-xs" />
                 </button>
               </div>
 
@@ -336,11 +485,33 @@ export default function BusinessManagementsPage() {
         </div>
       </div>
 
-      {/* Enterprise Modal */}
-      <EnterpriseModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onSave={handleSave}
+      {/* Password Reset Modal */}
+      {resetTarget && (
+        <PasswordResetModal
+          isOpen={showResetPassword}
+          onClose={() => { setShowResetPassword(false); setResetTarget(null) }}
+          username={resetTarget.taxCode.replace(/-/g, '')}
+          companyName={resetTarget.companyName}
+          onConfirm={handleConfirmResetPassword}
+        />
+      )}
+
+      {/* Floating Action Bar */}
+      <BulkDeleteBar
+        selectedCount={selectedIds.length}
+        onDelete={() => setShowDeleteConfirm(true)}
+        onClearSelection={() => setSelectedIds([])}
+        loading={isDeleting}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        open={showDeleteConfirm}
+        count={selectedIds.length}
+        title="Xác nhận xóa doanh nghiệp"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        loading={isDeleting}
       />
     </main>
   )

@@ -10,7 +10,7 @@ type SelectLegendProps = {
 }
 
 const SelectLegend = ({
-    label, select, errorMess, children
+    label, require, select, errorMess, children
 }: SelectLegendProps) => {
     const classname = "outline-none w-full";
 
@@ -23,6 +23,7 @@ const SelectLegend = ({
                         htmlFor={select.id}
                     >
                         {label}
+                        {require && <span className="text-red-600">*</span>}
                     </label>
                 )}
                 <select
