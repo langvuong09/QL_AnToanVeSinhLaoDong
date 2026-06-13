@@ -1,5 +1,5 @@
 import { 
-  Body, Controller, Get, Param, Post, Put, Query, UseGuards, ParseUUIDPipe, Delete, Patch, 
+  Body, Controller, Get, Param, Post, Put, Query, UseGuards, ParseUUIDPipe, Patch, 
   UseInterceptors,
   ClassSerializerInterceptor
 } from "@nestjs/common";
@@ -10,8 +10,7 @@ import { CurrentUser } from "../auth/auth.model";
 import { ChangePasswordDto } from "./dto/change-password";
 import { UpdateProfileDto } from "./dto/update-profile";
 import { CreateUserDto } from "./dto/create-user";
-import { ApiBearerAuth, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
-import { ApiBody } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiQuery, ApiBody } from '@nestjs/swagger';
 
 @ApiTags("Users")
 @Controller("users")
@@ -22,13 +21,27 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @ApiOperation({ summary: "Lấy danh sách người dùng có phân trang và lọc" })
-  @ApiQuery({ name: "page", required: false })
-  @ApiQuery({ name: "pageSize", required: false })
-  @ApiQuery({ name: "roleId", required: false })
-  @ApiQuery({ name: "position", required: false })
-  @ApiQuery({ name: "search", required: false })
-  async getAll(@Query() query: any) {
+  @ApiOperation({ summary: "Lấy danh sách người dùng với các bộ lọc độc lập" })
+  @ApiQuery({ name: "page", required: false, example: 1, description: "Số trang hiện tại" })
+  @ApiQuery({ name: "pageSize", required: false, example: 10, description: "Số lượng bản ghi trên một trang" })
+  @ApiQuery({ name: "fullName", required: false, description: "Tìm kiếm gần đúng theo Họ và tên" })
+  @ApiQuery({ name: "username", required: false, description: "Tìm kiếm gần đúng theo Tên tài khoản đăng nhập" })
+  @ApiQuery({ name: "email", required: false, description: "Tìm kiếm gần đúng theo địa chỉ Email" })
+  @ApiQuery({ name: "roleId", required: false, description: "Lọc đích danh theo ID Vai trò hệ thống" })
+  @ApiQuery({ name: "position", required: false, description: "Tìm kiếm gần đúng theo Chức danh công việc" })
+  @ApiQuery({ name: "status", required: false, type: Boolean, description: "Lọc theo Trạng thái hoạt động (true = Bật, false = Tắt)" })
+  async getAll(
+    @Query() query: { 
+      page?: number; 
+      pageSize?: number; 
+      fullName?: string; 
+      username?: string; 
+      email?: string; 
+      roleId?: number; 
+      position?: string; 
+      status?: boolean; 
+    }
+  ) {
     return await this.userService.getAll(query);
   }
 

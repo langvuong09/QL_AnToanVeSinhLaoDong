@@ -11,5 +11,17 @@ ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, url = EXCLUDED.url, "parent
 INSERT INTO view_permissions ("viewId", "permissionId") VALUES (2, 1), (3, 2)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO role_permissions ("roleId", "permissionId") VALUES (4, 1), (4, 2)
-ON CONFLICT DO NOTHING;
+WITH all_current_permissions AS (
+    SELECT id AS permission_id 
+    FROM permissions 
+    WHERE code IN (
+        'USER_VIEW', 'USER_CREATE', 'USER_UPDATE', 'USER_DELETE',
+        'DOET_VIEW', 'DOET_CREATE', 'DOET_UPDATE', 'DOET_DELETE',
+        'BUSINESS_TYPE_VIEW', 'BUSINESS_TYPE_CREATE', 'BUSINESS_TYPE_UPDATE', 'BUSINESS_TYPE_DELETE',
+        'INDUSTRY_VIEW', 'INDUSTRY_CREATE', 'INDUSTRY_UPDATE', 'INDUSTRY_DELETE'
+    )
+)
+INSERT INTO role_permissions ("roleId", "permissionId")
+SELECT 4, permission_id 
+FROM all_current_permissions
+ON CONFLICT ("roleId", "permissionId") DO NOTHING;

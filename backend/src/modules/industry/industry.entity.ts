@@ -5,7 +5,7 @@ import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMa
 export class Industry {
   @PrimaryGeneratedColumn("increment") id!: number;
 
-  @Column({ unique: true }) code!: string; 
+  @Column() code!: string; 
   @Column() name!: string;               
   @Column({ default: true }) isActive!: boolean;
 
