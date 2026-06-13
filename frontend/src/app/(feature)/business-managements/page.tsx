@@ -7,11 +7,11 @@ import EnterpriseModal from '@/src/components/modals/EnterpriseModal'
 import { Enterprise, enterprisesMock } from '@/src/mocks/enterprises'
 import type { EnterpriseFormData } from '@/src/components/modals/EnterpriseStepOne'
 
-const GRID_COLS = 'grid-cols-[40px_100px_1fr_120px_160px_180px_140px_80px]'
+const GRID_COLS = 'grid-cols-[40px_100px_1fr_120px_160px_180px_140px_100px]'
 
 export default function BusinessManagementsPage() {
   const [data, setData] = useState<Enterprise[]>(enterprisesMock)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'list' | 'create'>('list')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
 
   // Filter states
@@ -27,11 +27,11 @@ export default function BusinessManagementsPage() {
   const [currentPage, setCurrentPage] = useState(1)
 
   const openNew = () => {
-    setIsModalOpen(true)
+    setViewMode('create')
   }
 
-  const closeModal = () => {
-    setIsModalOpen(false)
+  const closeCreate = () => {
+    setViewMode('list')
   }
 
   const handleSave = (form: EnterpriseFormData) => {
@@ -57,7 +57,6 @@ export default function BusinessManagementsPage() {
       representativePhone: form.representativePhone,
     }
     setData((prev) => [nextItem, ...prev])
-    closeModal()
   }
 
   const handleToggleStatus = (id: number) => {
@@ -100,6 +99,17 @@ export default function BusinessManagementsPage() {
   // Unique values for dropdowns
   const uniqueBusinessTypes = [...new Set(data.map((d) => d.businessType))]
   const uniqueIndustries = [...new Set(data.map((d) => d.industry))]
+
+  // If in create mode, render the enterprise creation page inline
+  if (viewMode === 'create') {
+    return (
+      <EnterpriseModal
+        isOpen={true}
+        onClose={closeCreate}
+        onSave={handleSave}
+      />
+    )
+  }
 
   return (
     <main className="h-screen flex flex-col py-2">
@@ -335,13 +345,6 @@ export default function BusinessManagementsPage() {
           </div>
         </div>
       </div>
-
-      {/* Enterprise Modal */}
-      <EnterpriseModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onSave={handleSave}
-      />
     </main>
   )
 }
