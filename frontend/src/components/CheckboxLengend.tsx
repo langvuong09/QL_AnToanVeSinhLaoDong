@@ -10,6 +10,7 @@ type CheckboxLengendProps = {
 const CheckboxLengend = ({
    isChecked, onChange, checkbox
 }: CheckboxLengendProps) => {
+
     return (
         <div className="checkbox-wrapper-64">
             <label className="switch">

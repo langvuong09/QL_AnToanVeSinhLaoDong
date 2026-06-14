@@ -1,94 +1,93 @@
 'use client'
 
+import { Jwt } from "@/src/api/types/jwt";
+import { ElementAddress, User, UserDetail } from "@/src/api/User";
+import ChangeEmail from "@/src/components/ChangeEmail";
 import CheckboxLengend from "@/src/components/CheckboxLengend";
 import InputLegend from "@/src/components/InputLegend";
+import Loading from "@/src/components/Loading";
 import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import Button from "@/src/components/ui/Button";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { OpenAdress, Province, Ward } from "@/src/services/open-address";
+import { parseAccessToken } from "@/src/utils/jwt-parser";
 import { useContext, useEffect, useRef, useState } from "react";
 
 const InfomationPage = () => {
     const notificate = useContext(NotificateContext);
 
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const [jwt, setJwt] = useState<Jwt | null>(null);
+    const [currentUser, setCurrentUser] = useState<UserDetail | null>(null);
+
+    const [message, setMessage] = useState<{
+        type: "success" | "error",
+        des: string
+    } | undefined>(undefined);
+
     const [submitForm, setSubmitForm] = useState<{
-        username: string;
         fullName: string;
 
-        birthdate: string;
+        dateOfBirth: string;
         gender: string;
 
-        title: string;
-        roleId: string;
+        position: string;
 
-        email: string;
-
-        province: string;
-        ward: string;
+        province: ElementAddress;
+        ward: ElementAddress;
         address: string;
     }>({
         fullName: "",
-        username: "",
-
-        birthdate: "",
+        dateOfBirth: "",
         gender: "",
 
-        title: "",
-        roleId: "",
+        position: "",
 
-        email: "",
-
-        province: "",
-        ward: "",
+        province: {
+            key: 0,
+            value: ""
+        },
+        ward: {
+            key: 0,
+            value: ""
+        },
         address: "",
     });
 
     const [errorForm, setErrorForm] = useState<{
-        username: string;
         fullName: string;
-
-        birthdate: string;
+        dateOfBirth: string;
         gender: string;
 
-        roleId: string;
-
-        email: string;
+        position: string,
 
         province: string;
         ward: string;
         address: string;
     }>({
         fullName: "",
-        username: "",
-
-        birthdate: "",
+        dateOfBirth: "",
         gender: "",
 
-        roleId: "",
-
-        email: "",
+        position: "",
 
         province: "",
         ward: "",
         address: "",
     });
 
-    const isValidEmail = (email: string): boolean => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    };
-
-    const onSubmit = () => {
+    const onSubmit = async () => {
         console.log("Run here")
 
         const newErrors = {
-            username: "",
             fullName: "",
+            dateOfBirth: "",
             gender: "",
-            birthdate: "",
-            roleId: "",
-            email: "",
+
+            position: "",
+
             province: "",
             ward: "",
             address: "",
@@ -110,29 +109,17 @@ const InfomationPage = () => {
 
         }
 
-        if (!submitForm?.birthdate) {
-            newErrors.birthdate = "Ngày sinh không được để trống";
-            hasError = true;
-        }
-        // if (!submitForm?.roleId) {
-        //     newErrors.roleId = "Vai trò không được để trống";
-        //     hasError = true;
-        // }
-
-        if (!submitForm?.email?.trim()) {
-            newErrors.email = "Email không được để trống";
-            hasError = true;
-        } else if (!isValidEmail(submitForm.email)) {
-            newErrors.email = "Email không hợp lệ";
+        if (!submitForm?.dateOfBirth) {
+            newErrors.dateOfBirth = "Ngày sinh không được để trống";
             hasError = true;
         }
 
-        if (!submitForm?.province?.trim()) {
+        if (!submitForm?.province?.key || !submitForm?.province?.value.trim()) {
             newErrors.province = "Tỉnh/Thành phố không được để trống";
             hasError = true;
         }
 
-        if (!submitForm?.ward?.trim()) {
+        if (!submitForm?.ward?.key || !submitForm?.ward?.value.trim()) {
             newErrors.ward = "Phường/Xã không được để trống";
             hasError = true;
         }
@@ -150,6 +137,26 @@ const InfomationPage = () => {
 
         setErrorForm(newErrors);
         console.log("Form submitted successfully:", submitForm);
+
+        try {
+            setLoading(true);
+            const cls = new User();
+            await cls.UpdateSelfProfile(jwt?.id!, submitForm);
+            setLoading(false);
+            notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
+            setMessage({
+                type: "success",
+                des: "Đã cập nhật thông tin của bạn"
+            });
+
+        } catch (error) {
+            setLoading(false);
+            notificate?.showNotification({ type: "error", message: "Thay đổi thông tin thất bại" });
+            setMessage({
+                type: "success",
+                des: "Cập nhật thông tin thất bại"
+            });
+        }
     }
 
     const [isChangeEmail, setIsChangeEmail] = useState<string>("");
@@ -203,7 +210,7 @@ const InfomationPage = () => {
 
     const handleSelectProvince = (province: Province) => {
         setProvinceCodeSelected(province.code);
-        setSubmitForm((prev) => ({ ...prev, province: province.name, ward: "" }));
+        setSubmitForm((prev) => ({ ...prev, province: { key: province.code, value: province.name }, ward: { key: 0, value: "" } }));
         setErrorForm((prev) => ({ ...prev, province: "" }));
         setProvinceSearch(province.name);
         setShowProvinceDropdown(false);
@@ -212,14 +219,54 @@ const InfomationPage = () => {
     };
 
     const handleSelectWard = (ward: Ward) => {
-        setSubmitForm((prev) => ({ ...prev, ward: ward.name }));
+        setSubmitForm((prev) => ({ ...prev, ward: { key: ward.code, value: ward.name } }));
         setErrorForm((prev) => ({ ...prev, ward: "" }));
         setWardSearch(ward.name);
         setShowWardDropdown(false);
     };
 
+    // Get data from jwt
+    useEffect(() => {
+        const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || "";
+        if (token) {
+            const jwt = parseAccessToken(token);
+            setJwt(jwt);
+        }
+    }, []);
+
+    const fetchUserDetail = async () => {
+        if (jwt) {
+            setLoading(true);
+            const cls = new User();
+            const result = await cls.GetUserDetailById(jwt.id);
+            setCurrentUser(result);
+            setSubmitForm({
+                fullName: result.fullName,
+                dateOfBirth: result.dateOfBirth,
+                gender: result.gender,
+                position: result.position,
+                province: result.province,
+                ward: result.ward,
+                address: result.address
+            });
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        if (jwt) {
+            fetchUserDetail();
+        }
+    }, [jwt]);
+
     return (
         <main className="space-y-10 px-3">
+            {loading && (
+                <Loading />
+            )}
+
+            <ChangeEmail email={currentUser?.email || ""} />
+            
             <TopHero
                 lable="Chi tiết người dùng"
                 component={
@@ -234,6 +281,12 @@ const InfomationPage = () => {
                     </div>
                 }
             />
+
+            {message && (
+                <div>
+
+                </div>
+            )}
 
             <div className="grid grid-cols-12 gap-5">
                 {/* Left card */}
@@ -255,7 +308,7 @@ const InfomationPage = () => {
                     <div className="flex items-center justify-between">
                         <span className="font-semibold">Kích hoạt</span>
 
-                        <CheckboxLengend isChecked={true} checkbox={{ disabled: true }} />
+                        <CheckboxLengend isChecked={currentUser?.status || false} checkbox={{ disabled: true }} />
                     </div>
                 </div>
 
@@ -270,29 +323,29 @@ const InfomationPage = () => {
                                     label="Tên đăng nhập"
                                     require={true}
                                     input={{ type: "text", placeholder: "vnagroup", disabled: true }}
-                                    errorMess={errorForm?.username}
                                 />
                                 <InputLegend
                                     label="Ngày tháng năm sinh"
                                     require={true}
                                     input={{
                                         type: "date",
-                                        value: submitForm.birthdate,
+                                        value: submitForm.dateOfBirth,
                                         onChange: (event) => {
-                                            setSubmitForm((prev) => ({ ...prev, birthdate: event.target.value }));
-                                            setErrorForm((prev) => ({ ...prev, birthdate: "" }));
+                                            console.log(event.target.value)
+                                            setSubmitForm((prev) => ({ ...prev, dateOfBirth: event.target.value }));
+                                            setErrorForm((prev) => ({ ...prev, dateOfBirth: "" }));
                                         },
                                     }}
-                                    errorMess={errorForm?.birthdate}
+                                    errorMess={errorForm?.dateOfBirth}
                                 />
                                 <InputLegend
                                     label="Chức danh"
                                     input={{
                                         type: "text",
                                         placeholder: "Nhập chức danh",
-                                        value: submitForm.roleId,
+                                        value: submitForm.position,
                                         onChange: (event) => {
-                                            setSubmitForm((prev) => ({ ...prev, roleId: event.target.value }));
+                                            setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
                                         },
                                     }}
                                 />
@@ -332,14 +385,18 @@ const InfomationPage = () => {
                                     label="Vai trò"
                                     require={true}
                                     select={{
-                                        value: submitForm.roleId,
+                                        value: currentUser?.roleId,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, roleId: event.target.value }));
                                             setErrorForm((prev) => ({ ...prev, roleId: "" }));
                                         },
+                                        disabled: true
                                     }}
                                 >
                                     <option value="">Chọn vai trò</option>
+                                    {currentUser?.role && (
+                                        <option value={currentUser.role.id}>{currentUser.role.name}</option>
+                                    )}
                                 </SelectLegend>
                             </div>
                         </div>
@@ -351,14 +408,9 @@ const InfomationPage = () => {
                                 input={{
                                     type: "email",
                                     placeholder: "Nhập địa chỉ email",
-                                    value: submitForm.email,
-                                    onChange: (event) => {
-                                        setSubmitForm((prev) => ({ ...prev, email: event.target.value }));
-                                        setErrorForm((prev) => ({ ...prev, email: "" }));
-                                    },
+                                    value: currentUser?.email,
                                     disabled: true
                                 }}
-                                errorMess={errorForm?.email}
                             />
                             <div className="flex-1 flex items-center">
                                 <button className="text-[15px] font-semibold text-blue-600 w-fit">Thay đổi</button>
@@ -383,13 +435,17 @@ const InfomationPage = () => {
                                             input={{
                                                 type: "text",
                                                 placeholder: "Tìm tỉnh/thành phố",
-                                                value: provinceSearch,
+                                                value: submitForm.province.value || provinceSearch,
                                                 onChange: (event) => {
                                                     setProvinceSearch(event.target.value);
                                                     setShowProvinceDropdown(true);
 
                                                     if (!event.target.value) {
-                                                        setSubmitForm((prev) => ({ ...prev, province: "", ward: "" }));
+                                                        setSubmitForm((prev) => ({
+                                                            ...prev,
+                                                            province: { key: Number(event.target.value), value: event.target.textContent },
+                                                            ward: { key: 0, value: "" }
+                                                        }));
                                                         setProvinceCodeSelected(undefined);
                                                         setWards([]);
                                                         setWardSearch("");
@@ -433,13 +489,13 @@ const InfomationPage = () => {
                                             input={{
                                                 type: "text",
                                                 placeholder: "Tìm phường xã",
-                                                value: wardSearch,
+                                                value: submitForm.ward.value || wardSearch,
                                                 onChange: (event) => {
                                                     setWardSearch(event.target.value);
                                                     setShowWardDropdown(true);
 
                                                     if (!event.target.value) {
-                                                        setSubmitForm((prev) => ({ ...prev, ward: "" }));
+                                                        setSubmitForm((prev) => ({ ...prev, ward: { key: Number(event.target.value), value: event.target.textContent } }));
                                                     }
                                                 },
                                                 onFocus: () => {
