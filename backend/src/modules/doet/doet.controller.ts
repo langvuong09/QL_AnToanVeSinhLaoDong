@@ -1,5 +1,6 @@
 import { 
-  Body, Controller, Get, Param, Post, Put, Query, Patch, Delete, ParseIntPipe, UseGuards, UseInterceptors, ClassSerializerInterceptor 
+  Body, Controller, Get, Param, Post, Put, Query, Patch, Delete, ParseIntPipe, UseGuards, UseInterceptors, ClassSerializerInterceptor, 
+  BadRequestException
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { DoetService } from './doet.service';
@@ -9,6 +10,7 @@ import { AuthGuard } from "../../commons/guards/authGuard";
 import { PermissionCode } from 'src/commons/enums/permission.enum';
 import { RequirePermissions } from 'src/commons/guards/permission.decorator';
 import { PermissionGuard } from 'src/commons/guards/permissionGuard';
+import { GetUser } from 'src/commons/guards/user.decorator';
 
 @ApiTags('Doets (Quản lý doanh nghiệp)')
 @Controller('doets')
@@ -54,6 +56,16 @@ export class DoetController {
   @ApiOperation({ summary: 'Xem chi tiết hồ sơ doanh nghiệp' })
   async getDetail(@Param('id', ParseIntPipe) id: number) {
     return await this.doetService.getDetail(id);
+  }
+
+  @Get('my-profile')
+  @RequirePermissions(PermissionCode.DOET_VIEW)
+  @ApiOperation({ summary: '🎯 Doanh nghiệp tự xem hồ sơ thông tin của chính mình qua JWT token' })
+  async getMyProfile(@GetUser() user: any) {
+    if (!user.doetId) {
+      throw new BadRequestException('Tài khoản của bạn không gắn liền với doanh nghiệp nào!');
+    }
+    return await this.doetService.getDetail(user.doetId);
   }
 
   @Put(':id')

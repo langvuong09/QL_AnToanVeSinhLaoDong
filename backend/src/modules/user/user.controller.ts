@@ -11,16 +11,20 @@ import { ChangePasswordDto } from "./dto/change-password";
 import { UpdateProfileDto } from "./dto/update-profile";
 import { CreateUserDto } from "./dto/create-user";
 import { ApiBearerAuth, ApiOperation, ApiTags, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { PermissionGuard } from "src/commons/guards/permissionGuard";
+import { RequirePermissions } from "src/commons/guards/permission.decorator";
+import { PermissionCode } from "src/commons/enums/permission.enum";
 
 @ApiTags("Users")
 @Controller("users")
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard,PermissionGuard)
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiBearerAuth()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
+  @RequirePermissions(PermissionCode.USER_VIEW)
   @ApiOperation({ summary: "Lấy danh sách người dùng với các bộ lọc độc lập" })
   @ApiQuery({ name: "page", required: false, example: 1, description: "Số trang hiện tại" })
   @ApiQuery({ name: "pageSize", required: false, example: 10, description: "Số lượng bản ghi trên một trang" })
@@ -46,12 +50,14 @@ export class UserController {
   }
 
   @Get(":id")
+  @RequirePermissions(PermissionCode.USER_VIEW)
   @ApiOperation({ summary: "Lấy thông tin chi tiết người dùng" })
   async getDetail(@Param("id", ParseUUIDPipe) id: string) {
     return await this.userService.getDetail(id);
   }
 
   @Post()
+  @RequirePermissions(PermissionCode.USER_CREATE)
   @ApiOperation({ summary: "Tạo mới người dùng" })
   @ApiBody({ type: CreateUserDto, description: "Dữ liệu để tạo người dùng mới" })
   async createUser(@Body() createUserDto: CreateUserDto) {
@@ -59,6 +65,7 @@ export class UserController {
   }
 
   @Patch(":id/status")
+  @RequirePermissions(PermissionCode.USER_UPDATE)
   @ApiOperation({ summary: "Bật/Tắt trạng thái người dùng" })
   @ApiBody({
     schema: {
@@ -81,6 +88,7 @@ export class UserController {
   }
 
   @Put(":id/profile")
+  @RequirePermissions(PermissionCode.USER_UPDATE)
   @ApiOperation({ summary: "Cập nhật thông tin" })
   async updateProfile(
     @Param("id", ParseUUIDPipe) id: string, 
@@ -90,6 +98,7 @@ export class UserController {
   }
 
   @Post("reset-password")
+  @RequirePermissions(PermissionCode.USER_UPDATE)
   @ApiOperation({ summary: "Đổi mật khẩu người dùng" })
   async resetPassword(
     @GetUser() currentUser: CurrentUser,
@@ -99,6 +108,7 @@ export class UserController {
   }
 
   @Post(":id/set-password")
+  @RequirePermissions(PermissionCode.USER_UPDATE)
   @ApiOperation({ summary: "Đặt lại mật khẩu cho người dùng (Admin)" })
   @ApiBody({
     schema: {
@@ -121,6 +131,7 @@ export class UserController {
   }
 
   @Post('bulk-delete')
+  @RequirePermissions(PermissionCode.USER_DELETE)
   @ApiOperation({ summary: 'Xóa mềm hàng loạt tài khoản người dùng khỏi hệ thống' })
   @ApiBody({
     schema: {
