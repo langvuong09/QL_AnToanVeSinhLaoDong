@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as fs from 'fs';
 import { InjectRepository } from '@nestjs/typeorm';
 import Response from '../../commons/response';
 import { EntityManager, DataSource, Not, Repository, In } from 'typeorm';
@@ -10,6 +12,13 @@ import { User } from './user.entity';
 import * as argon from 'argon2';
 import { ChangePasswordDto } from './dto/change-password';
 import { UpdateProfileDto } from './dto/update-profile';
+import { getOtpKey, OtpType } from 'src/commons/enums/otp.enum';
+import { JwtService } from '@nestjs/jwt';
+import Redis from 'ioredis';
+import path from 'path';
+import { ConfigService } from '@nestjs/config';
+import { REDIS_CLIENT } from 'src/redis/redis.module';
+import { EmailService } from 'src/helper/Email';
 
 @Injectable()
 export class UserService {
@@ -17,6 +26,10 @@ export class UserService {
 
   constructor(
     private readonly dataSource: DataSource,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly emailService: EmailService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {
@@ -200,4 +213,39 @@ export class UserService {
     await this.userRepository.softDelete(ids);
     return Response.SUCCESSFULLY;
   }
+
+   async sendResetEmail(email: string) {
+      const manage = this.dataSource.manager;
+      const user = await manage.findOne(User, {
+        where: {
+          email: email,
+        },
+      });
+      if (!user) {
+        throw new NotFoundException('Not found email');
+      }
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const redisKey = getOtpKey(OtpType.RESET_EMAIL, user.id);
+      const ttl = this.configService.get<number>('OTP_EXPIRATION_TIME') || 300;
+      await this.redis.set(redisKey, otp, 'EX', ttl);
+  
+      const templatePath = path.join(
+        process.cwd(),
+        'src',
+        'templates',
+        'reset-email.html',
+      );
+      let template = fs.readFileSync(templatePath, { encoding: 'utf-8' });
+  
+      template = template.split('$1').join(user.fullName);
+      template = template.split('$2').join(otp);
+      template = template.split('$3').join((ttl / 60).toString());
+  
+      await this.emailService.sendMail(
+        email,
+        'Mã xác thực thiết lập lại email',
+        template,
+      );
+      return Response.SUCCESSFULLY;
+    }
 }

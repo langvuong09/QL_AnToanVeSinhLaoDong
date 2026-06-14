@@ -196,4 +196,65 @@ export class AuthService {
     });
     return Response.get({ accessToken: newAccessToken });
   }
+
+
+  async verifyResetEmailOtp(email: string, otp: string) {
+    const user = await this.dataSource.manager.findOne(User, {
+      where: { email },
+    });
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy tài khoản gắn liền với email này');
+    }
+
+    const redisKey = getOtpKey(OtpType.RESET_EMAIL, user.id);
+    const savedOtp = await this.redis.get(redisKey);
+
+    if (!savedOtp || savedOtp !== otp) {
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    await this.redis.del(redisKey);
+
+    const resetToken = this.jwtService.sign(
+      { email, id: user.id, purpose: 'RESET_EMAIL' }, 
+      { expiresIn: '3m' },
+    );
+    return Response.get({ resetToken });
+  }
+
+  async confirmResetEmail(resetToken: string, newEmail: string) {
+    try {
+      const decoded: any = this.jwtService.verify(resetToken);
+      
+      if (decoded.purpose !== 'RESET_EMAIL') {
+        throw new BadRequestException('Mã cấu hình Token không đúng mục đích xử lý');
+      }
+
+      const cleanEmail = newEmail.trim().toLowerCase();
+      const isEmailExist = await this.dataSource.manager.findOne(User, {
+        where: { email: cleanEmail },
+      });
+      if (isEmailExist) {
+        throw new BadRequestException('Địa chỉ email mới này đã được sử dụng bởi một tài khoản khác!');
+      }
+
+      const user = await this.dataSource.manager.findOne(User, {
+        where: { id: decoded.id },
+      });
+      if (!user) {
+        throw new NotFoundException('Không tìm thấy tài khoản người dùng tương ứng');
+      }
+
+      await this.dataSource.manager.update(User, user.id, {
+        email: cleanEmail,
+      });
+
+      return Response.SUCCESSFULLY;
+    } catch (error) {
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Mã xác thực Reset Token đã quá hạn 3 phút hoặc không hợp lệ');
+    }
+  }
 }

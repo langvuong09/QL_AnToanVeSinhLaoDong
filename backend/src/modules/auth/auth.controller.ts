@@ -109,4 +109,22 @@ export class AuthController {
     response.clearCookie('refreshToken');
     return { success: true, message: 'Logged out successfully' };
   }
+
+  @Post('verify-reset-email-otp')
+  @ApiOperation({ summary: '🎯 Bước 2: Xác thực mã OTP đổi email (Public)' })
+  async verifyResetEmailOtp(
+    @Body('email') email: string,
+    @Body('otp') otp: string,
+  ) {
+    return await this.authService.verifyResetEmailOtp(email, otp);
+  }
+
+  @Post('confirm-reset-email')
+  @ApiOperation({ summary: '🎯 Bước 3: Xác nhận lưu địa chỉ Email mới vào hệ thống (Public)' })
+  async confirmResetEmail(
+    @Body('resetToken') resetToken: string,
+    @Body('newEmail') newEmail: string,
+  ) {
+    return await this.authService.confirmResetEmail(resetToken, newEmail);
+  }
 }
