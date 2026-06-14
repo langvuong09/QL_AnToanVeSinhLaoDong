@@ -1,15 +1,19 @@
 'use client'
 
-import type { BusinessIndustry } from '@/src/mocks/business-industries'
+import { useMemo } from 'react'
+import type { IIndustry } from '@/src/api/Industry'
 import InputLegend from '@/src/components/InputLegend'
 import SelectLegend from '@/src/components/SelectLegend'
+import SearchableSelect from '@/src/components/SearchableSelect'
 
 type BusinessIndustryModalProps = {
   isOpen: boolean
-  editingItem: BusinessIndustry | null
-  allIndustries: BusinessIndustry[]
-  form: { code: string; name: string; parentId: string }
+  editingItem: IIndustry | null
+  allIndustries: IIndustry[]
+  form: { code: string; name: string; parentId: string; status: string }
   errors: { code: string; name: string }
+  isLoading?: boolean
+  loadingParents?: boolean
   onClose: () => void
   onSave: () => void
   onChange: (field: string, value: string) => void
@@ -21,15 +25,30 @@ export default function BusinessIndustryModal({
   allIndustries,
   form,
   errors,
+  isLoading = false,
+  loadingParents = false,
   onClose,
   onSave,
   onChange,
 }: BusinessIndustryModalProps) {
   if (!isOpen) return null
 
+  // Filter options to prevent setting parent as itself
   const parentOptions = allIndustries.filter((i) =>
     editingItem ? i.id !== editingItem.id : true
   )
+
+  const fallbackParent = useMemo(() => {
+    if (editingItem && editingItem.parent) {
+      const parentObj = editingItem.parent
+      const calculatedLevel = parentObj.level || (editingItem.level ? editingItem.level - 1 : 1)
+      return {
+        ...parentObj,
+        level: calculatedLevel,
+      } as IIndustry
+    }
+    return null
+  }, [editingItem])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
@@ -50,6 +69,7 @@ export default function BusinessIndustryModal({
                 placeholder: 'Nhập mã ngành',
                 value: form.code,
                 onChange: (e) => onChange('code', (e.target as HTMLInputElement).value),
+                disabled: isLoading || !!editingItem,
               }}
               errorMess={errors.code}
             />
@@ -62,23 +82,31 @@ export default function BusinessIndustryModal({
                 placeholder: 'Nhập tên ngành nghề',
                 value: form.name,
                 onChange: (e) => onChange('name', (e.target as HTMLInputElement).value),
+                disabled: isLoading,
               }}
               errorMess={errors.name}
             />
 
-            <SelectLegend
+            <SearchableSelect
               label="Nhóm ngành cha"
+              value={form.parentId}
+              options={parentOptions}
+              disabled={isLoading}
+              loading={loadingParents}
+              fallbackSelectedOption={fallbackParent}
+              onChange={(val) => onChange('parentId', val)}
+            />
+
+            <SelectLegend
+              label="Trạng thái"
               select={{
-                value: form.parentId,
-                onChange: (e) => onChange('parentId', (e.target as HTMLSelectElement).value),
+                value: form.status,
+                onChange: (e) => onChange('status', (e.target as HTMLSelectElement).value),
+                disabled: isLoading,
               }}
             >
-              <option value="">-- Không có (Cấp 1) --</option>
-              {parentOptions.map((opt) => (
-                <option key={opt.id} value={String(opt.id)}>
-                  {opt.code} - {opt.name}
-                </option>
-              ))}
+              <option value="true">Sử dụng</option>
+              <option value="false">Ngừng sử dụng</option>
             </SelectLegend>
           </div>
         </div>
@@ -87,16 +115,22 @@ export default function BusinessIndustryModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+            disabled={isLoading}
+            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Hủy bỏ
           </button>
           <button
             type="button"
             onClick={onSave}
-            className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+            disabled={isLoading}
+            className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-[#4a22b8] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <i className="fa-solid fa-floppy-disk text-xs" />
+            {isLoading ? (
+              <i className="fa-solid fa-spinner fa-spin text-xs" />
+            ) : (
+              <i className="fa-solid fa-floppy-disk text-xs" />
+            )}
             Lưu
           </button>
         </div>
@@ -104,3 +138,4 @@ export default function BusinessIndustryModal({
     </div>
   )
 }
+
