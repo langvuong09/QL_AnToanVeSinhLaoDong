@@ -23,6 +23,7 @@ import { Trauma } from './modules/traumaFactor/trauma-factor.entity';
 import { TraumaModule } from './modules/traumaFactor/trauma-factor.module';
 import { InjuryTypeModule } from './modules/typeInjury/injury.module';
 import { ReportModule } from './modules/report/report.module';
+import { RoleModule } from './modules/role/role.module';
 
 @Module({
   imports: [
@@ -44,7 +45,8 @@ import { ReportModule } from './modules/report/report.module';
     TraumaModule,
     InjuryTypeModule,
     ReportTypeModule,
-    ReportModule
+    ReportModule,
+    RoleModule
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -54,4 +56,3 @@ export class AppModule implements NestModule {
     // consumer.apply(DomainMiddleware).forRoutes('*');
   }
 }
-

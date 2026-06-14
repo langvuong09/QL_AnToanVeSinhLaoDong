@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import TopHero from "@/src/components/TopHero";
 import Button from "@/src/components/ui/Button";
-import { User, IUser, IUserListResponse } from "@/src/api/User";
+import { User, IUser } from "@/src/api/User";
+import { IRole, Role } from "@/src/api/Role";
 
 const AccountPage = () => {
     const [users, setUsers] = useState<IUser[]>([]);
+    const [roles, setRoles] = useState<IRole[]>([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
         page: 1,
@@ -24,6 +26,19 @@ const AccountPage = () => {
     });
 
     const userApi = new User();
+    const roleApi = new Role();
+
+    const fetchRoles = async () => {
+        try {
+            const result = await roleApi.getAll();
+
+            if (result.success && result.data) {
+                setRoles(result.data.items);
+            }
+        } catch (error) {
+            console.error('Loi khi lay danh sach vai tro:', error);
+        }
+    };
 
     // Fetch danh sách người dùng
     const fetchUsers = async (page = 1, filterParams = filters) => {
@@ -57,6 +72,7 @@ const AccountPage = () => {
 
     // Load danh sách khi component mount
     useEffect(() => {
+        fetchRoles();
         fetchUsers(1);
     }, []);
 
@@ -143,6 +159,11 @@ const AccountPage = () => {
                                 className="w-full remove-outline px-3 py-1.5 h-full ring-1 ring-gray-300 rounded bg-white"
                             >
                                 <option value="">Vai trò</option>
+                                {roles.map((role) => (
+                                    <option key={role.id} value={role.id}>
+                                        {role.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div className="flex-1">
