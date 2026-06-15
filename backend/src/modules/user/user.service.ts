@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -77,7 +78,12 @@ export class UserService {
     return await this.userRepository.save(newUser);
   }
 
-  async toggleStatus(userId: string, status: boolean) {
+  async toggleStatus(userId: string, status: boolean, currentUser: any) {
+    const currentUserDoetId = currentUser?.doetId ?? currentUser?.doet;
+    if (!currentUserDoetId) {
+      throw new ForbiddenException('Bạn không có quyền thực hiện hành động này');
+    }
+
     const user = await this.userRepository.findOneBy({ id: userId });
     if (!user || user.deletedAt) throw new NotFoundException('Không tìm thấy người dùng');
     

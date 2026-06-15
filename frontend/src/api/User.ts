@@ -70,6 +70,19 @@ export class User extends Base {
         };
     }
 
+    async toggleStatus(id: string, status: boolean): Promise<{ success: boolean; message: string }> {
+        const result = await this.execute({
+            url: `/${id}/status`,
+            method: "PATCH",
+            data: { status },
+        });
+
+        return {
+            success: result.success,
+            message: result.message || "Co loi xay ra khi thay doi trang thai nguoi dung",
+        };
+    }
+
     async GetUserDetailById(id: string): Promise<UserDetail> {
         const result = await this.execute<UserDetail>({
             url: `/${id}`,

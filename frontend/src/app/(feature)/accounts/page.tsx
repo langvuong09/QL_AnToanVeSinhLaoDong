@@ -10,6 +10,7 @@ const AccountPage = () => {
     const [users, setUsers] = useState<IUser[]>([]);
     const [roles, setRoles] = useState<IRole[]>([]);
     const [loading, setLoading] = useState(false);
+    const [updatingStatusIds, setUpdatingStatusIds] = useState<string[]>([]);
     const [pagination, setPagination] = useState({
         page: 1,
         pageSize: 10,
@@ -87,6 +88,31 @@ const AccountPage = () => {
     const handleStatusChange = (value: string) => {
         const statusValue = value === '' ? undefined : value === 'true';
         handleFilterChange('status', statusValue);
+    };
+
+    const handleToggleUserStatus = async (user: IUser) => {
+        if (updatingStatusIds.includes(user.id)) return;
+
+        const nextStatus = !user.status;
+        setUpdatingStatusIds((prev) => [...prev, user.id]);
+        setUsers((prev) =>
+            prev.map((item) =>
+                item.id === user.id ? { ...item, status: nextStatus } : item
+            )
+        );
+
+        const result = await userApi.toggleStatus(user.id, nextStatus);
+
+        if (!result.success) {
+            setUsers((prev) =>
+                prev.map((item) =>
+                    item.id === user.id ? { ...item, status: user.status } : item
+                )
+            );
+            alert(result.message);
+        }
+
+        setUpdatingStatusIds((prev) => prev.filter((id) => id !== user.id));
     };
 
     // Tính tổng số trang
@@ -206,10 +232,23 @@ const AccountPage = () => {
                                 <div className="flex-2 line-clamp-1">{user.email}</div>
                                 <div className="flex-1 line-clamp-1">{user.role?.name || '-'}</div>
                                 <div className="flex-1 line-clamp-1">{user.position || '-'}</div>
-                                <div className="flex-1">
-                                    <span className={`px-2 py-1 rounded text-xs ${user.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                        {user.status ? 'Bật' : 'Tắt'}
-                                    </span>
+                                <div className="flex-1 flex items-center">
+                                    <button
+                                        type="button"
+                                        aria-label={user.status ? 'Bật trạng thái' : 'Tắt trạng thái'}
+                                        aria-pressed={user.status}
+                                        disabled={updatingStatusIds.includes(user.id)}
+                                        onClick={() => handleToggleUserStatus(user)}
+                                        className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${
+                                            user.status ? 'bg-blue-600' : 'bg-black'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`absolute left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
+                                                user.status ? 'translate-x-5' : 'translate-x-0'
+                                            }`}
+                                        />
+                                    </button>
                                 </div>
                             </div>
                         ))}

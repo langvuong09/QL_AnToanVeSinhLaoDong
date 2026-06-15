@@ -66,7 +66,6 @@ export class UserController {
   }
 
   @Patch(":id/status")
-  @RequirePermissions(PermissionCode.USER_UPDATE)
   @ApiOperation({ summary: "Bật/Tắt trạng thái người dùng" })
   @ApiBody({
     schema: {
@@ -83,9 +82,10 @@ export class UserController {
   })
   async toggleStatus(
     @Param("id", ParseUUIDPipe) id: string, 
-    @Body("status") status: boolean
+    @Body("status") status: boolean,
+    @GetUser() currentUser: any,
   ) {
-    return await this.userService.toggleStatus(id, status);
+    return await this.userService.toggleStatus(id, status, currentUser);
   }
 
   @Put(":id/profile")
