@@ -82,10 +82,10 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function generateAccountInfo(taxCode: string) {
+function generateAccountInfo(taxCode: string, resultData?: any) {
   return {
     accountNumber: taxCode.replace(/-/g, '') || '0000000000',
-    password: '12345678',
+    password: resultData?.password || resultData?.defaultPassword || 'Liên hệ quản trị viên',
   }
 }
 
@@ -308,7 +308,7 @@ export default function EnterpriseModal({
     }
 
     if (mode === 'create') {
-      setAccountInfo(generateAccountInfo(form.taxCode))
+      setAccountInfo(generateAccountInfo(form.taxCode, (result as any).rawResult))
       showToast('success', result.message || 'Khai báo thành công')
       setShowAccountPopup(true)
       return

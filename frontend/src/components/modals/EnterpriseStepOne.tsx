@@ -273,7 +273,8 @@ export default function EnterpriseStepOne({
               errorMess={errors.companyName}
             />
             <InputLegend
-              label="Người đại diện"
+              label="Mã số thuế"
+              require
               input={{
                 type: 'text',
                 placeholder: 'VD: 0123456789 hoặc 0123456789-001',

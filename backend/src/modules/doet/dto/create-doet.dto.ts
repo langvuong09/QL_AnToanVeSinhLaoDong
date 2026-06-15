@@ -55,10 +55,15 @@ export class CreateDoetDto {
   @IsString()
   phone?: string;
 
-  @ApiProperty({ example: '162 đường số 2' })
-  @IsNotEmpty()
+  @ApiProperty({ example: 'nguyenvana@example.com', required: false })
+  @IsOptional()
   @IsString()
-  address!: string;
+  email?: string;
+
+  @ApiProperty({ example: '162 đường số 2', required: false })
+  @IsOptional()
+  @IsString()
+  address?: string;
 
   @ApiProperty({ example: 'Khu phố 2', required: false })
   @IsOptional()

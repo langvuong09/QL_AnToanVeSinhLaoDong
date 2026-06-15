@@ -53,6 +53,7 @@ export type DoetPayload = {
     representative?: string;
     repPhone?: string;
     phone?: string;
+    email?: string;
     address?: string;
     quarter?: string;
     province: ElementAddress;

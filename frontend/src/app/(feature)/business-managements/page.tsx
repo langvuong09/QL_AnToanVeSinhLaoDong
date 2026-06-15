@@ -93,6 +93,7 @@ function buildDoetPayload(form: EnterpriseFormData, includeTaxCode: boolean): Do
     representative: form.representative.trim() || undefined,
     repPhone: form.representativePhone.trim() || undefined,
     phone: form.phone.trim() || undefined,
+    email: form.email.trim() || undefined,
     address: form.address.trim() || undefined,
     province: form.gpkdProvinceData,
     district: { key: 0, value: '' },
@@ -200,21 +201,24 @@ export default function BusinessManagementsPage() {
   const handleUploadPendingFiles = async (doetId: number, attachments: AttachmentGroup[]) => {
     const media = new Media()
     let failedCount = 0
+
     for (const group of attachments) {
       for (const file of group.files) {
         if (!file.file) continue
         const formData = new FormData()
-        formData.append('file', file.file)
         formData.append('fileType', group.fileType)
         formData.append('doetId', String(doetId))
+        formData.append('file', file.file)
+        
         try {
-          const result = await media.UploadImage(formData)
-          if (!result.success) failedCount++
+          const res = await media.UploadImage(formData)
+          if (!res.success) failedCount++
         } catch {
           failedCount++
         }
       }
     }
+
     if (failedCount > 0) {
       throw new Error(`${failedCount} file upload thất bại`)
     }
@@ -240,6 +244,7 @@ export default function BusinessManagementsPage() {
         success: true,
         message: isEdit ? 'Cập nhật doanh nghiệp thành công' : 'Khai báo doanh nghiệp thành công',
         savedId: result.data.id,
+        rawResult: result.data,
       }
     } catch {
       await fetchData()
@@ -247,6 +252,7 @@ export default function BusinessManagementsPage() {
         success: false,
         message: 'Doanh nghiệp đã được lưu nhưng upload tài liệu thất bại. Vui lòng mở chỉnh sửa và tải lại tài liệu.',
         savedId: result.data.id,
+        rawResult: result.data,
       }
     }
   }
