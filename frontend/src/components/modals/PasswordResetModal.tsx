@@ -32,9 +32,12 @@ export default function PasswordResetModal({
     if (!password) {
       nextErrors.password = 'Mật khẩu mới là bắt buộc'
       valid = false
-    } else if (password.length < 6) {
-      nextErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự'
-      valid = false
+    } else {
+      const strongPasswordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+{}\[\]:;"'<>,.?/~`|\\\-]).{8,}$/
+      if (!strongPasswordRegex.test(password)) {
+        nextErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa và 1 ký tự đặc biệt'
+        valid = false
+      }
     }
 
     if (!confirmPassword) {

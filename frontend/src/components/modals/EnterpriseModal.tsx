@@ -85,7 +85,7 @@ function formatFileSize(bytes: number): string {
 function generateAccountInfo(taxCode: string, resultData?: any) {
   return {
     accountNumber: taxCode.replace(/-/g, '') || '0000000000',
-    password: resultData?.password || resultData?.defaultPassword || 'Liên hệ quản trị viên',
+    password: resultData?.password || resultData?.defaultPassword || 'Doet@123456',
   }
 }
 

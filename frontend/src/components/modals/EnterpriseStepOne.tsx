@@ -229,12 +229,19 @@ export default function EnterpriseStepOne({
   }
 
   const handleUploadClick = (groupIndex: number) => {
-    if (!isViewMode) fileInputRefs.current[groupIndex]?.click()
+    if (!isViewMode) {
+      const inputEl = fileInputRefs.current[groupIndex]
+      if (inputEl) {
+        inputEl.value = ''
+        inputEl.click()
+      }
+    }
   }
 
   const handleFileChange = (groupIndex: number, event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.length) {
       onAddFiles(groupIndex, event.target.files)
+      // Reset input value to allow selecting the same file again
       event.target.value = ''
     }
   }

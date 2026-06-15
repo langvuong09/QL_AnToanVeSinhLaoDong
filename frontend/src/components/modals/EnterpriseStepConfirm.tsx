@@ -46,7 +46,7 @@ export default function EnterpriseStepConfirm({ form, attachmentGroups }: Props)
             <InfoRow label="Mã số thuế :" value={form.taxCode} />
             <InfoRow label="Tên doanh nghiệp :" value={form.companyName} />
             <InfoRow label="Tên viết bằng tiếng nước ngoài :" value={form.foreignName} />
-            <InfoRow label="Ngày cấp GPKD:" value={form.gpkdDate} />
+            <InfoRow label="Ngày cấp GPKD:" value={form.gpkdDate ? form.gpkdDate.split('-').reverse().join('-') : ''} />
             <InfoRow label="Email:" value={form.email} />
             <InfoRow label="Loại hình kinh doanh:" value={form.businessType} />
             <InfoRow label="Ngành nghề kinh doanh" value={form.industry} />

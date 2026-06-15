@@ -36,8 +36,11 @@ const ChangePassword = ({
 
     if (!newPassword.trim()) {
       newErrors.newPassword = "Mật khẩu mới không được để trống";
-    } else if (newPassword.length < 8) {
-      newErrors.newPassword = "Mật khẩu phải có tối thiểu 8 ký tự";
+    } else {
+      const strongPasswordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+{}\[\]:;"'<>,.?/~`|\\\-]).{8,}$/;
+      if (!strongPasswordRegex.test(newPassword)) {
+        newErrors.newPassword = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa và 1 ký tự đặc biệt";
+      }
     }
 
     if (!confirmPassword.trim()) {

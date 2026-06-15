@@ -33,6 +33,11 @@ export interface IDoetUser {
     email?: string;
     position?: string;
     status: boolean;
+    address?: string;
+    quarter?: string;
+    province?: ElementAddress;
+    district?: ElementAddress;
+    ward?: ElementAddress;
     doet: IDoet;
 }
 
