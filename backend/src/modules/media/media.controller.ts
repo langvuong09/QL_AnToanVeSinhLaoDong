@@ -7,9 +7,10 @@ import {
   UploadedFile, 
   UseInterceptors, 
   Body, 
-  ParseUUIDPipe 
+  ParseUUIDPipe, 
+  UploadedFiles
 } from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { MediaService } from "./media.service";
 import { FileType } from "./media.model";
 import Response from 'src/commons/response'; // Điều chỉnh đường dẫn theo dự án của bạn
@@ -55,5 +56,36 @@ export class MediaController {
   @Delete(':id')
   async deleteFile(@Param('id', ParseUUIDPipe) id: string) {
     return await this.mediaService.deleteFile(id);
+  }
+
+  @Post('upload-multiple')
+  @UseInterceptors(FilesInterceptor('files', 10))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['files', 'fileType'],
+      properties: {
+        files: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+          description: 'Danh sách các file cần upload'
+        },
+        fileType: { 
+          type: 'string', 
+          enum: Object.values(FileType),
+          description: 'Loại file áp dụng chung cho danh sách file này' 
+        },
+        doetId: { type: 'number' , nullable: true },
+      },
+    },
+  })
+  async uploadMultipleFiles(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body('fileType') fileType: FileType,
+    @Body('doetId') doetId?: number,
+  ) {
+    const data = await this.mediaService.uploadMultipleFiles(files, fileType, doetId);
+    return Response.get(data);
   }
 }

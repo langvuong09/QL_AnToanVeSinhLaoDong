@@ -112,4 +112,14 @@ export class MediaService {
       throw new InternalServerErrorException(`Lỗi hệ thống khi xóa file: ${error.message}`);
     }
   }
+
+  async uploadMultipleFiles(files: Express.Multer.File[], fileType: FileType, doetId?: number) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('Danh sách file tải lên không được để trống.');
+    }
+
+    const uploadPromises = files.map(file => this.uploadFile(file, fileType, doetId));
+    
+    return await Promise.all(uploadPromises);
+  }
 }
