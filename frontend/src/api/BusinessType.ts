@@ -46,6 +46,26 @@ export class BusinessTypeApi extends Base {
         };
     }
 
+    async getAllForBusiness(query: {
+        page?: number;
+        pageSize?: number;
+        code?: string;
+        name?: string;
+        isActive?: boolean;
+    }): Promise<{ success: boolean; message: string; data?: IBusinessTypeListResponse }> {
+        const result = await this.execute<IBusinessTypeListResponse>({
+            url: "",
+            method: "GET",
+            params: query,
+        });
+
+        return {
+            success: result.success,
+            message: result.message || "Có lỗi xảy ra khi lấy danh sách loại hình doanh nghiệp",
+            data: result.data ?? undefined,
+        };
+    }
+
     async create(dto: {
         code: string;
         name: string;

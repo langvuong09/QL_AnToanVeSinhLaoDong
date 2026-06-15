@@ -1,7 +1,8 @@
 export type AttachmentGroupMock = {
   groupName: string
+  fileType?: 'GPKD' | 'OTHER'
   files: {
-    id: number
+    id: number | string
     name: string
     size: string
     url: string
@@ -13,7 +14,9 @@ export type Enterprise = {
   companyName: string
   taxCode: string
   businessType: string
+  businessTypeId?: number
   industry: string
+  industryId?: number
   ward: string
   status: boolean
   foreignName: string
@@ -21,10 +24,14 @@ export type Enterprise = {
   phone: string
   gpkdDate: string
   gpkdProvince: string
+  gpkdProvinceData?: { key: number; value: string }
   gpkdWard: string
+  gpkdWardData?: { key: number; value: string }
   address: string
   businessProvince: string
+  businessProvinceData?: { key: number; value: string }
   businessWard: string
+  businessWardData?: { key: number; value: string }
   businessAddress: string
   representative: string
   representativePhone: string
@@ -32,7 +39,7 @@ export type Enterprise = {
 }
 
 export type AttachmentFile = {
-  id: number
+  id: number | string
   fileName: string
   fileInfo: string
 }

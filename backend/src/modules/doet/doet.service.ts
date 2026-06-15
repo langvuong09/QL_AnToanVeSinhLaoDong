@@ -81,6 +81,7 @@ export class DoetService {
         district: dto.district,
         ward: dto.ward,
         address: dto.address,
+        email: dto.email,
       });
       
       await queryRunner.manager.save(User, newUser);
@@ -201,6 +202,7 @@ export class DoetService {
         if (dto.district) associatedUser.district = dto.district;
         if (dto.ward) associatedUser.ward = dto.ward;
         if (dto.address) associatedUser.address = dto.address;
+        if (dto.email !== undefined) associatedUser.email = dto.email;
 
         await queryRunner.manager.save(User, associatedUser);
       }

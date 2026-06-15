@@ -155,8 +155,8 @@ const InfomationPage = () => {
                 formData.append('fileType', "AVATAR");
 
                 const result = await mcls.UploadImage(formData);
-                if (result) {
-                    submitForm.avatarId = result.id;
+                if (result.success && result.data) {
+                    submitForm.avatarId = result.data.id;
                 }
             }
 

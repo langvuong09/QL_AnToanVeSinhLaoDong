@@ -19,7 +19,6 @@ export class OpenAdress {
 
     constructor() {
         this.provinces = require("./json/address.json");
-        console.log(this.provinces)
     }
 
     public filterProvinces(name: string): Province[] {
@@ -29,6 +28,6 @@ export class OpenAdress {
     }
 
     public filterWards(idProvince: number): Ward[] {
-        return this.provinces.filter(province => province.code === idProvince)[0].wards || [];
+        return this.provinces.find(province => province.code === idProvince)?.wards || [];
     }
 }

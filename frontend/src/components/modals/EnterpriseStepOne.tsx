@@ -1,10 +1,13 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import DateLengend from '@/src/components/DateLengend'
 import InputLegend from '@/src/components/InputLegend'
 import SelectLegend from '@/src/components/SelectLegend'
-import { businessTypesMock } from '@/src/mocks/business-types'
-import { businessIndustriesMock } from '@/src/mocks/business-industries'
+import type { IBusinessType } from '@/src/api/BusinessType'
+import type { IIndustry } from '@/src/api/Industry'
+import type { ElementAddress } from '@/src/api/User'
+import type { Province, Ward } from '@/src/services/open-address'
 
 export type EnterpriseFormMode = 'create' | 'edit' | 'view'
 
@@ -12,51 +15,162 @@ export type EnterpriseFormData = {
   companyName: string
   taxCode: string
   businessType: string
+  businessTypeId: number | ''
   industry: string
+  industryId: number | ''
   gpkdDate: string
   gpkdProvince: string
+  gpkdProvinceData: ElementAddress
   gpkdWard: string
+  gpkdWardData: ElementAddress
   address: string
   foreignName: string
   email: string
   phone: string
   businessProvince: string
+  businessProvinceData: ElementAddress
   businessWard: string
+  businessWardData: ElementAddress
   businessAddress: string
   representative: string
   representativePhone: string
 }
 
-export type EnterpriseFormErrors = {
-  companyName: string
-  taxCode: string
-  businessType: string
-  industry: string
-  gpkdProvince: string
-  gpkdWard: string
-  email: string
-}
+export type EnterpriseFormErrors = Partial<Record<keyof EnterpriseFormData | 'attachments', string>>
 
 export type UploadedFile = {
-  id: number
+  id: number | string
   name: string
   size: string
   file?: File
   url?: string
+  mimeType?: string
+  fileType?: 'GPKD' | 'OTHER'
+  uploading?: boolean
+  error?: string
 }
 
 export type AttachmentGroup = {
   groupName: string
+  fileType: 'GPKD' | 'OTHER'
   files: UploadedFile[]
+}
+
+type AddressOption = Province | Ward
+
+type AddressPickerProps<T extends AddressOption> = {
+  label: string
+  placeholder: string
+  value: string
+  errorMess?: string
+  disabled?: boolean
+  required?: boolean
+  options: T[]
+  loading?: boolean
+  onSelect: (option: T) => void
+  onClear: () => void
+  getKey: (option: T) => number
+}
+
+function AddressPicker<T extends AddressOption>({
+  label,
+  placeholder,
+  value,
+  errorMess,
+  disabled,
+  required,
+  options,
+  loading,
+  onSelect,
+  onClear,
+  getKey,
+}: AddressPickerProps<T>) {
+  const [search, setSearch] = useState(value)
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const filtered = useMemo(() => {
+    const keyword = search.trim().toLowerCase()
+    if (!keyword) return options
+    return options.filter((item) => item.name.toLowerCase().includes(keyword))
+  }, [options, search])
+
+  useEffect(() => {
+    if (!open) setSearch(value)
+  }, [open, value])
+
+  return (
+    <div className="relative flex-1" ref={ref}>
+      <InputLegend
+        label={label}
+        require={required}
+        input={{
+          type: 'text',
+          placeholder,
+          value: search,
+          disabled,
+          onFocus: () => !disabled && setOpen(true),
+          onBlur: () => setTimeout(() => setOpen(false), 150),
+          onChange: (event) => {
+            const next = event.target.value
+            setSearch(next)
+            setOpen(true)
+            if (!next) onClear()
+          },
+        }}
+        errorMess={errorMess}
+      />
+
+      {open && !disabled && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-52 overflow-y-auto text-sm">
+          {loading ? (
+            <div className="px-3 py-2 text-gray-400">Đang tải...</div>
+          ) : filtered.length > 0 ? (
+            filtered.map((option) => (
+              <button
+                key={getKey(option)}
+                type="button"
+                className="block w-full text-left px-3 py-2 hover:bg-blue-50"
+                onMouseDown={(event) => {
+                  event.preventDefault()
+                  setSearch(option.name)
+                  onSelect(option)
+                  setOpen(false)
+                }}
+              >
+                {option.name}
+              </button>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-gray-400">Không tìm thấy kết quả</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 type Props = {
   form: EnterpriseFormData
   errors: EnterpriseFormErrors
   attachmentGroups: AttachmentGroup[]
-  onChange: (field: keyof EnterpriseFormData, value: string) => void
+  businessTypes: IBusinessType[]
+  industries: IIndustry[]
+  provinces: Province[]
+  wards: Ward[]
+  businessWards: Ward[]
+  addressLoading?: boolean
+  onChange: (field: keyof EnterpriseFormData, value: string | number | ElementAddress) => void
+  onSelectGpkdProvince: (province: Province) => void
+  onSelectGpkdWard: (ward: Ward) => void
+  onSelectBusinessProvince: (province: Province) => void
+  onSelectBusinessWard: (ward: Ward) => void
+  onClearGpkdProvince: () => void
+  onClearGpkdWard: () => void
+  onClearBusinessProvince: () => void
+  onClearBusinessWard: () => void
   onAddFiles: (groupIndex: number, files: FileList) => void
-  onRemoveFile: (groupIndex: number, fileId: number) => void
+  onRemoveFile: (groupIndex: number, fileId: number | string) => void
   mode?: EnterpriseFormMode
   userRole?: string
 }
@@ -65,7 +179,21 @@ export default function EnterpriseStepOne({
   form,
   errors,
   attachmentGroups,
+  businessTypes,
+  industries,
+  provinces,
+  wards,
+  businessWards,
+  addressLoading = false,
   onChange,
+  onSelectGpkdProvince,
+  onSelectGpkdWard,
+  onSelectBusinessProvince,
+  onSelectBusinessWard,
+  onClearGpkdProvince,
+  onClearGpkdWard,
+  onClearBusinessProvince,
+  onClearBusinessWard,
   onAddFiles,
   onRemoveFile,
   mode = 'create',
@@ -76,67 +204,54 @@ export default function EnterpriseStepOne({
 
   const isViewMode = mode === 'view'
   const isEditMode = mode === 'edit'
-
-  // In edit mode, tax code is always read-only
   const isTaxCodeDisabled = isViewMode || isEditMode
-
-  // In edit mode, email is only editable when userRole === 'SỞ'
   const isEmailDisabled = isViewMode || (isEditMode && userRole !== 'SỞ')
 
-  // Filter business types: only active ones
-  const activeBusinessTypes = businessTypesMock.filter((t) => t.status === true)
+  const level4Industries = useMemo(() => industries.filter((industry) => industry.level === 4), [industries])
 
-  // Filter industries: only level 4
-  const level4Industries = businessIndustriesMock.filter((i) => i.level === 4)
-
-  const handleUploadClick = (groupIndex: number) => {
-    if (isViewMode) return
-    fileInputRefs.current[groupIndex]?.click()
+  const handleTaxCodeChange = (value: string) => {
+    if (isTaxCodeDisabled) return
+    onChange('taxCode', value.replace(/[^0-9-]/g, ''))
   }
 
-  const handleFileChange = (groupIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      onAddFiles(groupIndex, e.target.files)
-      // Reset input so same file can be selected again
-      e.target.value = ''
+  const handleBusinessTypeChange = (value: string) => {
+    const id = Number(value)
+    const selected = businessTypes.find((item) => item.id === id)
+    onChange('businessTypeId', Number.isNaN(id) ? '' : id)
+    onChange('businessType', selected ? selected.name : '')
+  }
+
+  const handleIndustryChange = (value: string) => {
+    const id = Number(value)
+    const selected = level4Industries.find((item) => item.id === id)
+    onChange('industryId', Number.isNaN(id) ? '' : id)
+    onChange('industry', selected ? `${selected.code} - ${selected.name}` : '')
+  }
+
+  const handleUploadClick = (groupIndex: number) => {
+    if (!isViewMode) {
+      const inputEl = fileInputRefs.current[groupIndex]
+      if (inputEl) {
+        inputEl.value = ''
+        inputEl.click()
+      }
+    }
+  }
+
+  const handleFileChange = (groupIndex: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files?.length) {
+      onAddFiles(groupIndex, event.target.files)
+      // Reset input value to allow selecting the same file again
+      event.target.value = ''
     }
   }
 
   const handlePreview = (file: UploadedFile) => {
-    // If it's an image, show in modal preview
-    if (file.file?.type.startsWith('image/') && file.url) {
+    if ((file.file?.type || file.mimeType || '').startsWith('image/') && file.url) {
       setPreviewFile(file)
-    } else if (file.url) {
-      // For non-image files, open in a new browser tab
-      window.open(file.url, '_blank')
+      return
     }
-  }
-
-  const closePreview = () => {
-    setPreviewFile(null)
-  }
-
-  // Handle tax code input - only allow digits and dash
-  const handleTaxCodeChange = (value: string) => {
-    if (isTaxCodeDisabled) return
-    const cleaned = value.replace(/[^0-9-]/g, '')
-    onChange('taxCode', cleaned)
-  }
-
-  // Handle GPKD date input - auto format as dd/mm/yyyy
-  const handleGpkdDateChange = (value: string) => {
-    // Remove non-digit and non-slash characters
-    let cleaned = value.replace(/[^0-9/]/g, '')
-    // Auto-insert slashes
-    const digits = cleaned.replace(/\//g, '')
-    if (digits.length <= 2) {
-      cleaned = digits
-    } else if (digits.length <= 4) {
-      cleaned = digits.slice(0, 2) + '/' + digits.slice(2)
-    } else {
-      cleaned = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4, 8)
-    }
-    onChange('gpkdDate', cleaned)
+    if (file.url) window.open(file.url, '_blank')
   }
 
   const sectionTitle = mode === 'create'
@@ -148,7 +263,6 @@ export default function EnterpriseStepOne({
   return (
     <>
       <div className="space-y-6">
-        {/* Section: Thông tin doanh nghiệp */}
         <div>
           <h3 className="text-sm font-bold text-gray-800 mb-4">{sectionTitle}</h3>
           <div className="grid grid-cols-3 gap-4">
@@ -159,7 +273,8 @@ export default function EnterpriseStepOne({
                 type: 'text',
                 placeholder: 'Nhập tên doanh nghiệp',
                 value: form.companyName,
-                onChange: (e) => onChange('companyName', (e.target as HTMLInputElement).value),
+                maxLength: 255,
+                onChange: (event) => onChange('companyName', event.target.value),
                 disabled: isViewMode,
               }}
               errorMess={errors.companyName}
@@ -171,7 +286,7 @@ export default function EnterpriseStepOne({
                 type: 'text',
                 placeholder: 'VD: 0123456789 hoặc 0123456789-001',
                 value: form.taxCode,
-                onChange: (e) => handleTaxCodeChange((e.target as HTMLInputElement).value),
+                onChange: (event) => handleTaxCodeChange(event.target.value),
                 maxLength: 14,
                 disabled: isTaxCodeDisabled,
               }}
@@ -181,16 +296,16 @@ export default function EnterpriseStepOne({
               label="Loại hình kinh doanh"
               require
               select={{
-                value: form.businessType,
-                onChange: (e) => onChange('businessType', (e.target as HTMLSelectElement).value),
+                value: form.businessTypeId,
+                onChange: (event) => handleBusinessTypeChange(event.target.value),
                 disabled: isViewMode,
               }}
               errorMess={errors.businessType}
             >
               <option value="">Chọn loại hình</option>
-              {activeBusinessTypes.map((bt) => (
-                <option key={bt.id} value={bt.name}>
-                  {bt.code} - {bt.name}
+              {businessTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.code} - {type.name}
                 </option>
               ))}
             </SelectLegend>
@@ -201,64 +316,56 @@ export default function EnterpriseStepOne({
               label="Ngành nghề kinh doanh chính"
               require
               select={{
-                value: form.industry,
-                onChange: (e) => onChange('industry', (e.target as HTMLSelectElement).value),
+                value: form.industryId,
+                onChange: (event) => handleIndustryChange(event.target.value),
                 disabled: isViewMode,
               }}
               errorMess={errors.industry}
             >
-              <option value="">Chọn ngành nghề</option>
-              {level4Industries.map((ind) => (
-                <option key={ind.id} value={`${ind.code} - ${ind.name}`}>
-                  {ind.code} - {ind.name}
+              <option value="">Chọn ngành nghề cấp 4</option>
+              {level4Industries.map((industry) => (
+                <option key={industry.id} value={industry.id}>
+                  {industry.code} - {industry.name}
                 </option>
               ))}
             </SelectLegend>
-            <InputLegend
+            <DateLengend
               label="Ngày cấp GPKD"
-              input={{
-                type: 'text',
-                placeholder: 'dd/mm/yyyy',
-                value: form.gpkdDate,
-                onChange: (e) => handleGpkdDateChange((e.target as HTMLInputElement).value),
-                maxLength: 10,
-                disabled: isViewMode,
-              }}
-            />
-            <SelectLegend
-              label="Tỉnh/Thành phố ĐKKD"
               require
-              select={{
-                value: form.gpkdProvince,
-                onChange: (e) => onChange('gpkdProvince', (e.target as HTMLSelectElement).value),
-                disabled: isViewMode,
-              }}
+              value={form.gpkdDate}
+              onChange={(value) => onChange('gpkdDate', value)}
+              disabled={isViewMode}
+              errorMess={errors.gpkdDate}
+              errorInput="Ngày cấp GPKD không hợp lệ"
+            />
+            <AddressPicker
+              label="Tỉnh/Thành phố ĐKKD"
+              placeholder="Tìm tỉnh/thành phố"
+              value={form.gpkdProvince}
+              required
+              disabled={isViewMode}
+              loading={addressLoading}
+              options={provinces}
+              onSelect={onSelectGpkdProvince}
+              onClear={onClearGpkdProvince}
+              getKey={(option) => option.code}
               errorMess={errors.gpkdProvince}
-            >
-              <option value="">Chọn tỉnh/TP</option>
-              <option value="Thành phố Hồ Chí Minh">Thành phố Hồ Chí Minh</option>
-              <option value="Hà Nội">Hà Nội</option>
-              <option value="Đà Nẵng">Đà Nẵng</option>
-            </SelectLegend>
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-4 mt-4">
-            <SelectLegend
+            <AddressPicker
               label="Phường/Xã ĐKKD"
-              require
-              select={{
-                value: form.gpkdWard,
-                onChange: (e) => onChange('gpkdWard', (e.target as HTMLSelectElement).value),
-                disabled: isViewMode,
-              }}
+              placeholder="Tìm phường/xã"
+              value={form.gpkdWard}
+              required
+              disabled={isViewMode || !form.gpkdProvinceData.key}
+              options={wards}
+              onSelect={onSelectGpkdWard}
+              onClear={onClearGpkdWard}
+              getKey={(option) => option.code}
               errorMess={errors.gpkdWard}
-            >
-              <option value="">Chọn phường/xã</option>
-              <option value="Phường Bình Thọ">Phường Bình Thọ</option>
-              <option value="Phường Tân Định">Phường Tân Định</option>
-              <option value="Phường Hiệp Bình Phước">Phường Hiệp Bình Phước</option>
-              <option value="Phường Linh Trung">Phường Linh Trung</option>
-            </SelectLegend>
+            />
             <div className="col-span-2">
               <InputLegend
                 label="Địa chỉ"
@@ -266,15 +373,15 @@ export default function EnterpriseStepOne({
                   type: 'text',
                   placeholder: 'Nhập địa chỉ',
                   value: form.address,
-                  onChange: (e) => onChange('address', (e.target as HTMLInputElement).value),
+                  onChange: (event) => onChange('address', event.target.value),
                   disabled: isViewMode,
                 }}
+                errorMess={errors.address}
               />
             </div>
           </div>
         </div>
 
-        {/* Section: Thông tin liên hệ */}
         <div>
           <h3 className="text-sm font-bold text-gray-800 mb-4">Thông tin liên hệ</h3>
           <div className="grid grid-cols-3 gap-4">
@@ -284,7 +391,8 @@ export default function EnterpriseStepOne({
                 type: 'text',
                 placeholder: 'Tên viết bằng tiếng nước ngoài',
                 value: form.foreignName,
-                onChange: (e) => onChange('foreignName', (e.target as HTMLInputElement).value),
+                maxLength: 255,
+                onChange: (event) => onChange('foreignName', event.target.value),
                 disabled: isViewMode,
               }}
             />
@@ -295,7 +403,7 @@ export default function EnterpriseStepOne({
                 type: 'email',
                 placeholder: 'Nhập email',
                 value: form.email,
-                onChange: (e) => onChange('email', (e.target as HTMLInputElement).value),
+                onChange: (event) => onChange('email', event.target.value),
                 disabled: isEmailDisabled,
               }}
               errorMess={errors.email}
@@ -306,45 +414,41 @@ export default function EnterpriseStepOne({
                 type: 'text',
                 placeholder: 'Số điện thoại cơ quan',
                 value: form.phone,
-                onChange: (e) => onChange('phone', (e.target as HTMLInputElement).value),
+                onChange: (event) => onChange('phone', event.target.value.replace(/[^0-9+]/g, '')),
                 disabled: isViewMode,
               }}
+              errorMess={errors.phone}
             />
           </div>
           <div className="grid grid-cols-3 gap-4 mt-4">
-            <SelectLegend
+            <AddressPicker
               label="Tỉnh/TP hoạt động KD"
-              select={{
-                value: form.businessProvince,
-                onChange: (e) => onChange('businessProvince', (e.target as HTMLSelectElement).value),
-                disabled: isViewMode,
-              }}
-            >
-              <option value="">Chọn tỉnh/TP</option>
-              <option value="Thành phố Hồ Chí Minh">Thành phố Hồ Chí Minh</option>
-              <option value="Hà Nội">Hà Nội</option>
-              <option value="Đà Nẵng">Đà Nẵng</option>
-            </SelectLegend>
-            <SelectLegend
+              placeholder="Tìm tỉnh/thành phố"
+              value={form.businessProvince}
+              disabled={isViewMode}
+              loading={addressLoading}
+              options={provinces}
+              onSelect={onSelectBusinessProvince}
+              onClear={onClearBusinessProvince}
+              getKey={(option) => option.code}
+            />
+            <AddressPicker
               label="Phường/Xã hoạt động KD"
-              select={{
-                value: form.businessWard,
-                onChange: (e) => onChange('businessWard', (e.target as HTMLSelectElement).value),
-                disabled: isViewMode,
-              }}
-            >
-              <option value="">Chọn phường/xã</option>
-              <option value="Phường Bình Thọ">Phường Bình Thọ</option>
-              <option value="Phường Tân Định">Phường Tân Định</option>
-              <option value="Phường Hiệp Bình Phước">Phường Hiệp Bình Phước</option>
-            </SelectLegend>
+              placeholder="Tìm phường/xã"
+              value={form.businessWard}
+              disabled={isViewMode || !form.businessProvinceData.key}
+              options={businessWards}
+              onSelect={onSelectBusinessWard}
+              onClear={onClearBusinessWard}
+              getKey={(option) => option.code}
+            />
             <InputLegend
               label="Địa điểm kinh doanh"
               input={{
                 type: 'text',
                 placeholder: 'Địa điểm kinh doanh',
                 value: form.businessAddress,
-                onChange: (e) => onChange('businessAddress', (e.target as HTMLInputElement).value),
+                onChange: (event) => onChange('businessAddress', event.target.value),
                 disabled: isViewMode,
               }}
             />
@@ -356,9 +460,10 @@ export default function EnterpriseStepOne({
                 type: 'text',
                 placeholder: 'Người đứng đầu doanh nghiệp',
                 value: form.representative,
-                onChange: (e) => onChange('representative', (e.target as HTMLInputElement).value),
+                onChange: (event) => onChange('representative', event.target.value),
                 disabled: isViewMode,
               }}
+              errorMess={errors.representative}
             />
             <InputLegend
               label="SĐT liên hệ người đứng đầu"
@@ -366,19 +471,19 @@ export default function EnterpriseStepOne({
                 type: 'text',
                 placeholder: 'SĐT liên hệ người đứng đầu',
                 value: form.representativePhone,
-                onChange: (e) => onChange('representativePhone', (e.target as HTMLInputElement).value),
+                onChange: (event) => onChange('representativePhone', event.target.value.replace(/[^0-9+]/g, '')),
                 disabled: isViewMode,
               }}
+              errorMess={errors.representativePhone}
             />
             <div />
           </div>
         </div>
 
-        {/* Section: File đính kèm */}
         <div>
           <h3 className="text-sm font-bold text-gray-800 mb-3">File đính kèm</h3>
+          {errors.attachments && <p className="text-red-600 text-xs mb-2">{errors.attachments}</p>}
           <div className="border border-gray-200 rounded-lg overflow-hidden">
-            {/* Table header */}
             <div className="grid grid-cols-[40px_1fr_1fr_140px] bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200">
               <div className="px-3 py-2.5 text-center">STT</div>
               <div className="px-4 py-2.5">Tên file</div>
@@ -386,17 +491,11 @@ export default function EnterpriseStepOne({
               <div className="px-4 py-2.5 text-center">Thao tác</div>
             </div>
 
-            {/* Render each attachment group */}
             {attachmentGroups.map((group, groupIdx) => (
               <div key={group.groupName}>
-                {/* Group header row */}
                 <div className="grid grid-cols-[40px_1fr_1fr_140px] bg-primary/5 border-b border-gray-200">
-                  <div className="px-3 py-2.5 text-center text-xs font-semibold text-gray-600">
-                    {groupIdx + 1}
-                  </div>
-                  <div className="px-4 py-2.5 text-sm font-semibold text-gray-800 col-span-2">
-                    {group.groupName}
-                  </div>
+                  <div className="px-3 py-2.5 text-center text-xs font-semibold text-gray-600">{groupIdx + 1}</div>
+                  <div className="px-4 py-2.5 text-sm font-semibold text-gray-800 col-span-2">{group.groupName}</div>
                   <div className="px-4 py-2.5 flex items-center justify-center">
                     {!isViewMode && (
                       <>
@@ -409,21 +508,19 @@ export default function EnterpriseStepOne({
                           <i className="fa-solid fa-upload text-xs" />
                           <span>Upload</span>
                         </button>
-                        {/* Hidden file input */}
                         <input
                           ref={(el) => { fileInputRefs.current[groupIdx] = el }}
                           type="file"
                           multiple
                           className="hidden"
-                          onChange={(e) => handleFileChange(groupIdx, e)}
-                          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+                          onChange={(event) => handleFileChange(groupIdx, event)}
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                         />
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Files in this group */}
                 {group.files.length === 0 ? (
                   <div className="px-4 py-4 text-center text-sm text-gray-400 italic border-b border-gray-100">
                     Chưa có file nào
@@ -434,19 +531,20 @@ export default function EnterpriseStepOne({
                       key={file.id}
                       className="grid grid-cols-[40px_1fr_1fr_140px] text-sm text-gray-700 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors"
                     >
-                      <div className="px-3 py-2.5 text-center text-xs text-gray-400">
-                        {groupIdx + 1}.{fileIdx + 1}
-                      </div>
-                      <div className="px-4 py-2.5 flex items-center gap-2">
+                      <div className="px-3 py-2.5 text-center text-xs text-gray-400">{groupIdx + 1}.{fileIdx + 1}</div>
+                      <div className="px-4 py-2.5 flex items-center gap-2 min-w-0">
                         <i className="fa-solid fa-file-lines text-primary/60 text-xs" />
                         <span className="truncate">{file.name}</span>
                       </div>
-                      <div className="px-4 py-2.5 text-gray-500">{file.size}</div>
+                      <div className={`px-4 py-2.5 ${file.error ? 'text-red-500' : 'text-gray-500'}`}>
+                        {file.uploading ? 'Đang upload...' : file.error || file.size}
+                      </div>
                       <div className="px-4 py-2.5 flex items-center justify-center gap-3">
                         <button
                           type="button"
                           onClick={() => handlePreview(file)}
-                          className="text-gray-400 hover:text-primary transition-colors"
+                          disabled={!file.url}
+                          className="text-gray-400 hover:text-primary disabled:opacity-30 transition-colors"
                           title="Xem"
                         >
                           <i className="fa-solid fa-eye text-xs" />
@@ -471,22 +569,15 @@ export default function EnterpriseStepOne({
         </div>
       </div>
 
-      {/* File Preview Modal - Images only */}
       {previewFile && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden">
-            {/* Header */}
             <div className="bg-primary px-5 py-3 flex items-center justify-between">
               <h3 className="text-white font-semibold text-sm">Xem file</h3>
-              <button
-                type="button"
-                onClick={closePreview}
-                className="text-white/80 hover:text-white transition-colors"
-              >
+              <button type="button" onClick={() => setPreviewFile(null)} className="text-white/80 hover:text-white transition-colors">
                 <i className="fa-solid fa-xmark text-lg" />
               </button>
             </div>
-            {/* Content */}
             <div className="flex-1 overflow-auto p-6">
               <div className="flex flex-col items-center gap-4">
                 <div className="text-center">
@@ -496,22 +587,13 @@ export default function EnterpriseStepOne({
                 {previewFile.url && (
                   <div className="mt-2 border border-gray-200 rounded-lg overflow-hidden max-w-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={previewFile.url}
-                      alt={previewFile.name}
-                      className="max-w-full max-h-[400px] object-contain"
-                    />
+                    <img src={previewFile.url} alt={previewFile.name} className="max-w-full max-h-[400px] object-contain" />
                   </div>
                 )}
               </div>
             </div>
-            {/* Footer */}
             <div className="px-5 py-3 border-t border-gray-100 flex justify-end">
-              <button
-                type="button"
-                onClick={closePreview}
-                className="px-4 py-2 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
-              >
+              <button type="button" onClick={() => setPreviewFile(null)} className="px-4 py-2 text-sm text-primary hover:text-primary/80 font-medium transition-colors">
                 Đóng
               </button>
             </div>

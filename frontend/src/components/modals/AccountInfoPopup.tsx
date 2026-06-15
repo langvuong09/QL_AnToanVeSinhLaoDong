@@ -48,7 +48,7 @@ export default function AccountInfoPopup({
             onClick={onClose}
             className="px-4 py-2 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
           >
-            Huỷ bỏ
+            Hoàn tất
           </button>
         </div>
       </div>
