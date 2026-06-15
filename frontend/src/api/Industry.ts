@@ -51,6 +51,27 @@ export class IndustryApi extends Base {
         };
     }
 
+    async getAllForBusiness(query: {
+        page?: number;
+        pageSize?: number;
+        code?: string;
+        name?: string;
+        level?: number;
+        isActive?: boolean;
+    }): Promise<{ success: boolean; message: string; data?: IIndustryListResponse }> {
+        const result = await this.execute<IIndustryListResponse>({
+            url: "",
+            method: "GET",
+            params: query,
+        });
+
+        return {
+            success: result.success,
+            message: result.message || "Có lỗi xảy ra khi lấy danh sách ngành nghề kinh doanh",
+            data: result.data ?? undefined,
+        };
+    }
+
     async create(dto: {
         code: string;
         name: string;

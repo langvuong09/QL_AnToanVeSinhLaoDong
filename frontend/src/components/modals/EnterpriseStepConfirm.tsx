@@ -52,8 +52,8 @@ export default function EnterpriseStepConfirm({ form, attachmentGroups }: Props)
             <InfoRow label="Ngành nghề kinh doanh" value={form.industry} />
             <InfoRow label="Địa chỉ đăng kí giấy phép kinh doanh :" value={gpkdAddress} />
             <InfoRow label="Địa điểm kinh doanh :" value={businessAddr} />
-            <InfoRow label="Người đứng đầu doanh nghiệp" value={form.representative} />
-            <InfoRow label="SĐT người đứng đầu" value={form.representativePhone} />
+            <InfoRow label="Người đại diện" value={form.representative} />
+            <InfoRow label="SĐT liên hệ người đại diện" value={form.representativePhone} />
           </div>
         </div>
 

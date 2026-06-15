@@ -1,66 +1,87 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Media } from '@/src/api/Media'
+import type { IBusinessType } from '@/src/api/BusinessType'
+import type { IIndustry } from '@/src/api/Industry'
+import type { ElementAddress } from '@/src/api/User'
+import { OpenAdress, type Province } from '@/src/services/open-address'
 import EnterpriseStepOne from './EnterpriseStepOne'
 import EnterpriseStepConfirm from './EnterpriseStepConfirm'
 import AccountInfoPopup from './AccountInfoPopup'
 import type { EnterpriseFormData, EnterpriseFormErrors, EnterpriseFormMode, AttachmentGroup, UploadedFile } from './EnterpriseStepOne'
 import type { Enterprise } from '@/src/mocks/enterprises'
 
+type SaveResult = {
+  success: boolean
+  message: string
+  savedId?: number
+}
+
 type Props = {
   isOpen: boolean
   onClose: () => void
-  onSave: (form: EnterpriseFormData, attachments: AttachmentGroup[]) => void
+  onSave: (form: EnterpriseFormData, attachments: AttachmentGroup[]) => Promise<SaveResult>
   mode?: EnterpriseFormMode
   initialData?: Enterprise | null
   userRole?: string
+  businessTypes: IBusinessType[]
+  industries: IIndustry[]
 }
+
+const emptyAddress: ElementAddress = { key: 0, value: '' }
 
 const emptyForm: EnterpriseFormData = {
   companyName: '',
   taxCode: '',
   businessType: '',
+  businessTypeId: '',
   industry: '',
+  industryId: '',
   gpkdDate: '',
   gpkdProvince: '',
+  gpkdProvinceData: emptyAddress,
   gpkdWard: '',
+  gpkdWardData: emptyAddress,
   address: '',
   foreignName: '',
   email: '',
   phone: '',
   businessProvince: '',
+  businessProvinceData: emptyAddress,
   businessWard: '',
+  businessWardData: emptyAddress,
   businessAddress: '',
   representative: '',
   representativePhone: '',
 }
 
-const emptyErrors: EnterpriseFormErrors = {
-  companyName: '',
-  taxCode: '',
-  businessType: '',
-  industry: '',
-  gpkdProvince: '',
-  gpkdWard: '',
-  email: '',
-}
-
 const defaultAttachmentGroups: AttachmentGroup[] = [
-  { groupName: 'Giấy phép kinh doanh', files: [] },
-  { groupName: 'Giấy tờ khác', files: [] },
+  { groupName: 'Giấy phép kinh doanh', fileType: 'GPKD', files: [] },
+  { groupName: 'Giấy tờ khác', fileType: 'OTHER', files: [] },
 ]
 
-// Vietnamese tax code regex: 10 digits OR 10 digits + dash + 3 digits
-const TAX_CODE_REGEX = /^(\d{10})$|^(\d{10}-\d{3})$/
+const TAX_CODE_REGEX = /^(?:\d{10}|\d{10}-\d{3}|\d{13})$/
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const VN_PHONE_REGEX = /^(?:\+84|84|0)(?:[35789]\d{8}|2\d{9})$/
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+]
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const MAX_FILES_PER_GROUP = 10
 
-// Helper to format file size
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-// Generate mock account info
 function generateAccountInfo(taxCode: string) {
   return {
     accountNumber: taxCode.replace(/-/g, '') || '0000000000',
@@ -68,26 +89,49 @@ function generateAccountInfo(taxCode: string) {
   }
 }
 
-// Convert Enterprise to EnterpriseFormData
+function cloneEmptyForm(): EnterpriseFormData {
+  return {
+    ...emptyForm,
+    gpkdProvinceData: { ...emptyAddress },
+    gpkdWardData: { ...emptyAddress },
+    businessProvinceData: { ...emptyAddress },
+    businessWardData: { ...emptyAddress },
+  }
+}
+
 function enterpriseToForm(enterprise: Enterprise): EnterpriseFormData {
   return {
+    ...cloneEmptyForm(),
     companyName: enterprise.companyName,
     taxCode: enterprise.taxCode,
     businessType: enterprise.businessType,
+    businessTypeId: enterprise.businessTypeId || '',
     industry: enterprise.industry,
+    industryId: enterprise.industryId || '',
     gpkdDate: enterprise.gpkdDate,
     gpkdProvince: enterprise.gpkdProvince,
+    gpkdProvinceData: enterprise.gpkdProvinceData || { key: 0, value: enterprise.gpkdProvince },
     gpkdWard: enterprise.gpkdWard,
+    gpkdWardData: enterprise.gpkdWardData || { key: 0, value: enterprise.gpkdWard },
     address: enterprise.address,
     foreignName: enterprise.foreignName,
     email: enterprise.email,
     phone: enterprise.phone,
     businessProvince: enterprise.businessProvince,
+    businessProvinceData: enterprise.businessProvinceData || { key: 0, value: enterprise.businessProvince },
     businessWard: enterprise.businessWard,
+    businessWardData: enterprise.businessWardData || { key: 0, value: enterprise.businessWard },
     businessAddress: enterprise.businessAddress,
     representative: enterprise.representative,
     representativePhone: enterprise.representativePhone,
   }
+}
+
+function isFutureDate(value: string) {
+  const date = new Date(value)
+  const today = new Date()
+  today.setHours(23, 59, 59, 999)
+  return !Number.isNaN(date.getTime()) && date > today
 }
 
 export default function EnterpriseModal({
@@ -97,64 +141,68 @@ export default function EnterpriseModal({
   mode = 'create',
   initialData = null,
   userRole = '',
+  businessTypes,
+  industries,
 }: Props) {
   const [currentStep, setCurrentStep] = useState(1)
-  const [form, setForm] = useState<EnterpriseFormData>({ ...emptyForm })
-  const [errors, setErrors] = useState<EnterpriseFormErrors>({ ...emptyErrors })
+  const [form, setForm] = useState<EnterpriseFormData>(cloneEmptyForm())
+  const [errors, setErrors] = useState<EnterpriseFormErrors>({})
   const [attachmentGroups, setAttachmentGroups] = useState<AttachmentGroup[]>(
-    defaultAttachmentGroups.map((g) => ({ ...g, files: [] }))
+    defaultAttachmentGroups.map((group) => ({ ...group, files: [] }))
   )
+  const [submitting, setSubmitting] = useState(false)
   const nextFileIdRef = useRef(1)
 
-  // Account info popup state (only for create mode)
   const [showAccountPopup, setShowAccountPopup] = useState(false)
   const [accountInfo, setAccountInfo] = useState({ accountNumber: '', password: '' })
-
-  // Toast state
   const [toast, setToast] = useState<{ show: boolean; type: 'success' | 'error'; message: string }>({
     show: false,
     type: 'success',
     message: '',
   })
 
-  // Load initial data when provided (edit/view modes)
+  const [provinces, setProvinces] = useState<Province[]>([])
+  const [addressLoading, setAddressLoading] = useState(false)
+
+  useEffect(() => {
+    setAddressLoading(true)
+    const openAddress = new OpenAdress()
+    setProvinces(openAddress.provinces)
+    setAddressLoading(false)
+  }, [])
+
+  const wards = useMemo(() => {
+    if (!form.gpkdProvinceData.key) return []
+    return new OpenAdress().filterWards(Number(form.gpkdProvinceData.key))
+  }, [form.gpkdProvinceData.key])
+
+  const businessWards = useMemo(() => {
+    if (!form.businessProvinceData.key) return []
+    return new OpenAdress().filterWards(Number(form.businessProvinceData.key))
+  }, [form.businessProvinceData.key])
+
   useEffect(() => {
     if (initialData && (mode === 'edit' || mode === 'view')) {
       setForm(enterpriseToForm(initialData))
-
-      // Use attachments from initialData if available, otherwise use default mock for visualization
-      if (initialData.attachments && initialData.attachments.length > 0) {
-        setAttachmentGroups(initialData.attachments.map(g => ({
-          groupName: g.groupName,
-          files: g.files.map(f => ({
-            id: f.id,
-            name: f.name,
-            size: f.size,
-            url: f.url
-          }))
-        })))
-      } else {
-        // Fallback mock files for existing data without attachments
-        setAttachmentGroups([
-          {
-            groupName: 'Giấy phép kinh doanh',
-            files: [
-              { id: -1, name: 'giay_phep_kd_da_co.pdf', size: '1.2 MB', url: '#' },
-            ]
-          },
-          {
-            groupName: 'Giấy tờ khác',
-            files: [
-              { id: -2, name: 'hop_dong_thue_nha_da_co.jpg', size: '850 KB', url: 'https://picsum.photos/800/600' },
-            ]
-          },
-        ])
-      }
+      setAttachmentGroups(
+        defaultAttachmentGroups.map((group) => ({
+          ...group,
+          files: initialData.attachments
+            ?.find((item) => item.fileType === group.fileType || item.groupName === group.groupName)
+            ?.files.map((file) => ({
+              id: file.id,
+              name: file.name,
+              size: file.size,
+              url: file.url,
+              fileType: group.fileType,
+            })) || [],
+        }))
+      )
     } else if (mode === 'create') {
-      setForm({ ...emptyForm })
-      setAttachmentGroups(defaultAttachmentGroups.map((g) => ({ ...g, files: [] })))
+      setForm(cloneEmptyForm())
+      setAttachmentGroups(defaultAttachmentGroups.map((group) => ({ ...group, files: [] })))
     }
-    setErrors({ ...emptyErrors })
+    setErrors({})
     setCurrentStep(1)
   }, [initialData, mode])
 
@@ -165,140 +213,163 @@ export default function EnterpriseModal({
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000)
   }
 
-  const handleChange = (field: keyof EnterpriseFormData, value: string) => {
+  const handleChange = (field: keyof EnterpriseFormData, value: string | number | ElementAddress) => {
     setForm((prev) => ({ ...prev, [field]: value }))
-    // Clear error on change
-    if (field in errors) {
-      setErrors((prev) => ({ ...prev, [field]: '' }))
-    }
+    setErrors((prev) => ({ ...prev, [field]: '' }))
   }
 
   const validate = (): boolean => {
-    const next: EnterpriseFormErrors = { ...emptyErrors }
+    const next: EnterpriseFormErrors = {}
     let valid = true
 
-    if (!form.companyName.trim()) {
-      next.companyName = 'Tên doanh nghiệp là bắt buộc'
+    const requireField = (field: keyof EnterpriseFormData, message: string) => {
+      const value = form[field]
+      if (typeof value === 'string' ? !value.trim() : !value) {
+        next[field] = message
+        valid = false
+      }
+    }
+
+    requireField('companyName', 'Tên doanh nghiệp là bắt buộc')
+    if (form.companyName.trim().length > 255) {
+      next.companyName = 'Tên doanh nghiệp không được vượt quá 255 ký tự'
       valid = false
     }
 
-    // Tax code validation (only in create mode)
     if (mode === 'create') {
       if (!form.taxCode.trim()) {
         next.taxCode = 'Mã số thuế là bắt buộc'
         valid = false
       } else if (!TAX_CODE_REGEX.test(form.taxCode.trim())) {
-        next.taxCode = 'Mã số thuế không hợp lệ. Định dạng: 10 chữ số hoặc 10 chữ số-3 chữ số (VD: 0123456789 hoặc 0123456789-001)'
+        next.taxCode = 'Mã số thuế gồm 10 số, 13 số hoặc 10 số-3 số'
         valid = false
       }
     }
 
-    if (!form.businessType) {
-      next.businessType = 'Loại hình kinh doanh là bắt buộc'
+    requireField('businessTypeId', 'Loại hình kinh doanh là bắt buộc')
+    requireField('industryId', 'Ngành nghề kinh doanh cấp 4 là bắt buộc')
+    requireField('gpkdDate', 'Ngày cấp GPKD là bắt buộc')
+    if (form.gpkdDate && isFutureDate(form.gpkdDate)) {
+      next.gpkdDate = 'Ngày cấp GPKD không được lớn hơn ngày hiện tại'
       valid = false
     }
-    if (!form.industry) {
-      next.industry = 'Ngành nghề là bắt buộc'
-      valid = false
-    }
-    if (!form.gpkdProvince) {
-      next.gpkdProvince = 'Tỉnh/TP ĐKKD là bắt buộc'
-      valid = false
-    }
-    if (!form.gpkdWard) {
-      next.gpkdWard = 'Phường/Xã ĐKKD là bắt buộc'
-      valid = false
-    }
+    requireField('gpkdProvince', 'Tỉnh/Thành phố ĐKKD là bắt buộc')
+    requireField('gpkdWard', 'Phường/Xã ĐKKD là bắt buộc')
+
     if (!form.email.trim()) {
       next.email = 'Email là bắt buộc'
       valid = false
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      next.email = 'Email không hợp lệ'
+    } else if (!EMAIL_REGEX.test(form.email.trim())) {
+      next.email = 'Email không đúng định dạng'
+      valid = false
+    }
+    if (form.phone.trim() && !VN_PHONE_REGEX.test(form.phone.trim())) {
+      next.phone = 'Số điện thoại cơ quan không đúng định dạng Việt Nam'
+      valid = false
+    }
+    if (form.representativePhone.trim() && !VN_PHONE_REGEX.test(form.representativePhone.trim())) {
+      next.representativePhone = 'SĐT người đại diện không đúng định dạng Việt Nam'
+      valid = false
+    }
+
+    const hasFileError = attachmentGroups.some((group) => group.files.some((file) => file.error))
+    if (hasFileError) {
+      next.attachments = 'Vui lòng xóa các file không hợp lệ trước khi tiếp tục'
       valid = false
     }
 
     setErrors(next)
+    if (!valid) showToast('error', 'Vui lòng kiểm tra lại thông tin')
     return valid
   }
 
   const handleNext = () => {
-    if (validate()) {
-      setCurrentStep(2)
-    }
-  }
-
-  const handleBack = () => {
-    setCurrentStep(1)
-  }
-
-  const handleConfirm = () => {
-    onSave(form, attachmentGroups)
-
-    if (mode === 'create') {
-      // Generate account info and show popup
-      const info = generateAccountInfo(form.taxCode)
-      setAccountInfo(info)
-      showToast('success', 'Khai báo thành công')
-      setShowAccountPopup(true)
-    } else if (mode === 'edit') {
-      // Show success toast and go back to list
-      showToast('success', 'Cập nhật doanh nghiệp thành công')
-      setTimeout(() => {
-        resetAndClose()
-      }, 1500)
-    }
+    if (validate()) setCurrentStep(2)
   }
 
   const resetAndClose = () => {
-    setForm({ ...emptyForm })
-    setErrors({ ...emptyErrors })
-    setAttachmentGroups(defaultAttachmentGroups.map((g) => ({ ...g, files: [] })))
+    setForm(cloneEmptyForm())
+    setErrors({})
+    setAttachmentGroups(defaultAttachmentGroups.map((group) => ({ ...group, files: [] })))
     setCurrentStep(1)
     nextFileIdRef.current = 1
     onClose()
   }
 
-  const handleCloseAccountPopup = () => {
-    setShowAccountPopup(false)
-    resetAndClose()
+  const handleConfirm = async () => {
+    if (!validate()) return
+    setSubmitting(true)
+    const result = await onSave(form, attachmentGroups)
+    setSubmitting(false)
+
+    if (!result.success) {
+      showToast('error', result.message)
+      return
+    }
+
+    if (mode === 'create') {
+      setAccountInfo(generateAccountInfo(form.taxCode))
+      showToast('success', result.message || 'Khai báo thành công')
+      setShowAccountPopup(true)
+      return
+    }
+
+    showToast('success', result.message || 'Cập nhật doanh nghiệp thành công')
+    setTimeout(resetAndClose, 800)
   }
 
-  const handleCancel = () => {
-    resetAndClose()
+  const validateFile = (file: File, currentCount: number): string => {
+    if (currentCount >= MAX_FILES_PER_GROUP) return `Mỗi nhóm tối đa ${MAX_FILES_PER_GROUP} file`
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) return 'Định dạng file không được hỗ trợ'
+    if (file.size > MAX_FILE_SIZE) return 'File không được vượt quá 10MB'
+    return ''
   }
 
   const handleAddFiles = (groupIndex: number, files: FileList) => {
-    const newFiles: UploadedFile[] = Array.from(files).map((file) => {
-      const id = nextFileIdRef.current++
-      return {
-        id,
-        name: file.name,
-        size: formatFileSize(file.size),
-        file,
-        url: URL.createObjectURL(file),
-      }
-    })
     setAttachmentGroups((prev) =>
-      prev.map((group, idx) =>
-        idx === groupIndex
-          ? { ...group, files: [...group.files, ...newFiles] }
-          : group
-      )
+      prev.map((group, idx) => {
+        if (idx !== groupIndex) return group
+        const newFiles: UploadedFile[] = Array.from(files).map((file, fileIdx) => {
+          const id = nextFileIdRef.current++
+          const error = validateFile(file, group.files.length + fileIdx)
+          return {
+            id,
+            name: file.name,
+            size: formatFileSize(file.size),
+            file,
+            url: URL.createObjectURL(file),
+            mimeType: file.type,
+            fileType: group.fileType,
+            error,
+          }
+        })
+        return { ...group, files: [...group.files, ...newFiles] }
+      })
     )
+    setErrors((prev) => ({ ...prev, attachments: '' }))
   }
 
-  const handleRemoveFile = (groupIndex: number, fileId: number) => {
+  const handleRemoveFile = async (groupIndex: number, fileId: number | string) => {
+    const target = attachmentGroups[groupIndex]?.files.find((file) => file.id === fileId)
+    if (typeof fileId === 'string' && target && !target.file) {
+      const media = new Media()
+      const result = await media.deleteFile(fileId)
+      if (!result.success) {
+        showToast('error', result.message)
+        return
+      }
+    }
+
     setAttachmentGroups((prev) =>
       prev.map((group, idx) =>
         idx === groupIndex
-          ? { ...group, files: group.files.filter((f) => f.id !== fileId) }
+          ? { ...group, files: group.files.filter((file) => file.id !== fileId) }
           : group
       )
     )
   }
 
   const isViewMode = mode === 'view'
-
   const pageTitle = mode === 'create'
     ? 'Thêm mới doanh nghiệp'
     : mode === 'edit'
@@ -312,14 +383,12 @@ export default function EnterpriseModal({
 
   return (
     <>
-      {/* Inline Page View */}
       <div className="h-screen flex flex-col py-2">
-        {/* Top Bar */}
         <div className="shrink-0 bg-white px-5 py-3 rounded-lg border border-gray-100 shadow-sm flex items-center justify-between">
           <h1 className="text-base font-bold text-gray-800">{pageTitle}</h1>
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={resetAndClose}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
           >
             <i className="fa-solid fa-arrow-left text-xs" />
@@ -327,9 +396,7 @@ export default function EnterpriseModal({
           </button>
         </div>
 
-        {/* Main content */}
         <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden mt-2">
-          {/* Stepper (hidden in view mode) */}
           {!isViewMode && (
             <div className="shrink-0 px-8 pt-6 pb-4 border-b border-gray-100">
               <div className="flex items-center justify-center gap-0">
@@ -338,34 +405,18 @@ export default function EnterpriseModal({
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 transition-colors ${
-                          currentStep > step.number
-                            ? 'bg-primary text-white'
-                            : currentStep === step.number
-                              ? 'bg-primary text-white'
-                              : 'bg-gray-200 text-gray-500'
+                          currentStep >= step.number ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
                         }`}
                       >
-                        {currentStep > step.number ? (
-                          <i className="fa-solid fa-check text-xs" />
-                        ) : (
-                          step.number
-                        )}
+                        {currentStep > step.number ? <i className="fa-solid fa-check text-xs" /> : step.number}
                       </div>
-                      <span
-                        className={`text-sm whitespace-nowrap ${
-                          currentStep >= step.number ? 'text-gray-800 font-medium' : 'text-gray-400'
-                        }`}
-                      >
+                      <span className={`text-sm whitespace-nowrap ${currentStep >= step.number ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
                         {step.label}
                       </span>
                     </div>
 
                     {idx < steps.length - 1 && (
-                      <div
-                        className={`w-32 h-0.5 mx-4 transition-colors ${
-                          currentStep > step.number ? 'bg-primary' : 'bg-gray-200'
-                        }`}
-                      />
+                      <div className={`w-32 h-0.5 mx-4 transition-colors ${currentStep > step.number ? 'bg-primary' : 'bg-gray-200'}`} />
                     )}
                   </div>
                 ))}
@@ -373,62 +424,83 @@ export default function EnterpriseModal({
             </div>
           )}
 
-          {/* Content - Scrollable */}
           <div className="flex-1 overflow-y-auto px-8 py-6 min-h-0">
             {isViewMode ? (
-              <EnterpriseStepConfirm
+              <EnterpriseStepConfirm form={form} attachmentGroups={attachmentGroups} />
+            ) : currentStep === 1 ? (
+              <EnterpriseStepOne
                 form={form}
+                errors={errors}
                 attachmentGroups={attachmentGroups}
+                businessTypes={businessTypes}
+                industries={industries}
+                provinces={provinces}
+                wards={wards}
+                businessWards={businessWards}
+                addressLoading={addressLoading}
+                onChange={handleChange}
+                onSelectGpkdProvince={(province) => {
+                  handleChange('gpkdProvince', province.name)
+                  handleChange('gpkdProvinceData', { key: province.code, value: province.name })
+                  handleChange('gpkdWard', '')
+                  handleChange('gpkdWardData', { ...emptyAddress })
+                }}
+                onSelectGpkdWard={(ward) => {
+                  handleChange('gpkdWard', ward.name)
+                  handleChange('gpkdWardData', { key: ward.code, value: ward.name })
+                }}
+                onSelectBusinessProvince={(province) => {
+                  handleChange('businessProvince', province.name)
+                  handleChange('businessProvinceData', { key: province.code, value: province.name })
+                  handleChange('businessWard', '')
+                  handleChange('businessWardData', { ...emptyAddress })
+                }}
+                onSelectBusinessWard={(ward) => {
+                  handleChange('businessWard', ward.name)
+                  handleChange('businessWardData', { key: ward.code, value: ward.name })
+                }}
+                onClearGpkdProvince={() => {
+                  handleChange('gpkdProvince', '')
+                  handleChange('gpkdProvinceData', { ...emptyAddress })
+                  handleChange('gpkdWard', '')
+                  handleChange('gpkdWardData', { ...emptyAddress })
+                }}
+                onClearGpkdWard={() => {
+                  handleChange('gpkdWard', '')
+                  handleChange('gpkdWardData', { ...emptyAddress })
+                }}
+                onClearBusinessProvince={() => {
+                  handleChange('businessProvince', '')
+                  handleChange('businessProvinceData', { ...emptyAddress })
+                  handleChange('businessWard', '')
+                  handleChange('businessWardData', { ...emptyAddress })
+                }}
+                onClearBusinessWard={() => {
+                  handleChange('businessWard', '')
+                  handleChange('businessWardData', { ...emptyAddress })
+                }}
+                onAddFiles={handleAddFiles}
+                onRemoveFile={handleRemoveFile}
+                mode={mode}
+                userRole={userRole}
               />
             ) : (
-              <>
-                {currentStep === 1 && (
-                  <EnterpriseStepOne
-                    form={form}
-                    errors={errors}
-                    attachmentGroups={attachmentGroups}
-                    onChange={handleChange}
-                    onAddFiles={handleAddFiles}
-                    onRemoveFile={handleRemoveFile}
-                    mode={mode}
-                    userRole={userRole}
-                  />
-                )}
-                {currentStep === 2 && (
-                  <EnterpriseStepConfirm
-                    form={form}
-                    attachmentGroups={attachmentGroups}
-                  />
-                )}
-              </>
+              <EnterpriseStepConfirm form={form} attachmentGroups={attachmentGroups} />
             )}
           </div>
 
-          {/* Footer buttons */}
           <div className="shrink-0 px-8 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
             {isViewMode && (
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="px-5 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-              >
+              <button type="button" onClick={resetAndClose} className="px-5 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
                 Quay lại
               </button>
             )}
             {!isViewMode && currentStep === 1 && (
               <>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="px-5 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                >
+                <button type="button" onClick={resetAndClose} className="px-5 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
                   Hủy bỏ
                 </button>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
-                >
+                <button type="button" onClick={handleNext} className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
                   <i className="fa-solid fa-chevron-right text-xs" />
                   Tiếp tục
                 </button>
@@ -436,20 +508,17 @@ export default function EnterpriseModal({
             )}
             {!isViewMode && currentStep === 2 && (
               <>
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="px-5 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                >
+                <button type="button" onClick={() => setCurrentStep(1)} className="px-5 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
                   Trở về
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirm}
-                  className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                  disabled={submitting}
+                  className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity flex items-center gap-2"
                 >
                   <i className="fa-solid fa-check text-xs" />
-                  Xác nhận
+                  {submitting ? 'Đang lưu...' : 'Xác nhận'}
                 </button>
               </>
             )}
@@ -457,22 +526,13 @@ export default function EnterpriseModal({
         </div>
       </div>
 
-      {/* Toast Notification */}
       {toast.show && (
         <div className="fixed top-4 right-4 z-[80] animate-[slideInRight_0.3s_ease-out]">
-          <div className={`rounded-lg px-5 py-3 flex items-center gap-3 shadow-lg ${
-            toast.type === 'success'
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-red-50 border border-red-200'
-          }`}>
-            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-              toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-            }`}>
+          <div className={`rounded-lg px-5 py-3 flex items-center gap-3 shadow-lg ${toast.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
               <i className={`fa-solid ${toast.type === 'success' ? 'fa-check' : 'fa-xmark'} text-white text-[10px]`} />
             </div>
-            <span className={`text-sm font-medium ${
-              toast.type === 'success' ? 'text-green-800' : 'text-red-800'
-            }`}>{toast.message}</span>
+            <span className={`text-sm font-medium ${toast.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>{toast.message}</span>
             <button
               type="button"
               onClick={() => setToast((prev) => ({ ...prev, show: false }))}
@@ -484,11 +544,13 @@ export default function EnterpriseModal({
         </div>
       )}
 
-      {/* Account Info Popup (create mode only) */}
       {mode === 'create' && (
         <AccountInfoPopup
           isOpen={showAccountPopup}
-          onClose={handleCloseAccountPopup}
+          onClose={() => {
+            setShowAccountPopup(false)
+            resetAndClose()
+          }}
           accountNumber={accountInfo.accountNumber}
           password={accountInfo.password}
         />
