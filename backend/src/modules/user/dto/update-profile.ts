@@ -6,7 +6,6 @@ export class UpdateProfileDto {
   @ApiProperty({ required: false }) @IsOptional() @IsString() fullName?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsDateString() dateOfBirth?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() gender?: string;
-  @ApiProperty({ required: false }) @IsOptional() @IsEmail() email?: string;
 
   @ApiProperty({ example: { key: '79', value: 'Thành phố Hồ Chí Minh' }, required: false }) 
   @IsOptional() 
