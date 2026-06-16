@@ -7,28 +7,31 @@ type InputLegendProps = {
     require?: boolean;
     errorMess?: string;
 
-    input: InputHTMLAttributes<HTMLInputElement>
+    input: InputHTMLAttributes<HTMLInputElement>,
+
+    fillWhite?: boolean;
 }
 
 const InputLegend = ({
-    label, require, errorMess, input
+    label, require, errorMess, input, fillWhite
 }: InputLegendProps) => {
-    const classname = `outline-none w-full bg-transparent ${input.disabled ? "text-gray-400 cursor-not-allowed select-none" : "text-gray-800"}`;
+    const classname = `outline-none w-full bg-transparent`;
 
     const value = input.value || "";
 
     const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
 
     const togglePasswordVisibility = () => {
-        setIsShowPassword(!isShowPassword);
+        if (input.disabled) return;
+        setIsShowPassword(prev => !prev);
     };
 
     return (
         <div className="flex flex-col gap-2 flex-1">
-            <div className={`relative ${input.disabled ? "bg-gray-50 border border-gray-200" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} px-3 py-2 rounded-lg`}>
+            <div className={`relative ${fillWhite && "bg-white"} ${input.disabled ? "bg-gray-100 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} px-3 py-2 rounded-lg`}>
                 {label && (
                     <label
-                        className={`absolute ${input.disabled ? "bg-gray-50 text-gray-400" : "bg-white text-gray-600"} bottom-full translate-y-1/2 text-sm px-1`}
+                        className={`absolute text-gray-500 bg-white bottom-full translate-y-1/2 text-sm px-1`}
                         htmlFor={input.id}
                     >
                         {label}
@@ -40,9 +43,13 @@ const InputLegend = ({
                 )}
                 <div className="flex items-center gap-2">
                     <input
-                        className={classname}
-                        type={input.type === "password" && !isShowPassword ? "password" : input.type === "password" ? "text" : input.type}
                         {...input}
+                        className={classname}
+                        type={
+                            input.type === "password"
+                                ? (isShowPassword ? "text" : "password")
+                                : input.type
+                        }
                         value={value}
                     />
 

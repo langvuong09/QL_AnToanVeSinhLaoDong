@@ -1,6 +1,7 @@
 'use client'
 
 import { Media } from "@/src/api/Media";
+import { IRole, Role } from "@/src/api/Role";
 import { Jwt } from "@/src/api/types/jwt";
 import { UserDetail } from "@/src/api/types/user";
 import { ElementAddress, User } from "@/src/api/User";
@@ -14,36 +15,119 @@ import TopHero from "@/src/components/TopHero";
 import Button from "@/src/components/ui/Button";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { OpenAdress, Province, Ward } from "@/src/services/open-address";
-import { parseAccessToken } from "@/src/utils/jwt-parser";
+import { useParams } from "next/navigation";
+import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useRef, useState } from "react";
 
-const InfomationPage = () => {
+const AccountIdPage = () => {
+    const { id } = useParams();
+    const router = useRouter();
+
+    if (!id) {
+        router.replace("/accounts");
+    }
+
     const notificate = useContext(NotificateContext);
 
     const [loading, setLoading] = useState<boolean>(false);
-
-    const [jwt, setJwt] = useState<Jwt | null>(null);
     const [currentUser, setCurrentUser] = useState<UserDetail | null>(null);
+    const [roles, setRoles] = useState<IRole[]>([]);
+    const [errorMessage, setErrorMessage] = useState<string>("");
 
+    // ---------- Handle fetch current state ----------
+    const fetchUserDetail = async (id: string) => {
+        try {
+            setLoading(true);
+            const ucls = new User();
+            const rcls = new Role();
+
+            const uresult = await ucls.GetUserDetailById(id);
+            const rresult = await rcls.getAll();
+
+            if (rresult.success && rresult.data) {
+                setRoles(rresult.data.items);
+            }
+
+            var province, ward = null;
+
+            setCurrentUser(uresult);
+            setSubmitForm({
+                username: uresult.username || "",
+                fullName: uresult.fullName || "",
+                gender: uresult.gender || "",
+                roleId: uresult.roleId,
+
+                dateOfBirth: uresult.dateOfBirth || "",
+                position: uresult.position || "",
+                email: uresult.email || "",
+
+                province: uresult.province || { key: 0, value: "" },
+                ward: uresult.ward || { key: 0, value: "" },
+                address: uresult.address || "",
+
+                status: uresult.status
+            });
+
+            province = uresult.province;
+            ward = uresult.ward;
+
+            if (province) {
+                setProvinceSearch(province.value)
+            } else {
+                setProvinceSearch("");
+            }
+
+            if (ward) {
+                setWardSearch(ward.value);
+            } else {
+                setWardSearch("");
+            }
+
+            if (uresult.avatar) {
+                setImagePreview(uresult.avatar.url);
+            }
+            setLoading(false);
+        } catch (error: any) {
+            setLoading(false);
+            setCurrentUser(null);
+            setErrorMessage(error.message || "Lỗi không xác định. Vui lòng thử lại sau ít phút." as string);
+        }
+    }
+
+    useEffect(() => {
+        if (id) {
+            fetchUserDetail(id as string);
+        }
+    }, [id]);
+
+    // Start decalare state
     const [submitForm, setSubmitForm] = useState<{
+        username: string;
         fullName: string;
+        gender: string;
+        roleId: number;
 
         dateOfBirth: string;
-        gender: string;
-
         position: string;
+        email: string;
 
         province: ElementAddress;
         ward: ElementAddress;
         address: string;
 
-        avatarId?: string;
-    }>({
-        fullName: "",
-        dateOfBirth: "",
-        gender: "",
+        status: boolean;
 
+        avatarId?: string;
+
+    }>({
+        username: "",
+        fullName: "",
+        gender: "",
+        roleId: 0,
+
+        dateOfBirth: "",
         position: "",
+        email: "",
 
         province: {
             key: 0,
@@ -54,24 +138,32 @@ const InfomationPage = () => {
             value: ""
         },
         address: "",
+
+        status: false
     });
 
     const [errorForm, setErrorForm] = useState<{
+        username: string
         fullName: string;
-        dateOfBirth: string;
         gender: string;
+        roleId: string;
 
+        dateOfBirth: string;
         position: string,
+        email: string,
 
         province: string;
         ward: string;
         address: string;
     }>({
+        username: "",
         fullName: "",
-        dateOfBirth: "",
         gender: "",
+        roleId: "",
 
+        dateOfBirth: "",
         position: "",
+        email: "",
 
         province: "",
         ward: "",
@@ -80,31 +172,39 @@ const InfomationPage = () => {
 
     const onSubmit = async () => {
         const newErrors = {
+            username: "",
             fullName: "",
-            dateOfBirth: "",
             gender: "",
+            roleId: "",
 
+            dateOfBirth: "",
             position: "",
+            email: "",
 
             province: "",
             ward: "",
             address: "",
-        };
+        }
 
         let hasError = false;
+        if (!submitForm?.username?.trim()) {
+            newErrors.username = "Tên đăng nhập không được để trống";
+            hasError = true;
+        }
 
         if (!submitForm?.fullName?.trim()) {
             newErrors.fullName = "Họ và tên không được để trống";
             hasError = true;
-            console.log("Run here")
-
         }
 
         if (!submitForm?.gender) {
             newErrors.gender = "Giới tính không được để trống";
             hasError = true;
-            console.log("Run here")
+        }
 
+        if (!submitForm?.roleId) {
+            newErrors.roleId = "Quyền không được để trống";
+            hasError = true;
         }
 
         if (!submitForm?.dateOfBirth) {
@@ -120,6 +220,11 @@ const InfomationPage = () => {
                 newErrors.dateOfBirth = "Ngày sinh phải nhỏ hơn hiện tại";
                 hasError = true;
             }
+        }
+
+        if (!submitForm?.email.trim()) {
+            newErrors.email = "Email không được để trống";
+            hasError = true;
         }
 
         if (!submitForm?.province?.key || !submitForm?.province?.value.trim()) {
@@ -149,19 +254,19 @@ const InfomationPage = () => {
         try {
             setLoading(true);
             if (fileAvatar) {
-                const mcls = new Media;
+                const mcls = new Media();
                 const formData = new FormData();
                 formData.append('file', fileAvatar);
                 formData.append('fileType', "AVATAR");
 
                 const result = await mcls.UploadImage(formData);
-                if (result.success && result.data) {
-                    submitForm.avatarId = result.data.id;
+                if (result) {
+                    submitForm.avatarId = result.id;
                 }
             }
 
             const ucls = new User();
-            await ucls.UpdateSelfProfile(jwt?.id!, submitForm);
+            await ucls.UpdateSelfProfile(id as string, submitForm);
             setLoading(false);
             notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
 
@@ -170,8 +275,6 @@ const InfomationPage = () => {
             notificate?.showNotification({ type: "error", message: "Thay đổi thông tin thất bại" });
         }
     }
-
-    const [isChangeEmail, setIsChangeEmail] = useState<string>("");
 
     const [provinces, setProvinces] = useState<Province[]>([]);
     const [wards, setWards] = useState<Ward[]>([]);
@@ -260,69 +363,10 @@ const InfomationPage = () => {
         setImagePreview(object);
     }
 
-    // ---------- Handle fetch current state ----------
-    useEffect(() => {
-        const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || "";
-        if (token) {
-            const jwt = parseAccessToken(token);
-            setJwt(jwt);
-        }
-    }, []);
-
-    const fetchUserDetail = async () => {
-        if (jwt) {
-            setLoading(true);
-            const cls = new User();
-            const result = await cls.GetUserDetailById(jwt.id);
-
-            var province, ward = null;
-
-            setCurrentUser(result);
-            setSubmitForm({
-                fullName: result.fullName || "",
-                dateOfBirth: result.dateOfBirth || "",
-                gender: result.gender || "",
-                position: result.position || "",
-                province: result.province || { key: 0, value: "" },
-                ward: result.ward || { key: 0, value: "" },
-                address: result.address || ""
-            });
-
-            province = result.province;
-            ward = result.ward;
-
-            if (province) {
-                setProvinceSearch(province.value)
-            } else {
-                setProvinceSearch("");
-            }
-
-            if (ward) {
-                setWardSearch(ward.value);
-            } else {
-                setWardSearch("");
-            }
-
-            setImagePreview(result.avatar.url);
-
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        if (jwt) {
-            fetchUserDetail();
-        }
-    }, [jwt]);
-
     return (
         <main className="space-y-10 px-3">
             {loading && (
                 <Loading />
-            )}
-
-            {isChangeEmail && (
-                <ChangeEmail email={currentUser?.email || ""} />
             )}
 
             <TopHero
@@ -339,6 +383,13 @@ const InfomationPage = () => {
                     </div>
                 }
             />
+
+            {errorMessage && (
+                <div className="bg-red-100 px-3 py-2 rounded text-red-500 flex items-center gap-5 font-semibold text-sm">
+                    <i className="fa-solid fa-triangle-exclamation"></i>
+                    <span>{errorMessage}</span>
+                </div>
+            )}
 
             <div className="grid grid-cols-12 gap-5">
                 {/* Left card */}
@@ -369,7 +420,13 @@ const InfomationPage = () => {
                     <div className="flex items-center justify-between">
                         <span className="font-semibold">Kích hoạt</span>
 
-                        <CheckboxLengend isChecked={currentUser?.status || false} checkbox={{ disabled: true }} />
+                        <CheckboxLengend
+                            isChecked={submitForm.status}
+                            checkbox={{ }}
+                            onChange={() => {
+                                setSubmitForm(prev => ({ ...prev, status: !prev.status }))
+                            }}
+                            />
                     </div>
                 </div>
 
@@ -383,34 +440,19 @@ const InfomationPage = () => {
                                 <InputLegend
                                     label="Tên đăng nhập"
                                     require={true}
-                                    input={{ type: "text", placeholder: "vnagroup", disabled: true }}
-                                />
-
-                                <DateLengend
-                                    label="Ngày tháng năm sinh"
-                                    require={true}
-                                    value={submitForm.dateOfBirth}
-                                    onChange={(val) => {
-                                        setSubmitForm((prev) => ({ ...prev, dateOfBirth: val }));
-                                        setErrorForm((prev) => ({ ...prev, dateOfBirth: "" }));
-                                    }}
-                                    errorMess={errorForm?.dateOfBirth}
-                                    errorInput="Dữ liệu truyền vào không hợp lệ"
-                                />
-
-                                <InputLegend
-                                    label="Chức danh"
                                     input={{
                                         type: "text",
-                                        placeholder: "Nhập chức danh",
-                                        value: submitForm.position,
+                                        placeholder: "vnagroup",
+                                        value: submitForm.username,
+                                        disabled: true,
                                         onChange: (event) => {
-                                            setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
-                                        },
+                                            setSubmitForm((prev) => ({ ...prev, username: event.target.value }));
+                                            setErrorForm((prev) => ({ ...prev, username: "" }));
+                                        }
                                     }}
+                                    errorMess={errorForm?.username}
                                 />
-                            </div>
-                            <div className="flex-1 flex flex-col gap-5">
+
                                 <InputLegend
                                     label="Họ và tên (*)"
                                     require={true}
@@ -425,6 +467,7 @@ const InfomationPage = () => {
                                     }}
                                     errorMess={errorForm?.fullName}
                                 />
+
                                 <SelectLegend
                                     label="Giới tính"
                                     require={true}
@@ -441,39 +484,78 @@ const InfomationPage = () => {
                                     <option value="male">Nam</option>
                                     <option value="female">Nữ</option>
                                 </SelectLegend>
+
                                 <SelectLegend
                                     label="Vai trò"
                                     require={true}
                                     select={{
-                                        value: currentUser?.roleId,
+                                        value: submitForm?.roleId,
                                         onChange: (event) => {
-                                            setSubmitForm((prev) => ({ ...prev, roleId: event.target.value }));
+                                            setSubmitForm((prev) => ({ ...prev, roleId: Number(event.target.value) }));
                                             setErrorForm((prev) => ({ ...prev, roleId: "" }));
                                         },
-                                        disabled: true
                                     }}
+                                    errorMess={errorForm.roleId}
                                 >
                                     <option value="">Chọn vai trò</option>
-                                    {currentUser?.role && (
-                                        <option value={currentUser.role.id}>{currentUser.role.name}</option>
-                                    )}
+                                    {roles && roles.map((role) => (
+                                        <option key={role.id} value={role.id}>{role.name}</option>
+                                    ))}
                                 </SelectLegend>
-                            </div>
-                        </div>
 
-                        <div className="flex gap-5">
-                            <InputLegend
-                                label="Email"
-                                require={true}
-                                input={{
-                                    type: "email",
-                                    placeholder: "Nhập địa chỉ email",
-                                    value: currentUser?.email,
-                                    disabled: true
-                                }}
-                            />
-                            <div className="flex-1 flex items-center">
-                                <button className="text-[15px] font-semibold text-blue-600 w-fit">Thay đổi</button>
+                            </div>
+
+                            <div className="flex-1 flex flex-col gap-5">
+                                <InputLegend
+                                    label="Mật khẩu"
+                                    require={true}
+                                    input={{
+                                        type: "password",
+                                        placeholder: "Nhập mật khẩu",
+                                        value: "**********",
+                                        disabled: true
+                                    }}
+                                />
+
+                                <DateLengend
+                                    label="Ngày tháng năm sinh"
+                                    require={true}
+                                    value={submitForm.dateOfBirth}
+                                    onChange={(val) => {
+                                        setSubmitForm((prev) => ({ ...prev, dateOfBirth: val }));
+                                        setErrorForm((prev) => ({ ...prev, dateOfBirth: "" }));
+                                    }}
+                                    errorMess={errorForm.dateOfBirth}
+                                    errorInput="Dữ liệu truyền vào không hợp lệ"
+                                />
+
+                                <InputLegend
+                                    label="Chức danh"
+                                    input={{
+                                        type: "text",
+                                        placeholder: "Nhập chức danh",
+                                        value: submitForm.position,
+                                        onChange: (event) => {
+                                            setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
+                                        },
+                                    }}
+                                />
+
+                                <InputLegend
+                                    label="Email"
+                                    require={true}
+                                    input={{
+                                        type: "email",
+                                        placeholder: "Nhập địa chỉ email",
+                                        value: submitForm.email,
+                                        onChange: (event) => {
+                                            setSubmitForm((prev) => ({ ...prev, email: event.target.value }));
+                                            setErrorForm((prev) => ({ ...prev, email: "" }));
+                                        }
+                                    }}
+                                    errorMess={errorForm.email}
+                                />
+
                             </div>
                         </div>
                     </div>
@@ -610,4 +692,4 @@ const InfomationPage = () => {
     );
 };
 
-export default InfomationPage;
+export default AccountIdPage;

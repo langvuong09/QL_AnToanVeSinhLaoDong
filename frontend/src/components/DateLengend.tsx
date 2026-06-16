@@ -149,7 +149,7 @@ export default function DatePicker({ label, require, errorMess, errorInput, valu
             <div ref={containerRef} className="relative">
                 <div className={`relative ${disabled ? 'bg-gray-100' : ''} ring ${displayError || isInternalErr ? 'ring-red-600' : 'ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2'} px-3 py-2 rounded-lg`}>
                     {label && (
-                        <label className="absolute bg-white bottom-full translate-y-1/2 text-sm text-gray-400 px-1" htmlFor={id}>
+                        <label className="absolute bg-white bottom-full translate-y-1/2 text-sm px-1 text-gray-500" htmlFor={id}>
                             {label}
                             {require && <span className="text-red-600">{" "}*</span>}
                         </label>

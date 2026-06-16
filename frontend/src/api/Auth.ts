@@ -21,11 +21,11 @@ export class Auth extends Base {
             if (result?.data && result?.success) {
                 return result.data;
             }
-        } catch  {
+        } catch (error) {
             throw Error("Thông tin đăng nhập không chính xác");
         }
-        
-        throw Error("Lỗi không xác định vui lòng thử lại sau");
+
+        throw Error("Thông tin đăng nhập không chính xác");
     }
 
     async Logout(): Promise<void> {

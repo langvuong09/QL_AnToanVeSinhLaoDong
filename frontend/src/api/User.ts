@@ -12,6 +12,7 @@ export interface IUser {
         id: number;
         name: string;
     };
+    createdAt: Date;
 }
 
 export interface IUserListResponse {
@@ -57,6 +58,67 @@ export class User extends Base {
         };
     }
 
+    // Admin functions
+    async ChangeStatus(id: string, status: boolean) {
+        const result = await this.execute({
+            url: `/${id}/status`,
+            method: "PATCH",
+            data: {
+                status: status
+            }
+        });
+
+        console.log(result);
+    }
+
+    async CreateUser(data: {
+        username: string;
+        password: string;
+        fullName: string;
+        email: string;
+        dateOfBirth: string;
+        gender: string;
+        roleId: number;
+        position: string;
+        province: ElementAddress
+        ward: ElementAddress;
+        address: string;
+        avatarId?: string;
+    }) {
+        const result = await this.execute({
+            url: "/",
+            method: "POST",
+            data: data
+        });
+
+        return result;
+    }
+
+    async DeleteUser(ids: string[]) {
+        const result = await this.execute({
+            url: "/bulk-delete",
+            method: "POST",
+            data: {
+                ids: ids
+            }
+        });
+
+        return result;
+    }
+
+    async SetPassword(id: string, newPassword: string) {
+        const result = await this.execute({
+            url: `/${id}/set-password`,
+            method: "POST",
+            data: {
+                newPassword: newPassword
+            }
+        });
+
+        return result;
+    }
+
+    // User functions
     async ChangePassword(oldPassword: string, newPassword: string, confirmPassword: string): Promise<{ success: boolean; message: string }> {
         const result = await this.execute({
             url: "/reset-password",
@@ -89,10 +151,14 @@ export class User extends Base {
             method: "GET",
         });
 
-        return result.data!;
+        if (result && result.success) {
+            return result.data!;
+        }
+
+        throw new Error("Người dùng không tồn tại. Vui lòng kiểm tra lại UUID của người dùng.");
     }
 
-    async UpdateSelfProfile(id: string,data: {
+    async UpdateSelfProfile(id: string, data: {
         fullName?: string;
         dateOfBirth?: string;
         gender?: string;
