@@ -62,4 +62,30 @@ export class Auth extends Base {
         });
         return { success: result.success, message: result.message || "" };
     }
+
+    async VerifyResetEmail(email: string, otp: string) {
+        const result = await this.execute<{ resetToken: string }>({
+            url: "/verify-reset-email-otp",
+            method: "POST",
+            data: {
+                email: email,
+                otp: otp
+            }
+        });
+        return result;
+    }
+
+    async ConfirmResetEmail(newEmail: string, resetToken: string) {
+        const result = await this.execute<{ resetToken: string }>({
+            url: "/confirm-reset-email",
+            method: "POST",
+            data: {
+                resetToken: resetToken,
+                newEmail: newEmail
+            }
+        });
+
+        console.log(result)
+        return result;
+    }
 }

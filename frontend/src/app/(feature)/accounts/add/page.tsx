@@ -325,7 +325,7 @@ const AccountAddPage = () => {
                 lable="Chi tiết người dùng"
                 component={
                     <div className="flex gap-5 rounded">
-                        <Button variant="outline" className="flex gap-3 items-center text-sm font-semibold">
+                        <Button variant="outline" className="flex gap-3 items-center text-sm font-semibold" onClick={() => router.push("/accounts")}>
                             <span>Hủy bỏ</span>
                         </Button>
                         <Button variant="primary" className="flex gap-3 items-center text-sm font-semibold" onClick={onSubmit}>

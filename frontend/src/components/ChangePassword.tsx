@@ -76,12 +76,12 @@ const ChangePassword = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4 py-6">
-      <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden">
-        <div className="bg-primary px-6 py-4 text-center">
+      <div className="w-full max-w-md rounded-lg bg-white shadow-2xl overflow-hidden">
+        <div className="bg-blue-600 px-6 py-4 text-center">
           <h1 className="text-lg font-semibold text-white">Đổi mật khẩu</h1>
         </div>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-2 px-6 py-6 text-gray-700">
+        <form onSubmit={onSubmit} className="flex flex-col gap-2 px-6 py-6 text-gray-700 space-y-2">
           {errors.form && (
             <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
               {errors.form}
@@ -120,6 +120,7 @@ const ChangePassword = ({
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <Button
+              className="text-sm"
               type="button"
               variant="outline"
               onClick={onClose}
@@ -127,7 +128,7 @@ const ChangePassword = ({
               Hủy bỏ
             </Button>
             <Button
-
+              className="px-5 text-sm"
               type="submit"
               disabled={isLoading}
             >

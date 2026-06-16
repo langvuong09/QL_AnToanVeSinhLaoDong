@@ -212,8 +212,11 @@ const AccountIdPage = () => {
             }
         }
 
-        if (!submitForm?.email.trim()) {
+        if (!submitForm.email?.trim()) {
             newErrors.email = "Email không được để trống";
+            hasError = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submitForm.email)) {
+            newErrors.email = "Email không đúng định dạng";
             hasError = true;
         }
 
@@ -364,7 +367,7 @@ const AccountIdPage = () => {
                 lable="Chi tiết người dùng"
                 component={
                     <div className="flex gap-5 rounded">
-                        <Button variant="outline" className="flex gap-3 items-center text-sm font-semibold">
+                        <Button variant="outline" className="flex gap-3 items-center text-sm font-semibold" onClick={() => router.push("/accounts")}>
                             <span>Hủy bỏ</span>
                         </Button>
                         <Button variant="primary" className="flex gap-3 items-center text-sm font-semibold" onClick={onSubmit}>
@@ -413,11 +416,11 @@ const AccountIdPage = () => {
 
                         <CheckboxLengend
                             isChecked={submitForm.status}
-                            checkbox={{ }}
+                            checkbox={{}}
                             onChange={() => {
                                 setSubmitForm(prev => ({ ...prev, status: !prev.status }))
                             }}
-                            />
+                        />
                     </div>
                 </div>
 
@@ -439,6 +442,33 @@ const AccountIdPage = () => {
                                     }}
                                 />
 
+                                <DateLengend
+                                    label="Ngày tháng năm sinh"
+                                    require={true}
+                                    value={submitForm.dateOfBirth}
+                                    onChange={(val) => {
+                                        setSubmitForm((prev) => ({ ...prev, dateOfBirth: val }));
+                                        setErrorForm((prev) => ({ ...prev, dateOfBirth: "" }));
+                                    }}
+                                    errorMess={errorForm.dateOfBirth}
+                                    errorInput="Dữ liệu truyền vào không hợp lệ"
+                                />
+
+                                <InputLegend
+                                    label="Chức danh"
+                                    input={{
+                                        type: "text",
+                                        placeholder: "Nhập chức danh",
+                                        value: submitForm.position,
+                                        onChange: (event) => {
+                                            setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
+                                        },
+                                    }}
+                                />
+
+                            </div>
+
+                            <div className="flex-1 flex flex-col gap-5">
                                 <InputLegend
                                     label="Họ và tên (*)"
                                     require={true}
@@ -488,45 +518,10 @@ const AccountIdPage = () => {
                                         <option key={role.id} value={role.id}>{role.name}</option>
                                     ))}
                                 </SelectLegend>
-
                             </div>
-
-                            <div className="flex-1 flex flex-col gap-5">
-                                <InputLegend
-                                    label="Mật khẩu"
-                                    require={true}
-                                    input={{
-                                        type: "password",
-                                        placeholder: "Nhập mật khẩu",
-                                        value: "**********",
-                                        disabled: true
-                                    }}
-                                />
-
-                                <DateLengend
-                                    label="Ngày tháng năm sinh"
-                                    require={true}
-                                    value={submitForm.dateOfBirth}
-                                    onChange={(val) => {
-                                        setSubmitForm((prev) => ({ ...prev, dateOfBirth: val }));
-                                        setErrorForm((prev) => ({ ...prev, dateOfBirth: "" }));
-                                    }}
-                                    errorMess={errorForm.dateOfBirth}
-                                    errorInput="Dữ liệu truyền vào không hợp lệ"
-                                />
-
-                                <InputLegend
-                                    label="Chức danh"
-                                    input={{
-                                        type: "text",
-                                        placeholder: "Nhập chức danh",
-                                        value: submitForm.position,
-                                        onChange: (event) => {
-                                            setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
-                                        },
-                                    }}
-                                />
-
+                        </div>
+                        <div className="flex gap-5">
+                            <div className="flex-1">
                                 <InputLegend
                                     label="Email"
                                     require={true}
@@ -541,8 +536,8 @@ const AccountIdPage = () => {
                                     }}
                                     errorMess={errorForm.email}
                                 />
-
                             </div>
+                            <div className="flex-1"></div>
                         </div>
                     </div>
 

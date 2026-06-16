@@ -185,4 +185,17 @@ export class User extends Base {
         });
         return result;
     }
+
+    async SendChangeEmailRequest(email: string) {
+        const result = await this.execute({
+            url: "/send-reset-email",
+            method: "POST",
+            data: {
+                email: email
+            }
+        });
+
+        console.log(result);
+        return result;
+    }
 }
