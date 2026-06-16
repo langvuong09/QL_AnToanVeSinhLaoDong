@@ -11,10 +11,19 @@ const ALLOWED_MIME_TYPES = [
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+  'application/msexcel',
+  'application/x-msexcel',
+  'application/x-ms-excel',
+  'application/x-excel',
+  'application/x-dos_ms_excel',
+  'application/xls',
+  'application/x-xls',
   'image/jpeg',
   'image/jpg',
   'image/png',
 ]
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png']
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 const MAX_FILES_PER_GROUP = 10
 
@@ -38,7 +47,15 @@ function fileDedupeKey(name: string, size: number): string {
 
 function validateFile(file: File, currentCount: number): string {
   if (currentCount >= MAX_FILES_PER_GROUP) return `Mỗi nhóm tối đa ${MAX_FILES_PER_GROUP} file`
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) return 'Định dạng file không được hỗ trợ'
+  
+  const ext = file.name.split('.').pop()?.toLowerCase() || ''
+  const isAllowedExt = ALLOWED_EXTENSIONS.includes(ext)
+  const isAllowedMime = ALLOWED_MIME_TYPES.includes(file.type)
+
+  if (!isAllowedMime && !isAllowedExt) {
+    return 'Định dạng file không được hỗ trợ'
+  }
+
   if (file.size > MAX_FILE_SIZE) return 'File không được vượt quá 10MB'
   return ''
 }
@@ -62,50 +79,71 @@ export function useFileAttachment() {
   )
   const nextFileIdRef = useRef(1)
 
+  // Keep latest attachmentGroups in a ref for synchronous access in addFiles
+  const attachmentGroupsRef = useRef<AttachmentGroup[]>(attachmentGroups)
+  attachmentGroupsRef.current = attachmentGroups
+
   // ── addFiles ───────────────────────────────────────────────────────
   const addFiles = useCallback((groupIndex: number, fileList: FileList) => {
-    setAttachmentGroups((prev) =>
-      prev.map((group, idx) => {
-        if (idx !== groupIndex) return group
+    const currentGroups = attachmentGroupsRef.current
+    const targetGroup = currentGroups[groupIndex]
+    if (!targetGroup) return { addedCount: 0, duplicates: [], invalidFiles: [] }
 
-        // Tạo set các key file đã có để kiểm tra trùng lặp
-        const existingKeys = new Set(
-          group.files
-            .filter((f) => f.file) // chỉ check local files (server files không có f.file)
-            .map((f) => fileDedupeKey(f.name, f.file!.size)),
-        )
-
-        const newFiles: UploadedFile[] = []
-        let addedCount = 0
-
-        for (const file of Array.from(fileList)) {
-          const key = fileDedupeKey(file.name, file.size)
-
-          // Bỏ qua file trùng lặp (cùng tên + cùng size)
-          if (existingKeys.has(key)) continue
-
-          const id = nextFileIdRef.current++
-          const error = validateFile(file, group.files.length + addedCount)
-
-          newFiles.push({
-            id,
-            name: file.name,
-            size: formatFileSize(file.size),
-            file,
-            url: URL.createObjectURL(file),
-            mimeType: file.type,
-            fileType: group.fileType,
-            error,
-          })
-
-          existingKeys.add(key) // ngăn duplicate trong cùng 1 batch
-          addedCount++
-        }
-
-        if (newFiles.length === 0) return group
-        return { ...group, files: [...group.files, ...newFiles] }
-      }),
+    // Tạo set các key file đã có để kiểm tra trùng lặp
+    const existingKeys = new Set(
+      targetGroup.files
+        .filter((f) => f.file) // chỉ check local files (server files không có f.file)
+        .map((f) => fileDedupeKey(f.name, f.file!.size)),
     )
+
+    const duplicates: string[] = []
+    const invalidFiles: { name: string; error: string }[] = []
+    const newFiles: UploadedFile[] = []
+    let addedCount = 0
+
+    for (const file of Array.from(fileList)) {
+      const key = fileDedupeKey(file.name, file.size)
+
+      // Bỏ qua file trùng lặp (cùng tên + cùng size)
+      if (existingKeys.has(key)) {
+        duplicates.push(file.name)
+        continue
+      }
+
+      const error = validateFile(file, targetGroup.files.length + addedCount)
+      if (error) {
+        invalidFiles.push({ name: file.name, error })
+      }
+
+      const id = nextFileIdRef.current++
+      newFiles.push({
+        id,
+        name: file.name,
+        size: formatFileSize(file.size),
+        file,
+        url: URL.createObjectURL(file),
+        mimeType: file.type,
+        fileType: targetGroup.fileType,
+        error,
+      })
+
+      existingKeys.add(key) // ngăn duplicate trong cùng 1 batch
+      addedCount++
+    }
+
+    if (newFiles.length > 0) {
+      setAttachmentGroups((prev) =>
+        prev.map((group, idx) =>
+          idx === groupIndex ? { ...group, files: [...group.files, ...newFiles] } : group,
+        ),
+      )
+    }
+
+    return {
+      addedCount: newFiles.filter((f) => !f.error).length,
+      duplicates,
+      invalidFiles,
+    }
   }, [])
 
   // ── removeFile ─────────────────────────────────────────────────────

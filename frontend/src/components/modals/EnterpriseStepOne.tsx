@@ -199,7 +199,6 @@ export default function EnterpriseStepOne({
   mode = 'create',
   userRole = '',
 }: Props) {
-  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([])
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null)
 
   const isViewMode = mode === 'view'
@@ -226,16 +225,6 @@ export default function EnterpriseStepOne({
     const selected = level4Industries.find((item) => item.id === id)
     onChange('industryId', Number.isNaN(id) ? '' : id)
     onChange('industry', selected ? `${selected.code} - ${selected.name}` : '')
-  }
-
-  const handleUploadClick = (groupIndex: number) => {
-    if (!isViewMode) {
-      const inputEl = fileInputRefs.current[groupIndex]
-      if (inputEl) {
-        inputEl.value = ''
-        inputEl.click()
-      }
-    }
   }
 
   const handleFileChange = (groupIndex: number, event: React.ChangeEvent<HTMLInputElement>) => {
@@ -499,17 +488,16 @@ export default function EnterpriseStepOne({
                   <div className="px-4 py-2.5 flex items-center justify-center">
                     {!isViewMode && (
                       <>
-                        <button
-                          type="button"
-                          onClick={() => handleUploadClick(groupIdx)}
-                          className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                        <label
+                          htmlFor={`file-input-${groupIdx}`}
+                          className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer"
                           title="Upload file"
                         >
                           <i className="fa-solid fa-upload text-xs" />
                           <span>Upload</span>
-                        </button>
+                        </label>
                         <input
-                          ref={(el) => { fileInputRefs.current[groupIdx] = el }}
+                          id={`file-input-${groupIdx}`}
                           type="file"
                           multiple
                           className="hidden"

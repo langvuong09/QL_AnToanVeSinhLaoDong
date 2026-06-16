@@ -290,8 +290,20 @@ export default function EnterpriseModal({
 
   // ── File handlers (delegate sang hook) ─────────────────────────────
   const handleAddFiles = (groupIndex: number, files: FileList) => {
-    addFiles(groupIndex, files)
+    const result = addFiles(groupIndex, files)
     setErrors((prev) => ({ ...prev, attachments: '' }))
+
+    const messages: string[] = []
+    if (result.duplicates.length > 0) {
+      messages.push(`Bỏ qua ${result.duplicates.length} file trùng lặp: ${result.duplicates.join(', ')}`)
+    }
+    if (result.invalidFiles.length > 0) {
+      messages.push(`Có ${result.invalidFiles.length} file lỗi: ${result.invalidFiles.map((f) => `${f.name} (${f.error})`).join(', ')}`)
+    }
+
+    if (messages.length > 0) {
+      showToast('error', messages.join('\n'))
+    }
   }
 
   const handleRemoveFile = async (groupIndex: number, fileId: number | string) => {
@@ -464,7 +476,7 @@ export default function EnterpriseModal({
             <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
               <i className={`fa-solid ${toast.type === 'success' ? 'fa-check' : 'fa-xmark'} text-white text-[10px]`} />
             </div>
-            <span className={`text-sm font-medium ${toast.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>{toast.message}</span>
+            <span className={`text-sm font-medium whitespace-pre-line ${toast.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>{toast.message}</span>
             <button
               type="button"
               onClick={() => setToast((prev) => ({ ...prev, show: false }))}
