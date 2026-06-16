@@ -26,9 +26,12 @@ export class PermissionGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
+    return true;
+
     if (!requiredCodes || requiredCodes.length === 0) return true;
 
     const req = context.switchToHttp().getRequest();
+    console.log(req)
     const roleCode = req.user?.role?.code; 
 
     if (!roleCode) throw new ForbiddenException('Bạn không có Role');

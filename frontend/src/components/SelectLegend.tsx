@@ -7,19 +7,21 @@ type SelectLegendProps = {
 
     select: SelectHTMLAttributes<HTMLSelectElement>;
     children?: React.ReactNode;
+
+    fillWhite?: boolean;
 }
 
 const SelectLegend = ({
-    label, require, select, errorMess, children
+    label, require, select, errorMess, children, fillWhite
 }: SelectLegendProps) => {
     const classname = `outline-none w-full`;
 
     return (
         <div className="flex flex-col gap-2">
-            <div className={`relative border border-gray-400 px-3 py-2 rounded-lg ${select.disabled && "bg-gray-100"}`}>
+            <div className={`relative ${fillWhite && "bg-white"} ${select.disabled ? "bg-gray-100 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} px-3 py-2 rounded-lg`}>
                 {label && (
                     <label
-                        className="absolute bg-white bottom-full translate-y-1/2 text-sm text-gray-600 px-1"
+                        className="absolute bg-white bottom-full translate-y-1/2 text-sm text-gray-500 px-1"
                         htmlFor={select.id}
                     >
                         {label}

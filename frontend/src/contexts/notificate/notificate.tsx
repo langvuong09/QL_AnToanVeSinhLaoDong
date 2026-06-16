@@ -66,7 +66,7 @@ const NotificateProvider = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <NotificateContext.Provider value={{ showNotification, closeNotification }}>
-            <div className="fixed space-y-5 top-4 left-1/2 -translate-x-1/2">
+            <div className="fixed space-y-5 top-4 left-1/2 -translate-x-1/2 z-100">
                 {notifications && notifications.map((noti, idx) => (
                     <div key={idx} className={`notification flex px-4 py-2 min-w-100 justify-between ${getBgColor(noti.type)} ${getTextColor(noti.type)} rounded-lg gap-10`}>
                         <div className="flex items-center gap-2 text-sm">
