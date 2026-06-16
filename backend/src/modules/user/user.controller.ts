@@ -151,9 +151,9 @@ export class UserController {
   @RequirePermissions(PermissionCode.USER_UPDATE)
   @ApiOperation({ summary: '🎯 Bước 1: Gửi mã OTP xác thực đến Email từ Token của tài khoản' })
   async sendResetEmail(@GetUser() user: any) {
-    if (!user || !user.email) {
-        throw new BadRequestException('Không tìm thấy thông tin email trong tài khoản của bạn!');
+    if (!user || !user.id) {
+        throw new BadRequestException('Không tìm thấy thông tin định danh tài khoản!');
     }
-    return await this.userService.sendResetEmail(user.email);
+    return await this.userService.sendResetEmail(user.id);
   }
 }
