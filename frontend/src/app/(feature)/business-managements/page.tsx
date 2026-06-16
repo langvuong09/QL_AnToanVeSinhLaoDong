@@ -4,6 +4,7 @@ import { useCallback, useContext, useEffect, useState } from 'react'
 import TopHero from '@/src/components/TopHero'
 import ToggleSwitch from '@/src/components/ToggleSwitch'
 import EnterpriseModal from '@/src/components/modals/EnterpriseModal'
+import EnterpriseImportModal from '@/src/components/modals/EnterpriseImportModal'
 import PasswordResetModal from '@/src/components/modals/PasswordResetModal'
 import BulkDeleteBar from '@/src/components/common/BulkDeleteBar'
 import DeleteConfirmModal from '@/src/components/common/DeleteConfirmModal'
@@ -119,6 +120,7 @@ export default function BusinessManagementsPage() {
   const [businessTypes, setBusinessTypes] = useState<IBusinessType[]>([])
   const [industries, setIndustries] = useState<IIndustry[]>([])
   const [totalItems, setTotalItems] = useState(0)
+  const [isImportOpen, setIsImportOpen] = useState(false)
 
   const [filterName, setFilterName] = useState('')
   const [filterTaxCode, setFilterTaxCode] = useState('')
@@ -316,6 +318,7 @@ export default function BusinessManagementsPage() {
           <div className="flex gap-2">
             <button
               type="button"
+              onClick={() => setIsImportOpen(true)}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
             >
               <i className="fa-solid fa-upload text-xs text-primary" />
@@ -472,6 +475,18 @@ export default function BusinessManagementsPage() {
         onCancel={() => setShowDeleteConfirm(false)}
         loading={isDeleting}
       />
+
+      {isImportOpen && (
+        <EnterpriseImportModal
+          isOpen
+          onClose={() => setIsImportOpen(false)}
+          businessTypes={businessTypes}
+          industries={industries}
+          onSuccess={() => {
+            fetchData()
+          }}
+        />
+      )}
     </main>
   )
 }
