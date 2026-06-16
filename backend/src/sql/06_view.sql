@@ -3,8 +3,8 @@ INSERT INTO views (id, name, url, icon, "parentId", "order") VALUES
 (5, 'Tai nạn lao động', '#', 'hazard-icon', null, 2),
 (8, 'Hệ thống', '#', 'setting-icon', null, 3),
 
-(2, 'Quản lý người dùng', '/users', 'user-icon', 1, 1),
-(3, 'Quản lý doanh nghiệp', '/doets', 'briefcase-icon', 1, 2),
+(2, 'Quản lý người dùng', '/accounts', 'user-icon', 1, 1),
+(3, 'Quản lý doanh nghiệp', '/business-management', 'briefcase-icon', 1, 2),
 (4, 'Kỳ báo cáo', '/report-periods', 'calendar-icon', 1, 3),
 
 (6, 'Danh mục chung', '/categories', 'list-icon', 5, 1),
