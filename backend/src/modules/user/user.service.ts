@@ -224,7 +224,7 @@ export class UserService {
         },
       });
       if (!user) {
-        throw new NotFoundException('Not found email');
+        throw new NotFoundException('Không tìm thấy tài khoản gắn liền với email này');
       }
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       const redisKey = getOtpKey(OtpType.RESET_EMAIL, user.id);

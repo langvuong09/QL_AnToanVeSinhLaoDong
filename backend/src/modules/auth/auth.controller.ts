@@ -112,6 +112,16 @@ export class AuthController {
 
   @Post('verify-reset-email-otp')
   @ApiOperation({ summary: '🎯 Bước 2: Xác thực mã OTP đổi email (Public)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'nguyenvana@gmail.com' },
+        otp: { type: 'string', example: '123456' }
+      },
+      required: ['email', 'otp']
+    }
+  })
   async verifyResetEmailOtp(
     @Body('email') email: string,
     @Body('otp') otp: string,
@@ -120,6 +130,16 @@ export class AuthController {
   }
 
   @Post('confirm-reset-email')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        resetToken: { type: 'string', example: 'eyJhbGciOi...' },
+        newEmail: { type: 'string', example: 'newemail@gmail.com' }
+      },
+      required: ['resetToken', 'newEmail']
+    }
+  })
   @ApiOperation({ summary: '🎯 Bước 3: Xác nhận lưu địa chỉ Email mới vào hệ thống (Public)' })
   async confirmResetEmail(
     @Body('resetToken') resetToken: string,

@@ -149,19 +149,10 @@ export class UserController {
 
   @Post('send-reset-email')
   @RequirePermissions(PermissionCode.USER_UPDATE)
-  @ApiOperation({ summary: '🎯 Bước 1: Gửi mã OTP xác thực đến Email hiện tại của tài khoản' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: { type: 'string', example: 'nguyenvana@gmail.com', description: 'Địa chỉ email hiện tại cần nhận OTP' }
-      },
-      required: ['email']
-    }
-  })
+  @ApiOperation({ summary: '🎯 Bước 1: Gửi mã OTP xác thực đến Email từ Token của tài khoản' })
   async sendResetEmail(@GetUser() user: any) {
-    if (!user) {
-        throw new BadRequestException('Tài khoản của bạn không gắn liền với doanh nghiệp nào!');
+    if (!user || !user.email) {
+        throw new BadRequestException('Không tìm thấy thông tin email trong tài khoản của bạn!');
     }
     return await this.userService.sendResetEmail(user.email);
   }
