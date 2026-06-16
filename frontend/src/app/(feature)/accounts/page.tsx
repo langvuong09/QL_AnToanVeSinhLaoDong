@@ -147,7 +147,7 @@ const AccountPage = () => {
         }
 
         if (hasError) {
-            notificate?.showNotification({ type: "error", message: "Vui lòng nhập mật khẩu đúng định dạng "});
+            notificate?.showNotification({ type: "error", message: "Vui lòng nhập mật khẩu đúng định dạng " });
             setStateValChangePassword(prev => ({ ...prev, error: error }));
             return;
         }
@@ -157,14 +157,14 @@ const AccountPage = () => {
             const cls = new User();
             const result = await cls.SetPassword(stateChangePassword.id, stateValChangePassword.password);
             if (result.success) {
-                notificate?.showNotification({ type: "success", message: "Đổi mật khẩu thành công"});
+                notificate?.showNotification({ type: "success", message: "Đổi mật khẩu thành công" });
                 setStateChangePassword({ username: "", id: "" });
                 setStateValChangePassword({ password: "", error: "" });
             } else {
-                notificate?.showNotification({ type: "error", message: "Đổi mật khẩu thất bại "});
+                notificate?.showNotification({ type: "error", message: "Đổi mật khẩu thất bại " });
             }
         } catch (error: any) {
-            notificate?.showNotification({ type: "error", message: error.message || "Có lỗi xảy ra vui lòng thử lại sau"});
+            notificate?.showNotification({ type: "error", message: error.message || "Có lỗi xảy ra vui lòng thử lại sau" });
         } finally {
             setLoading(false);
         }
@@ -234,7 +234,10 @@ const AccountPage = () => {
                             </div>
 
                             <div className="flex gap-3 justify-end">
-                                <button className="text-blue-600 font-semibold">Hủy bỏ</button>
+                                <button className="text-blue-600 font-semibold" onClick={() => {
+                                    setStateChangePassword({ username: "", id: "" });
+                                    setStateValChangePassword({ password: "", error: "" });
+                                }}>Hủy bỏ</button>
                                 <button className="px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 rounded flex items-center gap-2 text-white" onClick={handleChangePassword}>
                                     <i className="fa-solid fa-floppy-disk"></i>
                                     <span>Lưu</span>

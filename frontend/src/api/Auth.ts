@@ -11,21 +11,18 @@ export class Auth extends Base {
     }
 
     async Login(username: string, password: string): Promise<AuthData> {
-        try {
-            const result = await this.execute<AuthData>({
-                url: "/login",
-                method: "POST",
-                data: { username: username, password: password }
-            });
+        const result = await this.execute<AuthData>({
+            url: "/login",
+            method: "POST",
+            data: { username: username, password: password }
+        });
 
-            if (result?.data && result?.success) {
-                return result.data;
-            }
-        } catch (error) {
-            throw Error("Thông tin đăng nhập không chính xác");
+        if (result?.data && result?.success) {
+            return result.data;
         }
-
-        throw Error("Thông tin đăng nhập không chính xác");
+        else {
+            throw Error(result.message === "Account is locked" ? "Tài khoản bị khóa" : "Thông tin đăng nhập không chính xác");
+        }
     }
 
     async Logout(): Promise<void> {

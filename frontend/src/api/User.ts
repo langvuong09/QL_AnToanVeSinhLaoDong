@@ -88,7 +88,13 @@ export class User extends Base {
         const result = await this.execute({
             url: "/",
             method: "POST",
-            data: data
+            data: {
+                ...data,
+                district: {
+                    key: 0,
+                    value: ""
+                }
+            }
         });
 
         return result;

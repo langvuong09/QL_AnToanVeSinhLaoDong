@@ -52,7 +52,6 @@ const AccountIdPage = () => {
 
             setCurrentUser(uresult);
             setSubmitForm({
-                username: uresult.username || "",
                 fullName: uresult.fullName || "",
                 gender: uresult.gender || "",
                 roleId: uresult.roleId,
@@ -102,7 +101,6 @@ const AccountIdPage = () => {
 
     // Start decalare state
     const [submitForm, setSubmitForm] = useState<{
-        username: string;
         fullName: string;
         gender: string;
         roleId: number;
@@ -120,7 +118,6 @@ const AccountIdPage = () => {
         avatarId?: string;
 
     }>({
-        username: "",
         fullName: "",
         gender: "",
         roleId: 0,
@@ -143,7 +140,6 @@ const AccountIdPage = () => {
     });
 
     const [errorForm, setErrorForm] = useState<{
-        username: string
         fullName: string;
         gender: string;
         roleId: string;
@@ -156,7 +152,6 @@ const AccountIdPage = () => {
         ward: string;
         address: string;
     }>({
-        username: "",
         fullName: "",
         gender: "",
         roleId: "",
@@ -172,7 +167,6 @@ const AccountIdPage = () => {
 
     const onSubmit = async () => {
         const newErrors = {
-            username: "",
             fullName: "",
             gender: "",
             roleId: "",
@@ -187,10 +181,6 @@ const AccountIdPage = () => {
         }
 
         let hasError = false;
-        if (!submitForm?.username?.trim()) {
-            newErrors.username = "Tên đăng nhập không được để trống";
-            hasError = true;
-        }
 
         if (!submitForm?.fullName?.trim()) {
             newErrors.fullName = "Họ và tên không được để trống";
@@ -260,8 +250,9 @@ const AccountIdPage = () => {
                 formData.append('fileType', "AVATAR");
 
                 const result = await mcls.UploadImage(formData);
-                if (result) {
-                    submitForm.avatarId = result.id;
+                if (result && result.data) {
+                    submitForm.avatarId = result.data.id;
+                    setFileAvater(null);
                 }
             }
 
@@ -443,14 +434,9 @@ const AccountIdPage = () => {
                                     input={{
                                         type: "text",
                                         placeholder: "vnagroup",
-                                        value: submitForm.username,
+                                        value: currentUser?.username,
                                         disabled: true,
-                                        onChange: (event) => {
-                                            setSubmitForm((prev) => ({ ...prev, username: event.target.value }));
-                                            setErrorForm((prev) => ({ ...prev, username: "" }));
-                                        }
                                     }}
-                                    errorMess={errorForm?.username}
                                 />
 
                                 <InputLegend
