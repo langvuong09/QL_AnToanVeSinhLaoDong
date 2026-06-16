@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEmail, IsDateString, IsOptional, IsNumber, Matches, MinLength, IsUUID, IsObject } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsString, IsNotEmpty, IsEmail, IsDateString, IsOptional, IsNumber, Matches, MinLength, IsUUID, IsObject, IsBoolean } from 'class-validator';
 import { KeyValue } from 'src/commons/bases/baseAddressEntity';
 
 export class CreateUserDto {
@@ -70,4 +71,13 @@ export class CreateUserDto {
   @IsOptional()
   @IsUUID('4', { message: 'Avatar ID phải là định dạng UUID hợp lệ' })
   avatarId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  status?: boolean;
 }
