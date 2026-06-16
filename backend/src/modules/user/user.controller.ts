@@ -57,6 +57,13 @@ export class UserController {
     return await this.userService.getDetail(id);
   }
 
+  @Get("/me")
+  @RequirePermissions(PermissionCode.USER_VIEW)
+  @ApiOperation({ summary: "Lấy thông tin chi tiết người dùng" })
+  async getMe(@GetUser() currentUser: CurrentUser) {
+    return await this.userService.getDetail(currentUser.id);
+  }
+
   @Post()
   @RequirePermissions(PermissionCode.USER_CREATE)
   @ApiOperation({ summary: "Tạo mới người dùng" })

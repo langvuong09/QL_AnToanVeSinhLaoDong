@@ -25,7 +25,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
     const { data } = await this.userService.get({
       where: JSON.stringify(_where),
-      relation: JSON.stringify(["role"])
+      relation: JSON.stringify(["role" , "avatar"])
     });
 
     const user = get(data, "items[0]");

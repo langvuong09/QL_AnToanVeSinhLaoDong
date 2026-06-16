@@ -42,7 +42,17 @@ export class AuthService {
       doet: doetId,
     });
     const roleCode: string = user.role.code!;
-    const userPayload = JSON.parse(JSON.stringify(user));
+    const userPayload = {
+      id: data.id,
+      username: data.username,
+      fullName: data.fullName,
+      doetId: doetId,
+      role: {
+        id: data.role.id,
+        code: data.role.code,
+        name: data.role.name
+      }
+    };
 
     const accessTtl =
       this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m';
@@ -59,6 +69,7 @@ export class AuthService {
 
     const viewsResponse = await this.viewService.getViewsByRoleCode(roleCode);
     const rs = new LoginModel(accessToken, refreshToken, {
+      user: user,
       views: get(viewsResponse, 'data.items', []),
     });
     return Response.get<LoginModel>(rs);
