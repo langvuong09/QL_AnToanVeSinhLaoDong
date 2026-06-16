@@ -15,7 +15,7 @@ INSERT INTO users (
   'Quản trị viên',
   '$argon2id$v=19$m=65536,t=3,p=4$jcZYnh86gnd3u3ZhsFDjDQ$j/JnxLj/3q9b88n0jYMzaDOKJL+sm7ssw2/LRxz4h9o',
   4,
-  1,
+  NULL,
   true,
   'superadmin@gmail.com',
   'Quản trị hệ thống'
