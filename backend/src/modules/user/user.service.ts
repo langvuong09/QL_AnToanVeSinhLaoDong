@@ -216,15 +216,16 @@ export class UserService {
     return Response.SUCCESSFULLY;
   }
 
-   async sendResetEmail(email: string) {
+   async sendResetEmail(userId: string) {
       const manage = this.dataSource.manager;
       const user = await manage.findOne(User, {
-        where: {
-          email: email,
-        },
+        where: { id: userId }, 
       });
       if (!user) {
         throw new NotFoundException('Không tìm thấy tài khoản gắn liền với email này');
+      }
+      if (!user.email) {
+        throw new BadRequestException('Tài khoản này chưa được cấu hình địa chỉ Email');
       }
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       const redisKey = getOtpKey(OtpType.RESET_EMAIL, user.id);
@@ -244,7 +245,7 @@ export class UserService {
       template = template.split('$3').join((ttl / 60).toString());
   
       await this.emailService.sendMail(
-        email,
+        user.email,
         'Mã xác thực thiết lập lại email',
         template,
       );
