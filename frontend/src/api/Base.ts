@@ -18,6 +18,12 @@ export class Base {
     private setupInterceptors() {
         this.api.interceptors.request.use(
             (config) => {
+                // Khi data là FormData, xóa Content-Type để browser tự set
+                // multipart/form-data với boundary đúng
+                if (config.data instanceof FormData) {
+                    delete config.headers['Content-Type'];
+                }
+
                 // Send token in each request
                 const local = localStorage.getItem("accessToken") || null;
                 const session = sessionStorage.getItem("accessToken") || null;

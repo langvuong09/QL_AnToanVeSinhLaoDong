@@ -200,7 +200,7 @@ export default function BusinessManagementsPage() {
 
   const handleUploadPendingFiles = async (doetId: number, attachments: AttachmentGroup[]) => {
     const media = new Media()
-    let failedCount = 0
+    const failedFiles: string[] = []
 
     for (const group of attachments) {
       for (const file of group.files) {
@@ -212,15 +212,15 @@ export default function BusinessManagementsPage() {
         
         try {
           const res = await media.UploadImage(formData)
-          if (!res.success) failedCount++
+          if (!res.success) failedFiles.push(file.name)
         } catch {
-          failedCount++
+          failedFiles.push(file.name)
         }
       }
     }
 
-    if (failedCount > 0) {
-      throw new Error(`${failedCount} file upload thất bại`)
+    if (failedFiles.length > 0) {
+      throw new Error(`Upload thất bại: ${failedFiles.join(', ')}`)
     }
   }
 
