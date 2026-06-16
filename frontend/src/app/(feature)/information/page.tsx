@@ -322,13 +322,17 @@ const InformationPage = () => {
                     onResend={(v, on) => {
                         if (!currentUser) return;
                         if (v > 0) {
-                            notificate?.showNotification({ type: "error", message: "Vui lòng chờ thêm "+ v +" giây" });
+                            notificate?.showNotification({ type: "error", message: "Vui lòng chờ thêm " + v + " giây" });
                             return;
                         }
                         const cls = new User();
                         cls.SendChangeEmailRequest(currentUser.email);
                         notificate?.showNotification({ type: "success", message: "Đã gửi thành công email vui lòng điền OTP" });
                         on
+                    }}
+                    onSuccess={(v) => {
+                        setCurrentUser(prev => prev ? { ...prev, email: v } : prev);
+                        setIsChangeEmail(false);
                     }}
                 />
             )}
@@ -480,14 +484,14 @@ const InformationPage = () => {
                                     disabled: true
                                 }}
                             />
-                            <div className="flex-1 flex items-center" onClick={() => {
-                                if (!currentUser) return;
-                                const cls = new User();
-                                cls.SendChangeEmailRequest(currentUser.email);
-                                notificate?.showNotification({ type: "success", message: "Đã gửi thành công email vui lòng điền OTP" })
-                                setIsChangeEmail(prev => !prev);
-                            }}>
-                                <button className="text-[15px] font-semibold text-blue-600 w-fit">Thay đổi</button>
+                            <div className="flex-1 flex items-center">
+                                <button className="text-[15px] font-semibold text-blue-600 w-fit" onClick={() => {
+                                    if (!currentUser) return;
+                                    const cls = new User();
+                                    cls.SendChangeEmailRequest(currentUser.email);
+                                    notificate?.showNotification({ type: "success", message: "Đã gửi thành công email vui lòng điền OTP" })
+                                    setIsChangeEmail(prev => !prev);
+                                }}>Thay đổi</button>
                             </div>
                         </div>
                     </div>

@@ -212,8 +212,11 @@ const AccountIdPage = () => {
             }
         }
 
-        if (!submitForm?.email.trim()) {
+        if (!submitForm.email?.trim()) {
             newErrors.email = "Email không được để trống";
+            hasError = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submitForm.email)) {
+            newErrors.email = "Email không đúng định dạng";
             hasError = true;
         }
 
