@@ -10,12 +10,13 @@ type InputLegendProps = {
     input: InputHTMLAttributes<HTMLInputElement>,
 
     fillWhite?: boolean;
+    isSmall?: boolean;
 }
 
 const InputLegend = ({
-    label, require, errorMess, input, fillWhite
+    label, require, errorMess, input, fillWhite, isSmall
 }: InputLegendProps) => {
-    const classname = `outline-none w-full bg-transparent`;
+    const classname = `outline-none w-full bg-transparent ${isSmall && "text-sm"}`;
 
     const value = input.value || "";
 
@@ -28,7 +29,7 @@ const InputLegend = ({
 
     return (
         <div className="flex flex-col gap-2 flex-1">
-            <div className={`relative ${fillWhite && "bg-white"} ${input.disabled ? "bg-gray-100 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} px-3 py-2 rounded-lg`}>
+            <div className={`relative ${fillWhite && "bg-white"} ${input.disabled ? "bg-gray-100 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} px-3 py-2 rounded-sm`}>
                 {label && (
                     <label
                         className={`absolute text-gray-500 bg-white bottom-full translate-y-1/2 text-sm px-1`}

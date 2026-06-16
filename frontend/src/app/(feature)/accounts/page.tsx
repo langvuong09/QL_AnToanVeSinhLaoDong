@@ -265,10 +265,10 @@ const AccountPage = () => {
                 }
             />
 
-            <div className="flex flex-col flex-1 pt-5">
+            <div className="flex flex-col flex-1 pt-3">
                 <div className="flex-1">
                     <div className="bg-[#F4F6F8] px-3 py-2">
-                        <div className="flex font-semibold gap-5 pb-3">
+                        <div className="flex font-semibold gap-5 pb-3 text-sm">
                             <div className="flex-1"></div>
                             <div className="flex-3">Họ và tên</div>
                             <div className="flex-2">Tài khoản</div>
@@ -290,6 +290,7 @@ const AccountPage = () => {
                                         onChange: (e) => handleFilterChange('fullName', e.target.value)
                                     }}
                                     fillWhite={true}
+                                    isSmall={true}
                                 />
                             </div>
                             <div className="flex-2">
@@ -301,6 +302,7 @@ const AccountPage = () => {
                                         onChange: (e) => handleFilterChange('username', e.target.value)
                                     }}
                                     fillWhite={true}
+                                    isSmall={true}
                                 />
                             </div>
                             <div className="flex-2">
@@ -312,6 +314,7 @@ const AccountPage = () => {
                                         onChange: (e) => handleFilterChange('email', e.target.value)
                                     }}
                                     fillWhite={true}
+                                    isSmall={true}
                                 />
                             </div>
                             <div className="flex-1">
@@ -321,6 +324,7 @@ const AccountPage = () => {
                                         onChange: (e) => handleFilterImmediate('roleId', e.target.value ? Number(e.target.value) : undefined)
                                     }}
                                     fillWhite={true}
+                                    isSmall={true}
                                 >
                                     <option value="">Vai trò</option>
                                     {roles.map((role) => (
@@ -339,6 +343,7 @@ const AccountPage = () => {
                                         onChange: (e) => handleFilterChange('position', e.target.value)
                                     }}
                                     fillWhite={true}
+                                    isSmall={true}
                                 />
                             </div>
                             <div className="flex-1">
@@ -348,6 +353,7 @@ const AccountPage = () => {
                                         onChange: (e) => handleStatusChange(e.target.value)
                                     }}
                                     fillWhite={true}
+                                    isSmall={true}
                                 >
                                     <option value="">Trạng thái</option>
                                     <option value="true">Bật</option>
@@ -363,7 +369,7 @@ const AccountPage = () => {
                             <div className="py-10 text-center text-gray-400 text-sm">Không có dữ liệu</div>
                         )}
                         {users.map((user) => (
-                            <div key={user.id} className="flex gap-5 py-2 border-b border-gray-300">
+                            <div key={user.id} className="flex items-center gap-5 py-2 border-b border-gray-300 text-sm">
                                 <div className="flex-1 flex items-center justify-between">
                                     <input type="checkbox" className="w-5 h-5"
                                         checked={selectedList.includes(user.id)}
@@ -377,15 +383,15 @@ const AccountPage = () => {
                                     <Link className="text-gray-500" href={`/accounts/${user.id}`}>
                                         <i className="fa-solid fa-pen"></i>
                                     </Link>
-                                    <button className="text-gray-500" onClick={() => setStateChangePassword({ username: user.username, id: user.id })}>
+                                    <button className="text-gray-500 pe-5" onClick={() => setStateChangePassword({ username: user.username, id: user.id })}>
                                         <i className="fa-solid fa-key"></i>
                                     </button>
                                 </div>
-                                <div className="flex-3 line-clamp-1">{user.fullName}</div>
-                                <div className="flex-2 line-clamp-1">{user.username}</div>
-                                <div className="flex-2 line-clamp-1">{user.email}</div>
-                                <div className="flex-1 line-clamp-1">{user.role?.name || '-'}</div>
-                                <div className="flex-1 line-clamp-1">{user.position || '-'}</div>
+                                <div className="flex-3">{user.fullName}</div>
+                                <div className="flex-2">{user.username}</div>
+                                <div className="flex-2">{user.email}</div>
+                                <div className="flex-1">{user.role?.name || '-'}</div>
+                                <div className="flex-1">{user.position || '-'}</div>
                                 <div className="flex-1">
                                     <CheckboxLengend isChecked={user.status} checkbox={{}} onChange={() => {
                                         handleToggleStatus(user.id, !user.status)
