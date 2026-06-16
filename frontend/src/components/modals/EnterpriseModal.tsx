@@ -235,11 +235,11 @@ export default function EnterpriseModal({
       valid = false
     }
     if (form.phone.trim() && !VN_PHONE_REGEX.test(form.phone.trim())) {
-      next.phone = 'Số điện thoại cơ quan không đúng định dạng Việt Nam'
+      next.phone = 'Số điện thoại cơ quan phải có 10 chữ số (hoặc 11 số với máy bàn) và bắt đầu bằng 0, 84 hoặc +84'
       valid = false
     }
     if (form.representativePhone.trim() && !VN_PHONE_REGEX.test(form.representativePhone.trim())) {
-      next.representativePhone = 'SĐT người đại diện không đúng định dạng Việt Nam'
+      next.representativePhone = 'Số điện thoại người đại diện phải gồm 10 chữ số di động và bắt đầu bằng 0, 84 hoặc +84'
       valid = false
     }
 
