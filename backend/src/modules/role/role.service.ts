@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { Role } from './role.entity';
 import Response from '../../commons/response';
 
@@ -13,6 +13,9 @@ export class RoleService {
 
   async getAllRoles() {
     const roles = await this.roleRepository.find({
+      where: {
+        code: Not('business'),
+      },
       relations: { permissions: true },
       order: { id: 'ASC' },
     });
