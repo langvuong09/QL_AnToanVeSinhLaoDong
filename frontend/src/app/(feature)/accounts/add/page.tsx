@@ -2,10 +2,7 @@
 
 import { Media } from "@/src/api/Media";
 import { IRole, Role } from "@/src/api/Role";
-import { Jwt } from "@/src/api/types/jwt";
-import { UserDetail } from "@/src/api/types/user";
 import { ElementAddress, User } from "@/src/api/User";
-import ChangeEmail from "@/src/components/ChangeEmail";
 import CheckboxLengend from "@/src/components/CheckboxLengend";
 import DateLengend from "@/src/components/DateLengend";
 import InputLegend from "@/src/components/InputLegend";
@@ -15,7 +12,6 @@ import TopHero from "@/src/components/TopHero";
 import Button from "@/src/components/ui/Button";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { OpenAdress, Province, Ward } from "@/src/services/open-address";
-import { parseAccessToken } from "@/src/utils/jwt-parser";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useRef, useState } from "react";
 
@@ -24,6 +20,7 @@ const AccountAddPage = () => {
     const router = useRouter();
     const [roles, setRoles] = useState<IRole[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>("")
 
     const fetchRoles = async () => {
         setLoading(true);
@@ -62,7 +59,7 @@ const AccountAddPage = () => {
         gender: "",
         roleId: 0,
 
-        password: "12345678",
+        password: "A12345678",
         dateOfBirth: "",
         position: "",
         email: "",
@@ -209,8 +206,8 @@ const AccountAddPage = () => {
                 formData.append('fileType', "AVATAR");
 
                 const result = await mcls.UploadImage(formData);
-                if (result) {
-                    submitForm.avatarId = result.id;
+                if (result && result.data) {
+                    submitForm.avatarId = result.data.id;
                 }
             }
             const ucls = new User();
@@ -220,6 +217,7 @@ const AccountAddPage = () => {
                 setTimeout(() => router.push("/accounts"), 200);
             } else {
                 notificate?.showNotification({ type: "error", message: "Tạo người dùng mới thất bại" });
+                setErrorMessage(result.message || "");
             }
             setLoading(false);
 
@@ -337,6 +335,13 @@ const AccountAddPage = () => {
                     </div>
                 }
             />
+
+            {errorMessage && (
+                <div className="bg-red-100 px-3 py-2 rounded text-red-500 flex items-center gap-5 font-semibold text-sm">
+                    <i className="fa-solid fa-triangle-exclamation"></i>
+                    <span>{errorMessage}</span>
+                </div>
+            )}
 
             <div className="grid grid-cols-12 gap-5">
                 {/* Left card */}

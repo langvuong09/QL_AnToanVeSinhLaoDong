@@ -157,6 +157,7 @@ const InformationPage = () => {
                 const result = await mcls.UploadImage(formData);
                 if (result.success && result.data) {
                     submitForm.avatarId = result.data.id;
+                    setFileAvater(null);
                 }
             }
 
