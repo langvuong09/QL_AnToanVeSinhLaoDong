@@ -12,17 +12,16 @@ import Loading from "@/src/components/Loading";
 import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import Button from "@/src/components/ui/Button";
+import { AuthenticateContext } from "@/src/contexts/authenticate/authenticate";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { OpenAdress, Province, Ward } from "@/src/services/open-address";
-import { parseAccessToken } from "@/src/utils/jwt-parser";
 import { useContext, useEffect, useRef, useState } from "react";
 
 const InformationPage = () => {
     const notificate = useContext(NotificateContext);
+    const authenticate = useContext(AuthenticateContext);
 
     const [loading, setLoading] = useState<boolean>(false);
-
-    const [jwt, setJwt] = useState<Jwt | null>(null);
     const [currentUser, setCurrentUser] = useState<UserDetail | null>(null);
 
     const [submitForm, setSubmitForm] = useState<{
@@ -162,7 +161,7 @@ const InformationPage = () => {
             }
 
             const ucls = new User();
-            await ucls.UpdateSelfProfile(jwt?.id!, submitForm);
+            await ucls.UpdateSelfProfile(currentUser?.id!, submitForm);
             setLoading(false);
             notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
 
@@ -172,7 +171,7 @@ const InformationPage = () => {
         }
     }
 
-    const [isChangeEmail, setIsChangeEmail] = useState<string>("");
+    const [isChangeEmail, setIsChangeEmail] = useState<boolean>(false);
 
     const [provinces, setProvinces] = useState<Province[]>([]);
     const [wards, setWards] = useState<Ward[]>([]);
@@ -262,19 +261,9 @@ const InformationPage = () => {
     }
 
     // ---------- Handle fetch current state ----------
-    useEffect(() => {
-        const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || "";
-        if (token) {
-            const jwt = parseAccessToken(token);
-            setJwt(jwt);
-        }
-    }, []);
-
     const fetchUserDetail = async () => {
-        if (jwt) {
-            setLoading(true);
-            const cls = new User();
-            const result = await cls.GetUserDetailById(jwt.id);
+        if (authenticate?.state) {
+            const result = authenticate.state
 
             var province, ward = null;
 
@@ -313,10 +302,10 @@ const InformationPage = () => {
     }
 
     useEffect(() => {
-        if (jwt) {
+        if (!authenticate?.isFetch && authenticate?.state) {
             fetchUserDetail();
         }
-    }, [jwt]);
+    }, [authenticate?.isFetch, authenticate?.state]);
 
     return (
         <main className="space-y-10 px-3">
@@ -325,7 +314,23 @@ const InformationPage = () => {
             )}
 
             {isChangeEmail && (
-                <ChangeEmail email={currentUser?.email || ""} />
+                <ChangeEmail
+                    email={currentUser?.email || ""}
+                    onClose={() => {
+                        setIsChangeEmail(false);
+                    }}
+                    onResend={(v, on) => {
+                        if (!currentUser) return;
+                        if (v > 0) {
+                            notificate?.showNotification({ type: "error", message: "Vui lòng chờ thêm "+ v +" giây" });
+                            return;
+                        }
+                        const cls = new User();
+                        cls.SendChangeEmailRequest(currentUser.email);
+                        notificate?.showNotification({ type: "success", message: "Đã gửi thành công email vui lòng điền OTP" });
+                        on
+                    }}
+                />
             )}
 
             <TopHero
@@ -475,7 +480,13 @@ const InformationPage = () => {
                                     disabled: true
                                 }}
                             />
-                            <div className="flex-1 flex items-center">
+                            <div className="flex-1 flex items-center" onClick={() => {
+                                if (!currentUser) return;
+                                const cls = new User();
+                                cls.SendChangeEmailRequest(currentUser.email);
+                                notificate?.showNotification({ type: "success", message: "Đã gửi thành công email vui lòng điền OTP" })
+                                setIsChangeEmail(prev => !prev);
+                            }}>
                                 <button className="text-[15px] font-semibold text-blue-600 w-fit">Thay đổi</button>
                             </div>
                         </div>

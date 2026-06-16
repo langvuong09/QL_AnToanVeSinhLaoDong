@@ -10,6 +10,7 @@ import { useContext, useState } from "react";
 import { Auth } from "@/src/api/Auth";
 import { AuthData } from "@/src/api/types/auth";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
+import { AuthenticateContext } from "@/src/contexts/authenticate/authenticate";
 
 type FormErrors = {
   account?: string;
@@ -19,6 +20,7 @@ type FormErrors = {
 export default function LoginPage() {
   const router = useRouter();
   const notificate = useContext(NotificateContext);
+  const authenticate = useContext(AuthenticateContext);
 
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -84,8 +86,7 @@ export default function LoginPage() {
         storage.setItem("refreshToken", result.refreshToken);
         storage.setItem("views", JSON.stringify(result.views || []));
 
-        // Lưu token vào cookies để middleware có thể kiểm tra
-        document.cookie = `accessToken=${result.token}; path=/; max-age=${rememberMe ? 7 * 24 * 60 * 60 : undefined}`;
+        await authenticate?.refreshAuth();
 
         notificate?.showNotification({ type: "success", message: "Đăng nhập thành công." });
 

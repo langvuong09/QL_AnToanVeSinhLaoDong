@@ -1,3 +1,4 @@
+import { AuthenticateProvider } from '../contexts/authenticate/authenticate';
 import { NotificateProvider } from '../contexts/notificate/notificate';
 import './globals.css'
 
@@ -14,7 +15,9 @@ export default function RootLayout({
       </head>
       <body className="">
         <NotificateProvider>
-          {children}
+          <AuthenticateProvider>
+            {children}
+          </AuthenticateProvider>
         </NotificateProvider>
       </body>
 
