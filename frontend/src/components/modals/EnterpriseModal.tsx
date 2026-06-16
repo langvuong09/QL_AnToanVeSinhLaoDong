@@ -1,15 +1,15 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Media } from '@/src/api/Media'
+import { useEffect, useMemo, useState } from 'react'
 import type { IBusinessType } from '@/src/api/BusinessType'
 import type { IIndustry } from '@/src/api/Industry'
 import type { ElementAddress } from '@/src/api/User'
 import { OpenAdress, type Province } from '@/src/services/open-address'
+import { useFileAttachment } from '@/src/hooks/useFileAttachment'
 import EnterpriseStepOne from './EnterpriseStepOne'
 import EnterpriseStepConfirm from './EnterpriseStepConfirm'
 import AccountInfoPopup from './AccountInfoPopup'
-import type { EnterpriseFormData, EnterpriseFormErrors, EnterpriseFormMode, AttachmentGroup, UploadedFile } from './EnterpriseStepOne'
+import type { EnterpriseFormData, EnterpriseFormErrors, EnterpriseFormMode, AttachmentGroup } from './EnterpriseStepOne'
 import type { Enterprise } from '@/src/mocks/enterprises'
 
 type SaveResult = {
@@ -56,31 +56,9 @@ const emptyForm: EnterpriseFormData = {
   representativePhone: '',
 }
 
-const defaultAttachmentGroups: AttachmentGroup[] = [
-  { groupName: 'Giấy phép kinh doanh', fileType: 'GPKD', files: [] },
-  { groupName: 'Giấy tờ khác', fileType: 'OTHER', files: [] },
-]
-
 const TAX_CODE_REGEX = /^(?:\d{10}|\d{10}-\d{3}|\d{13})$/
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const VN_PHONE_REGEX = /^(?:\+84|84|0)(?:[35789]\d{8}|2\d{9})$/
-const ALLOWED_MIME_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-]
-const MAX_FILE_SIZE = 10 * 1024 * 1024
-const MAX_FILES_PER_GROUP = 10
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
 
 function generateAccountInfo(taxCode: string, resultData?: any) {
   return {
@@ -147,11 +125,17 @@ export default function EnterpriseModal({
   const [currentStep, setCurrentStep] = useState(1)
   const [form, setForm] = useState<EnterpriseFormData>(cloneEmptyForm())
   const [errors, setErrors] = useState<EnterpriseFormErrors>({})
-  const [attachmentGroups, setAttachmentGroups] = useState<AttachmentGroup[]>(
-    defaultAttachmentGroups.map((group) => ({ ...group, files: [] }))
-  )
   const [submitting, setSubmitting] = useState(false)
-  const nextFileIdRef = useRef(1)
+
+  // ── File attachment hook (thay thế state rời rạc cũ) ─────────────
+  const {
+    attachmentGroups,
+    addFiles,
+    removeFile,
+    resetAttachments,
+    initFromServer,
+    hasErrors: hasFileErrors,
+  } = useFileAttachment()
 
   const [showAccountPopup, setShowAccountPopup] = useState(false)
   const [accountInfo, setAccountInfo] = useState({ accountNumber: '', password: '' })
@@ -184,27 +168,14 @@ export default function EnterpriseModal({
   useEffect(() => {
     if (initialData && (mode === 'edit' || mode === 'view')) {
       setForm(enterpriseToForm(initialData))
-      setAttachmentGroups(
-        defaultAttachmentGroups.map((group) => ({
-          ...group,
-          files: initialData.attachments
-            ?.find((item) => item.fileType === group.fileType || item.groupName === group.groupName)
-            ?.files.map((file) => ({
-              id: file.id,
-              name: file.name,
-              size: file.size,
-              url: file.url,
-              fileType: group.fileType,
-            })) || [],
-        }))
-      )
+      initFromServer(initialData.attachments)
     } else if (mode === 'create') {
       setForm(cloneEmptyForm())
-      setAttachmentGroups(defaultAttachmentGroups.map((group) => ({ ...group, files: [] })))
+      resetAttachments()
     }
     setErrors({})
     setCurrentStep(1)
-  }, [initialData, mode])
+  }, [initialData, mode, initFromServer, resetAttachments])
 
   if (!isOpen) return null
 
@@ -272,8 +243,8 @@ export default function EnterpriseModal({
       valid = false
     }
 
-    const hasFileError = attachmentGroups.some((group) => group.files.some((file) => file.error))
-    if (hasFileError) {
+    // Kiểm tra file lỗi thông qua hook
+    if (hasFileErrors) {
       next.attachments = 'Vui lòng xóa các file không hợp lệ trước khi tiếp tục'
       valid = false
     }
@@ -290,9 +261,8 @@ export default function EnterpriseModal({
   const resetAndClose = () => {
     setForm(cloneEmptyForm())
     setErrors({})
-    setAttachmentGroups(defaultAttachmentGroups.map((group) => ({ ...group, files: [] })))
+    resetAttachments()
     setCurrentStep(1)
-    nextFileIdRef.current = 1
     onClose()
   }
 
@@ -318,55 +288,29 @@ export default function EnterpriseModal({
     setTimeout(resetAndClose, 800)
   }
 
-  const validateFile = (file: File, currentCount: number): string => {
-    if (currentCount >= MAX_FILES_PER_GROUP) return `Mỗi nhóm tối đa ${MAX_FILES_PER_GROUP} file`
-    if (!ALLOWED_MIME_TYPES.includes(file.type)) return 'Định dạng file không được hỗ trợ'
-    if (file.size > MAX_FILE_SIZE) return 'File không được vượt quá 10MB'
-    return ''
-  }
-
+  // ── File handlers (delegate sang hook) ─────────────────────────────
   const handleAddFiles = (groupIndex: number, files: FileList) => {
-    setAttachmentGroups((prev) =>
-      prev.map((group, idx) => {
-        if (idx !== groupIndex) return group
-        const newFiles: UploadedFile[] = Array.from(files).map((file, fileIdx) => {
-          const id = nextFileIdRef.current++
-          const error = validateFile(file, group.files.length + fileIdx)
-          return {
-            id,
-            name: file.name,
-            size: formatFileSize(file.size),
-            file,
-            url: URL.createObjectURL(file),
-            mimeType: file.type,
-            fileType: group.fileType,
-            error,
-          }
-        })
-        return { ...group, files: [...group.files, ...newFiles] }
-      })
-    )
+    const result = addFiles(groupIndex, files)
     setErrors((prev) => ({ ...prev, attachments: '' }))
+
+    const messages: string[] = []
+    if (result.duplicates.length > 0) {
+      messages.push(`Bỏ qua ${result.duplicates.length} file trùng lặp: ${result.duplicates.join(', ')}`)
+    }
+    if (result.invalidFiles.length > 0) {
+      messages.push(`Có ${result.invalidFiles.length} file lỗi: ${result.invalidFiles.map((f) => `${f.name} (${f.error})`).join(', ')}`)
+    }
+
+    if (messages.length > 0) {
+      showToast('error', messages.join('\n'))
+    }
   }
 
   const handleRemoveFile = async (groupIndex: number, fileId: number | string) => {
-    const target = attachmentGroups[groupIndex]?.files.find((file) => file.id === fileId)
-    if (typeof fileId === 'string' && target && !target.file) {
-      const media = new Media()
-      const result = await media.deleteFile(fileId)
-      if (!result.success) {
-        showToast('error', result.message)
-        return
-      }
+    const result = await removeFile(groupIndex, fileId)
+    if (!result.success && result.message) {
+      showToast('error', result.message)
     }
-
-    setAttachmentGroups((prev) =>
-      prev.map((group, idx) =>
-        idx === groupIndex
-          ? { ...group, files: group.files.filter((file) => file.id !== fileId) }
-          : group
-      )
-    )
   }
 
   const isViewMode = mode === 'view'
@@ -532,7 +476,7 @@ export default function EnterpriseModal({
             <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
               <i className={`fa-solid ${toast.type === 'success' ? 'fa-check' : 'fa-xmark'} text-white text-[10px]`} />
             </div>
-            <span className={`text-sm font-medium ${toast.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>{toast.message}</span>
+            <span className={`text-sm font-medium whitespace-pre-line ${toast.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>{toast.message}</span>
             <button
               type="button"
               onClick={() => setToast((prev) => ({ ...prev, show: false }))}
