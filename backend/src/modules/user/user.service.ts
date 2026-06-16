@@ -19,6 +19,7 @@ import path from 'path';
 import { ConfigService } from '@nestjs/config';
 import { REDIS_CLIENT } from 'src/redis/redis.module';
 import { EmailService } from 'src/helper/Email';
+import { CreateUserDto } from './dto/create-user';
 
 @Injectable()
 export class UserService {
@@ -72,7 +73,7 @@ export class UserService {
     return await this.userRepository.save(user);
   }
 
-  async createUser(createUserDto: any) {
+  async createUser(createUserDto: CreateUserDto) {
     const newUser = this.userRepository.create(createUserDto);
     return await this.userRepository.save(newUser);
   }
