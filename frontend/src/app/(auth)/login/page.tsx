@@ -6,7 +6,7 @@ import Alert from "@/src/components/ui/Alert";
 import Button from "@/src/components/ui/Button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Auth } from "@/src/api/Auth";
 import { AuthData } from "@/src/api/types/auth";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
@@ -29,6 +29,23 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [alert, setAlert] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const savedAccount = localStorage.getItem("rememberedAccount");
+    const savedPassword = localStorage.getItem("rememberedPassword");
+    if (savedAccount) {
+      setAccount(savedAccount);
+      setRememberMe(true);
+    }
+    if (savedPassword) {
+      setPassword(savedPassword);
+    }
+
+    const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    if (token) {
+      router.replace("/dashboard");
+    }
+  }, [router]);
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -86,12 +103,17 @@ export default function LoginPage() {
         storage.setItem("refreshToken", result.refreshToken);
         storage.setItem("views", JSON.stringify(result.views || []));
 
+        if (rememberMe) {
+          localStorage.setItem("rememberedAccount", account);
+          localStorage.setItem("rememberedPassword", password);
+        } else {
+          localStorage.removeItem("rememberedAccount");
+          localStorage.removeItem("rememberedPassword");
+        }
+
         await authenticate?.refreshAuth();
 
         notificate?.showNotification({ type: "success", message: "Đăng nhập thành công." });
-
-        setAccount("");
-        setPassword("");
 
         setTimeout(() => {
           router.replace("/dashboard");

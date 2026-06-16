@@ -204,7 +204,7 @@ export default function EnterpriseStepOne({
   const isViewMode = mode === 'view'
   const isEditMode = mode === 'edit'
   const isTaxCodeDisabled = isViewMode || isEditMode
-  const isEmailDisabled = isViewMode || (isEditMode && userRole !== 'SỞ')
+  const isEmailDisabled = isViewMode
 
   const level4Industries = useMemo(() => industries.filter((industry) => industry.level === 4), [industries])
 
