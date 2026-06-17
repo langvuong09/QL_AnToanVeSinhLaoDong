@@ -260,9 +260,17 @@ const AccountIdPage = () => {
             }
 
             const ucls = new User();
-            await ucls.UpdateSelfProfile(id as string, submitForm);
+            const result = await ucls.UpdateSelfProfile(id as string, submitForm);
+            if (result.success) {
+                notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
+            } else {
+                notificate?.showNotification({ type: "error", message: "Dữ liệu đã có trên hệ thống" });
+                setErrorMessage("Dữ liệu đã tồn tại vui lòng kiểm tra lại thông tin");
+                setTimeout(() => {
+                    setErrorMessage("");
+                }, 2000);
+            }
             setLoading(false);
-            notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
 
         } catch (error) {
             setLoading(false);
