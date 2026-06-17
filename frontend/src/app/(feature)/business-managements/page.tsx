@@ -8,6 +8,7 @@ import EnterpriseImportModal from '@/src/components/modals/EnterpriseImportModal
 import PasswordResetModal from '@/src/components/modals/PasswordResetModal'
 import BulkDeleteBar from '@/src/components/common/BulkDeleteBar'
 import DeleteConfirmModal from '@/src/components/common/DeleteConfirmModal'
+import { User } from '@/src/api/User'
 import { DoetApi, type DoetPayload, type IDoetUser } from '@/src/api/Doet'
 import { BusinessTypeApi, type IBusinessType } from '@/src/api/BusinessType'
 import { IndustryApi, type IIndustry } from '@/src/api/Industry'
@@ -56,6 +57,7 @@ function mapDoetUserToEnterprise(item: IDoetUser): Enterprise {
 
   return {
     id: doet.id,
+    userId: item.id,
     companyName: doet.name || '',
     taxCode: doet.taxCode || '',
     businessType: doet.businessType?.name || '',
@@ -457,10 +459,19 @@ export default function BusinessManagementsPage() {
           onClose={() => { setShowResetPassword(false); setResetTarget(null) }}
           username={resetTarget.taxCode.replace(/-/g, '')}
           companyName={resetTarget.companyName}
-          onConfirm={() => {
-            notificate?.showNotification({ type: 'success', message: `Đặt lại mật khẩu cho doanh nghiệp ${resetTarget.companyName} thành công.` })
-            setShowResetPassword(false)
-            setResetTarget(null)
+          onConfirm={async (password) => {
+            if (!resetTarget.userId) {
+              notificate?.showNotification({ type: 'error', message: 'Không tìm thấy tài khoản liên kết với doanh nghiệp này.' })
+              return
+            }
+            const res = await new User().SetPassword(resetTarget.userId, password)
+            if (res.success) {
+              notificate?.showNotification({ type: 'success', message: `Đặt lại mật khẩu cho doanh nghiệp ${resetTarget.companyName} thành công.` })
+              setShowResetPassword(false)
+              setResetTarget(null)
+            } else {
+              notificate?.showNotification({ type: 'error', message: res.message || 'Có lỗi xảy ra khi đặt lại mật khẩu.' })
+            }
           }}
         />
       )}

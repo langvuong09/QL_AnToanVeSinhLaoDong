@@ -11,6 +11,7 @@ export type AttachmentGroupMock = {
 
 export type Enterprise = {
   id: number
+  userId?: string
   companyName: string
   taxCode: string
   businessType: string
