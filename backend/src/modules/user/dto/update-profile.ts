@@ -12,6 +12,12 @@ export class UpdateProfileDto {
   @IsObject() 
   province?: KeyValue; 
 
+  @ApiProperty({ example: 'nguyenvana@gmail.com' })
+  @IsOptional({ message: 'Email là bắt buộc' })
+  @IsEmail({}, { message: 'Email không đúng định dạng' })
+  email!: string;
+  
+
   @ApiProperty({ example: { key: '760', value: 'Quận 1' }, required: false }) 
   @IsOptional() 
   @IsObject() 
