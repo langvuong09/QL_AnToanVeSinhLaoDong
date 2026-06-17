@@ -128,6 +128,17 @@ const AccountAddPage = () => {
             hasError = true;
         }
 
+        if (!/^[a-zA-Z0-9_]+$/.test(submitForm.username)) {
+            newErrors.username =
+                "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới (_)";
+            hasError = true;
+        }
+
+        if (submitForm.username.length < 6) {
+            newErrors.username = "Tên đăng nhập ít nhất 6 kí tự";
+            hasError = true;
+        }
+
         if (!submitForm.fullName?.trim()) {
             newErrors.fullName = "Họ và tên không được để trống";
             hasError = true;
