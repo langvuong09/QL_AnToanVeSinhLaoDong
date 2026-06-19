@@ -208,11 +208,12 @@ export default function EnterpriseModal({
     }
 
     if (mode === 'create') {
-      if (!form.taxCode.trim()) {
+      const taxCodeTrim = form.taxCode.trim()
+      if (!taxCodeTrim) {
         next.taxCode = 'Mã số thuế là bắt buộc'
         valid = false
-      } else if (!TAX_CODE_REGEX.test(form.taxCode.trim())) {
-        next.taxCode = 'Mã số thuế gồm 10 số, 13 số hoặc 10 số-3 số'
+      } else if (taxCodeTrim.length < 10 || taxCodeTrim.length > 15) {
+        next.taxCode = 'Mã số thuế phải từ 10 đến 15 ký tự'
         valid = false
       }
     }
@@ -289,20 +290,12 @@ export default function EnterpriseModal({
   }
 
   // ── File handlers (delegate sang hook) ─────────────────────────────
-  const handleAddFiles = (groupIndex: number, files: FileList) => {
-    const result = addFiles(groupIndex, files)
+  const handleAddFiles = async (groupIndex: number, files: FileList) => {
+    const result = await addFiles(groupIndex, files)
     setErrors((prev) => ({ ...prev, attachments: '' }))
 
-    const messages: string[] = []
-    if (result.duplicates.length > 0) {
-      messages.push(`Bỏ qua ${result.duplicates.length} file trùng lặp: ${result.duplicates.join(', ')}`)
-    }
-    if (result.invalidFiles.length > 0) {
-      messages.push(`Có ${result.invalidFiles.length} file lỗi: ${result.invalidFiles.map((f) => `${f.name} (${f.error})`).join(', ')}`)
-    }
-
-    if (messages.length > 0) {
-      showToast('error', messages.join('\n'))
+    if (result.error) {
+      showToast('error', result.error)
     }
   }
 

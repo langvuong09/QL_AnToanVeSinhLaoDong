@@ -1,14 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import InputLegend from '@/src/components/InputLegend'
-import PasswordInput from '@/src/components/form/PasswordInput'
 
 type Props = {
   isOpen: boolean
   onClose: () => void
   username: string
-  companyName: string
+  targetName: string
   onConfirm: (password: string) => void
 }
 
@@ -16,54 +15,30 @@ export default function PasswordResetModal({
   isOpen,
   onClose,
   username,
-  companyName,
+  targetName,
   onConfirm,
 }: Props) {
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [errors, setErrors] = useState({ password: '', confirmPassword: '' })
+  const [password, setPassword] = useState('A12345678')
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setPassword('A12345678')
+      setCopied(false)
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
-  const validate = () => {
-    let valid = true
-    const nextErrors = { password: '', confirmPassword: '' }
-
-    if (!password) {
-      nextErrors.password = 'Mật khẩu mới là bắt buộc'
-      valid = false
-    } else {
-      const strongPasswordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+{}\[\]:;"'<>,.?/~`|\\\-]).{8,}$/
-      if (!strongPasswordRegex.test(password)) {
-        nextErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa và 1 ký tự đặc biệt'
-        valid = false
-      }
-    }
-
-    if (!confirmPassword) {
-      nextErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu'
-      valid = false
-    } else if (confirmPassword !== password) {
-      nextErrors.confirmPassword = 'Mật khẩu xác nhận không khớp'
-      valid = false
-    }
-
-    setErrors(nextErrors)
-    return valid
-  }
-
   const handleConfirm = () => {
-    if (validate()) {
-      onConfirm(password)
-      resetAndClose()
-    }
+    onConfirm(password)
+    onClose()
   }
 
-  const resetAndClose = () => {
-    setPassword('')
-    setConfirmPassword('')
-    setErrors({ password: '', confirmPassword: '' })
-    onClose()
+  const handleCopy = () => {
+    navigator.clipboard.writeText(password)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
 
   return (
@@ -77,8 +52,8 @@ export default function PasswordResetModal({
         {/* Content */}
         <div className="px-8 py-8 space-y-6">
           <p className="text-sm text-gray-600 text-center">
-            Đang đặt lại mật khẩu cho doanh nghiệp:<br />
-            <span className="font-bold text-gray-800">{companyName}</span>
+            Bạn có chắc chắn muốn đặt lại mật khẩu cho:<br />
+            <span className="font-bold text-gray-800">{targetName}</span>
           </p>
 
           <InputLegend
@@ -90,36 +65,34 @@ export default function PasswordResetModal({
             }}
           />
 
-          <PasswordInput
-            label="Mật khẩu mới"
-            required
-            placeholder="Nhập mật khẩu mới"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value)
-              setErrors(prev => ({ ...prev, password: '' }))
-            }}
-            error={errors.password}
-          />
-
-          <PasswordInput
-            label="Nhập lại mật khẩu"
-            required
-            placeholder="Xác nhận mật khẩu mới"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value)
-              setErrors(prev => ({ ...prev, confirmPassword: '' }))
-            }}
-            error={errors.confirmPassword}
-          />
+          <div className="relative">
+            <InputLegend
+              label="Mật khẩu khởi tạo"
+              input={{
+                type: 'text',
+                value: password,
+                disabled: true,
+                className: 'bg-gray-50 font-mono text-center font-bold text-gray-900 border-dashed pr-20',
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="absolute right-3 bottom-2 text-primary hover:text-primary/80 text-xs font-semibold transition-colors"
+            >
+              {copied ? 'Đã chép!' : 'Sao chép'}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 italic text-center">
+            * Mật khẩu khởi tạo được tự động tạo theo cơ chế hệ thống.
+          </p>
         </div>
 
         {/* Footer */}
         <div className="px-8 pb-6 flex justify-end gap-3">
           <button
             type="button"
-            onClick={resetAndClose}
+            onClick={onClose}
             className="px-6 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
           >
             Hủy bỏ
@@ -129,7 +102,7 @@ export default function PasswordResetModal({
             onClick={handleConfirm}
             className="px-6 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
-            Lưu
+            Xác nhận
           </button>
         </div>
       </div>
