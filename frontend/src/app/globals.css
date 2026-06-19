@@ -94,8 +94,8 @@ li.menu-active {
 }
 
 .checkbox-wrapper-64 input:checked+.slider.disable {
-  background-color: #6b6a6a;
-  border: 1px solid #4c4c4c;
+  background-color: #8c8888;
+  border: 1px solid #615e5e;
 }
 
 .checkbox-wrapper-64 input:focus+.slider {

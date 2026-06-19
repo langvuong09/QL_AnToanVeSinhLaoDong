@@ -16,59 +16,74 @@ type InputLegendProps = {
 const InputLegend = ({
     label, require, errorMess, input, fillWhite, isSmall
 }: InputLegendProps) => {
-    const classname = `outline-none w-full bg-transparent ${isSmall && "text-sm"}`;
-
+    const classname = `outline-none w-full bg-transparent peer ${isSmall ? "text-sm px-2 pb-1.5 pt-2" : "px-2.5 pb-2 pt-3"}`;
     const value = input.value || "";
 
     const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
+    const [isFocused, setIsFocused] = useState(false);
 
     const togglePasswordVisibility = () => {
         if (input.disabled) return;
         setIsShowPassword(prev => !prev);
-    };
+    }
 
     return (
         <div className="flex flex-col gap-2 flex-1">
-            <div className={`relative ${fillWhite && "bg-white"} ${input.disabled ? "bg-gray-100 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} px-3 py-2 rounded-sm`}>
+            <div className={`relative 
+                ${fillWhite && "bg-white"} 
+                ${input.disabled ? "bg-gray-100 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} 
+                rounded-sm
+                `}>
+                {/* Input */}
+                <input
+                    {...input}
+                    className={classname}
+                    type={
+                        input.type === "password"
+                            ? (isShowPassword ? "text" : "password")
+                            : input.type
+                    }
+                    value={value}
+                    onFocus={(e) => {
+                        input.onFocus?.(e);
+                        setIsFocused(true);
+                    }}
+                    onBlur={(e) => {
+                        input.onBlur?.(e);
+                        setIsFocused(false);
+                    }}
+                    placeholder={!label ? input.placeholder : ""}
+                />
+
+                {/* Eye button */}
+                {input.type === "password" && (
+                    <button
+                        type="button"
+                        onClick={() => !input.disabled && setIsShowPassword(p => !p)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    >
+                        <i className={`fa-regular ${isShowPassword ? "fa-eye" : "fa-eye-slash"}`} />
+                    </button>
+                )}
+                {/* Label */}
                 {label && (
                     <label
-                        className={`absolute text-gray-500 bg-white bottom-full translate-y-1/2 text-sm px-1`}
+                        className={`absolute text-gray-500 text-[15px] bg-white transition-all duration-200 
+                            top-1/2 -translate-y-1/2 left-2.5
+                            peer-focus:top-0 
+                            ${errorMess ? "peer-focus:text-red-600" : "peer-focus:text-blue-500"} peer-focus:text-sm
+
+                            peer-[:not(:placeholder-shown)]:top-0 
+                            `}
                         htmlFor={input.id}
                     >
                         {label}
 
                         {require && (
-                            <span className="text-red-600">{" "}*</span>
+                            <span className={`text-red-600 ${isFocused ? "inline" : "hidden"}`}> *</span>
                         )}
                     </label>
                 )}
-                <div className="flex items-center gap-2">
-                    <input
-                        {...input}
-                        className={classname}
-                        type={
-                            input.type === "password"
-                                ? (isShowPassword ? "text" : "password")
-                                : input.type
-                        }
-                        value={value}
-                    />
-
-                    {input.type === "password" && (
-                        <button
-                            type="button"
-                            onClick={togglePasswordVisibility}
-                            className="text-gray-600 hover:text-gray-700 shrink-0"
-                            title={isShowPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                        >
-                            {isShowPassword ? (
-                                <i className="fa-regular fa-eye"></i>
-                            ) : (
-                                <i className="fa-regular fa-eye-slash"></i>
-                            )}
-                        </button>
-                    )}
-                </div>
             </div>
 
             {errorMess && (
