@@ -62,60 +62,43 @@ export default function EnterpriseStepConfirm({ form, attachmentGroups }: Props)
           <div className="border-t border-gray-200 pt-4">
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               {/* Table header */}
-              <div className="grid grid-cols-[40px_1fr_1fr_100px] bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200">
-                <div className="px-3 py-2.5 text-center">STT</div>
-                <div className="px-4 py-2.5">Tên file</div>
-                <div className="px-4 py-2.5">Thông tin file</div>
-                <div className="px-4 py-2.5 text-center">Thao tác</div>
+              <div className="grid grid-cols-[1fr_1fr_140px] bg-gray-50 text-xs font-semibold text-gray-500 border-b border-gray-200 uppercase tracking-wider">
+                <div className="px-6 py-3.5">Tên file</div>
+                <div className="px-6 py-3.5">Thông tin file</div>
+                <div className="px-6 py-3.5 text-center">Thao tác</div>
               </div>
 
               {/* Render each attachment group */}
-              {attachmentGroups.map((group, groupIdx) => (
-                <div key={group.groupName}>
-                  {/* Group header row */}
-                  <div className="grid grid-cols-[40px_1fr_1fr_100px] bg-primary/5 border-b border-gray-200">
-                    <div className="px-3 py-2.5 text-center text-xs font-semibold text-gray-600">
-                      {groupIdx + 1}
+              {attachmentGroups.map((group) => {
+                const file = group.files[0]
+                return (
+                  <div
+                    key={group.groupName}
+                    className="grid grid-cols-[1fr_1fr_140px] text-sm text-gray-700 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors items-center"
+                  >
+                    <div className="px-6 py-4 font-medium text-gray-900">{group.groupName}</div>
+                    <div className="px-6 py-4">
+                      {file ? (
+                        <span className="text-gray-800 font-normal">{file.name}</span>
+                      ) : (
+                        <span className="text-gray-400 italic">Chưa tải</span>
+                      )}
                     </div>
-                    <div className="px-4 py-2.5 text-sm font-semibold text-gray-800 col-span-3">
-                      {group.groupName}
+                    <div className="px-6 py-4 flex items-center justify-center">
+                      {file && (
+                        <button
+                          type="button"
+                          onClick={() => handlePreview(file)}
+                          className="text-gray-400 hover:text-primary transition-colors"
+                          title="Xem"
+                        >
+                          <i className="fa-solid fa-eye text-base" />
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  {/* Files */}
-                  {group.files.length === 0 ? (
-                    <div className="px-4 py-4 text-center text-sm text-gray-400 italic border-b border-gray-100">
-                      Chưa có file nào
-                    </div>
-                  ) : (
-                    group.files.map((file, fileIdx) => (
-                      <div
-                        key={file.id}
-                        className="grid grid-cols-[40px_1fr_1fr_100px] text-sm text-gray-700 border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="px-3 py-2.5 text-center text-xs text-gray-400">
-                          {groupIdx + 1}.{fileIdx + 1}
-                        </div>
-                        <div className="px-4 py-2.5 flex items-center gap-2">
-                          <i className="fa-solid fa-file-lines text-primary/60 text-xs" />
-                          <span className="truncate">{file.name}</span>
-                        </div>
-                        <div className="px-4 py-2.5 text-gray-500">{file.size}</div>
-                        <div className="px-4 py-2.5 flex items-center justify-center">
-                          <button
-                            type="button"
-                            onClick={() => handlePreview(file)}
-                            className="text-gray-400 hover:text-primary transition-colors"
-                            title="Xem"
-                          >
-                            <i className="fa-solid fa-eye text-xs" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>

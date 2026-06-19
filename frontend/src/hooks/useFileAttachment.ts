@@ -8,24 +8,14 @@ import type { AttachmentGroupMock } from '@/src/mocks/enterprises'
 // ── Constants ──────────────────────────────────────────────────────────
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.ms-excel',
-  'application/msexcel',
-  'application/x-msexcel',
-  'application/x-ms-excel',
-  'application/x-excel',
-  'application/x-dos_ms_excel',
-  'application/xls',
-  'application/x-xls',
   'image/jpeg',
   'image/jpg',
   'image/png',
+  'image/webp',
 ]
-const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png']
+const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'webp']
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
-const MAX_FILES_PER_GROUP = 10
+const MAX_FILES_PER_GROUP = 1
 
 const DEFAULT_GROUPS: AttachmentGroup[] = [
   { groupName: 'Giấy phép kinh doanh', fileType: 'GPKD', files: [] },
@@ -40,20 +30,13 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-/** Tạo key duy nhất cho file dựa trên tên + kích thước (dùng để detect trùng lặp) */
-function fileDedupeKey(name: string, size: number): string {
-  return `${name}::${size}`
-}
-
-function validateFile(file: File, currentCount: number): string {
-  if (currentCount >= MAX_FILES_PER_GROUP) return `Mỗi nhóm tối đa ${MAX_FILES_PER_GROUP} file`
-  
+function validateFile(file: File): string {
   const ext = file.name.split('.').pop()?.toLowerCase() || ''
   const isAllowedExt = ALLOWED_EXTENSIONS.includes(ext)
   const isAllowedMime = ALLOWED_MIME_TYPES.includes(file.type)
 
   if (!isAllowedMime && !isAllowedExt) {
-    return 'Định dạng file không được hỗ trợ'
+    return 'Chỉ cho phép tải lên các định dạng: PDF (.pdf) hoặc Hình ảnh (.jpg, .jpeg, .png, .webp)'
   }
 
   if (file.size > MAX_FILE_SIZE) return 'File không được vượt quá 10MB'
@@ -83,74 +66,11 @@ export function useFileAttachment() {
   const attachmentGroupsRef = useRef<AttachmentGroup[]>(attachmentGroups)
   attachmentGroupsRef.current = attachmentGroups
 
-  // ── addFiles ───────────────────────────────────────────────────────
-  const addFiles = useCallback((groupIndex: number, fileList: FileList) => {
-    const currentGroups = attachmentGroupsRef.current
-    const targetGroup = currentGroups[groupIndex]
-    if (!targetGroup) return { addedCount: 0, duplicates: [], invalidFiles: [] }
-
-    // Tạo set các key file đã có để kiểm tra trùng lặp
-    const existingKeys = new Set(
-      targetGroup.files
-        .filter((f) => f.file) // chỉ check local files (server files không có f.file)
-        .map((f) => fileDedupeKey(f.name, f.file!.size)),
-    )
-
-    const duplicates: string[] = []
-    const invalidFiles: { name: string; error: string }[] = []
-    const newFiles: UploadedFile[] = []
-    let addedCount = 0
-
-    for (const file of Array.from(fileList)) {
-      const key = fileDedupeKey(file.name, file.size)
-
-      // Bỏ qua file trùng lặp (cùng tên + cùng size)
-      if (existingKeys.has(key)) {
-        duplicates.push(file.name)
-        continue
-      }
-
-      const error = validateFile(file, targetGroup.files.length + addedCount)
-      if (error) {
-        invalidFiles.push({ name: file.name, error })
-      }
-
-      const id = nextFileIdRef.current++
-      newFiles.push({
-        id,
-        name: file.name,
-        size: formatFileSize(file.size),
-        file,
-        url: URL.createObjectURL(file),
-        mimeType: file.type,
-        fileType: targetGroup.fileType,
-        error,
-      })
-
-      existingKeys.add(key) // ngăn duplicate trong cùng 1 batch
-      addedCount++
-    }
-
-    if (newFiles.length > 0) {
-      setAttachmentGroups((prev) =>
-        prev.map((group, idx) =>
-          idx === groupIndex ? { ...group, files: [...group.files, ...newFiles] } : group,
-        ),
-      )
-    }
-
-    return {
-      addedCount: newFiles.filter((f) => !f.error).length,
-      duplicates,
-      invalidFiles,
-    }
-  }, [])
-
   // ── removeFile ─────────────────────────────────────────────────────
   const removeFile = useCallback(
     async (groupIndex: number, fileId: number | string) => {
       // Tìm file target trước khi xóa
-      const targetGroup = attachmentGroups[groupIndex]
+      const targetGroup = attachmentGroupsRef.current[groupIndex]
       const targetFile = targetGroup?.files.find((f) => f.id === fileId)
 
       // Nếu là file đã lưu trên server (id là string, không có f.file), gọi API xóa
@@ -178,7 +98,53 @@ export function useFileAttachment() {
 
       return { success: true }
     },
-    [attachmentGroups],
+    [],
+  )
+
+  // ── addFiles ───────────────────────────────────────────────────────
+  const addFiles = useCallback(
+    async (groupIndex: number, fileList: FileList) => {
+      const currentGroups = attachmentGroupsRef.current
+      const targetGroup = currentGroups[groupIndex]
+      if (!targetGroup) return { success: false, error: 'Nhóm file không hợp lệ' }
+
+      const file = fileList[0]
+      if (!file) return { success: false }
+
+      const error = validateFile(file)
+      if (error) {
+        return { success: false, error }
+      }
+
+      // Tự động thay thế file cũ: Xóa file cũ nếu có trước khi thêm mới
+      const oldFile = targetGroup.files[0]
+      if (oldFile) {
+        const removeRes = await removeFile(groupIndex, oldFile.id)
+        if (!removeRes.success) {
+          return { success: false, error: removeRes.message || 'Không thể thay thế file cũ' }
+        }
+      }
+
+      const id = nextFileIdRef.current++
+      const newFile: UploadedFile = {
+        id,
+        name: file.name,
+        size: formatFileSize(file.size),
+        file,
+        url: URL.createObjectURL(file),
+        mimeType: file.type,
+        fileType: targetGroup.fileType,
+      }
+
+      setAttachmentGroups((prev) =>
+        prev.map((group, idx) =>
+          idx === groupIndex ? { ...group, files: [newFile] } : group,
+        ),
+      )
+
+      return { success: true }
+    },
+    [removeFile],
   )
 
   // ── resetAttachments ───────────────────────────────────────────────

@@ -458,7 +458,7 @@ export default function BusinessManagementsPage() {
           isOpen={showResetPassword}
           onClose={() => { setShowResetPassword(false); setResetTarget(null) }}
           username={resetTarget.taxCode.replace(/-/g, '')}
-          companyName={resetTarget.companyName}
+          targetName={resetTarget.companyName}
           onConfirm={async (password) => {
             if (!resetTarget.userId) {
               notificate?.showNotification({ type: 'error', message: 'Không tìm thấy tài khoản liên kết với doanh nghiệp này.' })
@@ -466,7 +466,7 @@ export default function BusinessManagementsPage() {
             }
             const res = await new User().SetPassword(resetTarget.userId, password)
             if (res.success) {
-              notificate?.showNotification({ type: 'success', message: `Đặt lại mật khẩu cho doanh nghiệp ${resetTarget.companyName} thành công.` })
+              notificate?.showNotification({ type: 'success', message: 'Đặt lại mật khẩu thành công' })
               setShowResetPassword(false)
               setResetTarget(null)
             } else {

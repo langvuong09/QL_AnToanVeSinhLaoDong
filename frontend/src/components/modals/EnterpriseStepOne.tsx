@@ -56,99 +56,143 @@ export type AttachmentGroup = {
   files: UploadedFile[]
 }
 
-type AddressOption = Province | Ward
+// ── Helpers ──────────────────────────────────────────────────────────
 
-type AddressPickerProps<T extends AddressOption> = {
+function removeVietnameseTones(str: string): string {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+}
+
+// ── SelectLegend-style searchable dropdown ───────────────────────────
+// Renders with the same floating-label-on-border + chevron look as SelectLegend,
+// but uses a text input internally so the user can type to filter.
+
+type SearchableSelectLegendProps<T> = {
   label: string
-  placeholder: string
+  placeholder?: string
   value: string
   errorMess?: string
   disabled?: boolean
-  required?: boolean
+  require?: boolean
   options: T[]
-  loading?: boolean
   onSelect: (option: T) => void
   onClear: () => void
-  getKey: (option: T) => number
+  getKey: (option: T) => number | string
+  getDisplayString: (option: T) => string
+  getSearchString: (option: T) => string
 }
 
-function AddressPicker<T extends AddressOption>({
+function SearchableSelectLegend<T>({
   label,
-  placeholder,
+  placeholder = '',
   value,
   errorMess,
   disabled,
-  required,
+  require,
   options,
-  loading,
   onSelect,
   onClear,
   getKey,
-}: AddressPickerProps<T>) {
+  getDisplayString,
+  getSearchString,
+}: SearchableSelectLegendProps<T>) {
   const [search, setSearch] = useState(value)
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   const filtered = useMemo(() => {
-    const keyword = search.trim().toLowerCase()
+    const keyword = removeVietnameseTones(search.trim().toLowerCase())
     if (!keyword) return options
-    return options.filter((item) => item.name.toLowerCase().includes(keyword))
-  }, [options, search])
+    return options.filter((item) => {
+      const s = removeVietnameseTones(getSearchString(item).toLowerCase())
+      return s.includes(keyword)
+    })
+  }, [options, search, getSearchString])
 
   useEffect(() => {
     if (!open) setSearch(value)
   }, [open, value])
 
-  return (
-    <div className="relative flex-1" ref={ref}>
-      <InputLegend
-        label={label}
-        require={required}
-        input={{
-          type: 'text',
-          placeholder,
-          value: search,
-          disabled,
-          onFocus: () => !disabled && setOpen(true),
-          onBlur: () => setTimeout(() => setOpen(false), 150),
-          onChange: (event) => {
-            const next = event.target.value
-            setSearch(next)
-            setOpen(true)
-            if (!next) onClear()
-          },
-        }}
-        errorMess={errorMess}
-      />
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
-      {open && !disabled && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-52 overflow-y-auto text-sm">
-          {loading ? (
-            <div className="px-3 py-2 text-gray-400">Đang tải...</div>
-          ) : filtered.length > 0 ? (
-            filtered.map((option) => (
-              <button
-                key={getKey(option)}
-                type="button"
-                className="block w-full text-left px-3 py-2 hover:bg-blue-50"
-                onMouseDown={(event) => {
-                  event.preventDefault()
-                  setSearch(option.name)
-                  onSelect(option)
-                  setOpen(false)
-                }}
-              >
-                {option.name}
-              </button>
-            ))
-          ) : (
-            <div className="px-3 py-2 text-gray-400">Không tìm thấy kết quả</div>
-          )}
+  const ringClass = disabled
+    ? 'bg-gray-100 border border-gray-400 text-gray-600'
+    : `ring ${errorMess ? 'ring-red-600' : 'ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2'}`
+
+  return (
+    <div className="flex flex-col gap-2 flex-1" ref={ref}>
+      <div className={`relative ${ringClass} px-2.5 pb-2 pt-2.5 rounded-sm`}>
+        {label && (
+          <label className="absolute bg-white bottom-full translate-y-1/2 text-sm text-gray-500 px-1">
+            {label}
+            {require && <span className="text-red-600">*</span>}
+          </label>
+        )}
+        <div className="flex items-center">
+          <input
+            type="text"
+            className="outline-none w-full bg-transparent"
+            placeholder={placeholder}
+            value={search}
+            disabled={disabled}
+            onFocus={() => !disabled && setOpen(true)}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setOpen(true)
+              if (!e.target.value) onClear()
+            }}
+          />
+          <button
+            type="button"
+            className="shrink-0 ml-1 text-gray-400"
+            tabIndex={-1}
+            onClick={() => !disabled && setOpen((v) => !v)}
+          >
+            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
-      )}
+
+        {open && !disabled && (
+          <div className="absolute left-0 right-0 top-full z-50 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-52 overflow-y-auto text-sm">
+            {filtered.length > 0 ? (
+              filtered.map((option) => (
+                <button
+                  key={getKey(option)}
+                  type="button"
+                  className="block w-full text-left px-3 py-2 hover:bg-blue-50"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    setSearch(getDisplayString(option))
+                    onSelect(option)
+                    setOpen(false)
+                  }}
+                >
+                  {getDisplayString(option)}
+                </button>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-gray-400">Không tìm thấy kết quả</div>
+            )}
+          </div>
+        )}
+      </div>
+      {errorMess && <p className="text-red-600 text-xs">{errorMess}</p>}
     </div>
   )
 }
+
+// ── Props & Main Component ───────────────────────────────────────────
 
 type Props = {
   form: EnterpriseFormData
@@ -176,28 +220,15 @@ type Props = {
 }
 
 export default function EnterpriseStepOne({
-  form,
-  errors,
-  attachmentGroups,
-  businessTypes,
-  industries,
-  provinces,
-  wards,
-  businessWards,
-  addressLoading = false,
+  form, errors, attachmentGroups, businessTypes, industries,
+  provinces, wards, businessWards, addressLoading = false,
   onChange,
-  onSelectGpkdProvince,
-  onSelectGpkdWard,
-  onSelectBusinessProvince,
-  onSelectBusinessWard,
-  onClearGpkdProvince,
-  onClearGpkdWard,
-  onClearBusinessProvince,
-  onClearBusinessWard,
-  onAddFiles,
-  onRemoveFile,
-  mode = 'create',
-  userRole = '',
+  onSelectGpkdProvince, onSelectGpkdWard,
+  onSelectBusinessProvince, onSelectBusinessWard,
+  onClearGpkdProvince, onClearGpkdWard,
+  onClearBusinessProvince, onClearBusinessWard,
+  onAddFiles, onRemoveFile,
+  mode = 'create', userRole = '',
 }: Props) {
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null)
 
@@ -206,357 +237,215 @@ export default function EnterpriseStepOne({
   const isTaxCodeDisabled = isViewMode || isEditMode
   const isEmailDisabled = isViewMode
 
-  const level4Industries = useMemo(() => industries.filter((industry) => industry.level === 4), [industries])
+  const level4Industries = useMemo(() => industries.filter((i) => i.level === 4), [industries])
 
   const handleTaxCodeChange = (value: string) => {
     if (isTaxCodeDisabled) return
     onChange('taxCode', value.replace(/[^0-9-]/g, ''))
   }
 
-  const handleBusinessTypeChange = (value: string) => {
-    const id = Number(value)
-    const selected = businessTypes.find((item) => item.id === id)
-    onChange('businessTypeId', Number.isNaN(id) ? '' : id)
-    onChange('businessType', selected ? selected.name : '')
+  const handleBusinessTypeSelect = (t: IBusinessType) => {
+    onChange('businessTypeId', t.id)
+    onChange('businessType', t.name)
   }
+  const handleBusinessTypeClear = () => { onChange('businessTypeId', ''); onChange('businessType', '') }
 
-  const handleIndustryChange = (value: string) => {
-    const id = Number(value)
-    const selected = level4Industries.find((item) => item.id === id)
-    onChange('industryId', Number.isNaN(id) ? '' : id)
-    onChange('industry', selected ? `${selected.code} - ${selected.name}` : '')
+  const handleIndustrySelect = (i: IIndustry) => {
+    onChange('industryId', i.id)
+    onChange('industry', `${i.code} - ${i.name}`)
   }
+  const handleIndustryClear = () => { onChange('industryId', ''); onChange('industry', '') }
 
   const handleFileChange = (groupIndex: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files?.length) {
-      onAddFiles(groupIndex, event.target.files)
-      // Reset input value to allow selecting the same file again
-      event.target.value = ''
-    }
+    if (event.target.files?.length) { onAddFiles(groupIndex, event.target.files); event.target.value = '' }
   }
 
   const handlePreview = (file: UploadedFile) => {
-    if ((file.file?.type || file.mimeType || '').startsWith('image/') && file.url) {
-      setPreviewFile(file)
-      return
-    }
+    if ((file.file?.type || file.mimeType || '').startsWith('image/') && file.url) { setPreviewFile(file); return }
     if (file.url) window.open(file.url, '_blank')
   }
 
-  const sectionTitle = mode === 'create'
-    ? 'Thêm mới doanh nghiệp'
-    : mode === 'edit'
-      ? 'Chỉnh sửa doanh nghiệp'
-      : 'Chi tiết doanh nghiệp'
+  const sectionTitle = mode === 'create' ? 'Thêm mới doanh nghiệp' : mode === 'edit' ? 'Chỉnh sửa doanh nghiệp' : 'Chi tiết doanh nghiệp'
 
   return (
     <>
       <div className="space-y-6">
+        {/* ── Section 1: Thông tin doanh nghiệp ── */}
         <div>
           <h3 className="text-sm font-bold text-gray-800 mb-4">{sectionTitle}</h3>
+
+          {/* Row 1 */}
           <div className="grid grid-cols-3 gap-4">
             <InputLegend
-              label="Tên doanh nghiệp"
-              require
-              input={{
-                type: 'text',
-                placeholder: 'Nhập tên doanh nghiệp',
-                value: form.companyName,
-                maxLength: 255,
-                onChange: (event) => onChange('companyName', event.target.value),
-                disabled: isViewMode,
-              }}
+              label="Tên doanh nghiệp" require
+              input={{ type: 'text', value: form.companyName, maxLength: 255, onChange: (e) => onChange('companyName', e.target.value), disabled: isViewMode }}
               errorMess={errors.companyName}
             />
             <InputLegend
-              label="Mã số thuế"
-              require
-              input={{
-                type: 'text',
-                placeholder: 'VD: 0123456789 hoặc 0123456789-001',
-                value: form.taxCode,
-                onChange: (event) => handleTaxCodeChange(event.target.value),
-                maxLength: 14,
-                disabled: isTaxCodeDisabled,
-              }}
+              label="Mã số thuế" require
+              input={{ type: 'text', value: form.taxCode, onChange: (e) => handleTaxCodeChange(e.target.value), maxLength: 15, disabled: isTaxCodeDisabled }}
               errorMess={errors.taxCode}
             />
-            <SelectLegend
-              label="Loại hình kinh doanh"
-              require
-              select={{
-                value: form.businessTypeId,
-                onChange: (event) => handleBusinessTypeChange(event.target.value),
-                disabled: isViewMode,
-              }}
+            <SearchableSelectLegend
+              label="Loại hình kinh doanh" require
+              placeholder="Chọn loại hình" value={form.businessType} disabled={isViewMode}
+              options={businessTypes}
+              onSelect={handleBusinessTypeSelect} onClear={handleBusinessTypeClear}
+              getKey={(o) => o.id} getDisplayString={(o) => `${o.code} - ${o.name}`} getSearchString={(o) => `${o.code} ${o.name}`}
               errorMess={errors.businessType}
+            />
+          </div>
+
+          {/* Row 2 */}
+          <div className="grid grid-cols-3 gap-4 mt-4">
+            <SearchableSelectLegend
+              label="Ngành nghề kinh doanh  chính" require
+              placeholder="Chọn ngành nghề cấp 4" value={form.industry} disabled={isViewMode}
+              options={level4Industries}
+              onSelect={handleIndustrySelect} onClear={handleIndustryClear}
+              getKey={(o) => o.id} getDisplayString={(o) => `${o.code} - ${o.name}`} getSearchString={(o) => `${o.code} ${o.name}`}
+              errorMess={errors.industry}
+            />
+            <DateLengend
+              label="Ngày cấp GPKD" require
+              value={form.gpkdDate} onChange={(v) => onChange('gpkdDate', v)}
+              disabled={isViewMode} errorMess={errors.gpkdDate} errorInput="Ngày cấp GPKD không hợp lệ"
+            />
+            <SelectLegend
+              label="Tỉnh/Thành phố ĐKKD" require
+              select={{ value: form.gpkdProvinceData.key || '', onChange: (e) => {
+                const p = provinces.find((p) => p.code === Number(e.target.value))
+                if (p) onSelectGpkdProvince(p); else onClearGpkdProvince()
+              }, disabled: isViewMode }}
+              errorMess={errors.gpkdProvince}
             >
-              <option value="">Chọn loại hình</option>
-              {businessTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.code} - {type.name}
-                </option>
-              ))}
+              <option value="">Chọn tỉnh/thành phố</option>
+              {provinces.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
             </SelectLegend>
           </div>
 
+          {/* Row 3 */}
           <div className="grid grid-cols-3 gap-4 mt-4">
             <SelectLegend
-              label="Ngành nghề kinh doanh chính"
-              require
-              select={{
-                value: form.industryId,
-                onChange: (event) => handleIndustryChange(event.target.value),
-                disabled: isViewMode,
-              }}
-              errorMess={errors.industry}
-            >
-              <option value="">Chọn ngành nghề cấp 4</option>
-              {level4Industries.map((industry) => (
-                <option key={industry.id} value={industry.id}>
-                  {industry.code} - {industry.name}
-                </option>
-              ))}
-            </SelectLegend>
-            <DateLengend
-              label="Ngày cấp GPKD"
-              require
-              value={form.gpkdDate}
-              onChange={(value) => onChange('gpkdDate', value)}
-              disabled={isViewMode}
-              errorMess={errors.gpkdDate}
-              errorInput="Ngày cấp GPKD không hợp lệ"
-            />
-            <AddressPicker
-              label="Tỉnh/Thành phố ĐKKD"
-              placeholder="Tìm tỉnh/thành phố"
-              value={form.gpkdProvince}
-              required
-              disabled={isViewMode}
-              loading={addressLoading}
-              options={provinces}
-              onSelect={onSelectGpkdProvince}
-              onClear={onClearGpkdProvince}
-              getKey={(option) => option.code}
-              errorMess={errors.gpkdProvince}
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 mt-4">
-            <AddressPicker
-              label="Phường/Xã ĐKKD"
-              placeholder="Tìm phường/xã"
-              value={form.gpkdWard}
-              required
-              disabled={isViewMode || !form.gpkdProvinceData.key}
-              options={wards}
-              onSelect={onSelectGpkdWard}
-              onClear={onClearGpkdWard}
-              getKey={(option) => option.code}
+              label="Phường/Xã ĐKKD" require
+              select={{ value: form.gpkdWardData.key || '', onChange: (e) => {
+                const w = wards.find((w) => w.code === Number(e.target.value))
+                if (w) onSelectGpkdWard(w); else onClearGpkdWard()
+              }, disabled: isViewMode || !form.gpkdProvinceData.key }}
               errorMess={errors.gpkdWard}
-            />
+            >
+              <option value="">Chọn phường/xã</option>
+              {wards.map((w) => <option key={w.code} value={w.code}>{w.name}</option>)}
+            </SelectLegend>
             <div className="col-span-2">
               <InputLegend
                 label="Địa chỉ"
-                input={{
-                  type: 'text',
-                  placeholder: 'Nhập địa chỉ',
-                  value: form.address,
-                  onChange: (event) => onChange('address', event.target.value),
-                  disabled: isViewMode,
-                }}
+                input={{ type: 'text', value: form.address, onChange: (e) => onChange('address', e.target.value), disabled: isViewMode }}
                 errorMess={errors.address}
               />
             </div>
           </div>
         </div>
 
+        {/* ── Section 2: Thông tin liên hệ ── */}
         <div>
           <h3 className="text-sm font-bold text-gray-800 mb-4">Thông tin liên hệ</h3>
           <div className="grid grid-cols-3 gap-4">
-            <InputLegend
-              label="Tên viết bằng tiếng nước ngoài"
-              input={{
-                type: 'text',
-                placeholder: 'Tên viết bằng tiếng nước ngoài',
-                value: form.foreignName,
-                maxLength: 255,
-                onChange: (event) => onChange('foreignName', event.target.value),
-                disabled: isViewMode,
-              }}
-            />
-            <InputLegend
-              label="Email"
-              require
-              input={{
-                type: 'email',
-                placeholder: 'Nhập email',
-                value: form.email,
-                onChange: (event) => onChange('email', event.target.value),
-                disabled: isEmailDisabled,
-              }}
-              errorMess={errors.email}
-            />
-            <InputLegend
-              label="Số điện thoại cơ quan"
-              input={{
-                type: 'text',
-                placeholder: 'Số điện thoại cơ quan',
-                value: form.phone,
-                onChange: (event) => onChange('phone', event.target.value.replace(/[^0-9+]/g, '')),
-                disabled: isViewMode,
-              }}
-              errorMess={errors.phone}
-            />
+            <InputLegend label="Tên viết bằng tiếng nước ngoài"
+              input={{ type: 'text', value: form.foreignName, maxLength: 255, onChange: (e) => onChange('foreignName', e.target.value), disabled: isViewMode }} />
+            <InputLegend label="Email" require
+              input={{ type: 'email', value: form.email, onChange: (e) => onChange('email', e.target.value), disabled: isEmailDisabled }}
+              errorMess={errors.email} />
+            <InputLegend label="Số điện thoại cơ quan"
+              input={{ type: 'text', value: form.phone, onChange: (e) => onChange('phone', e.target.value.replace(/[^0-9+]/g, '')), disabled: isViewMode }}
+              errorMess={errors.phone} />
           </div>
           <div className="grid grid-cols-3 gap-4 mt-4">
-            <AddressPicker
-              label="Tỉnh/TP hoạt động KD"
-              placeholder="Tìm tỉnh/thành phố"
-              value={form.businessProvince}
-              disabled={isViewMode}
-              loading={addressLoading}
-              options={provinces}
-              onSelect={onSelectBusinessProvince}
-              onClear={onClearBusinessProvince}
-              getKey={(option) => option.code}
-            />
-            <AddressPicker
-              label="Phường/Xã hoạt động KD"
-              placeholder="Tìm phường/xã"
-              value={form.businessWard}
-              disabled={isViewMode || !form.businessProvinceData.key}
-              options={businessWards}
-              onSelect={onSelectBusinessWard}
-              onClear={onClearBusinessWard}
-              getKey={(option) => option.code}
-            />
-            <InputLegend
-              label="Địa điểm kinh doanh"
-              input={{
-                type: 'text',
-                placeholder: 'Địa điểm kinh doanh',
-                value: form.businessAddress,
-                onChange: (event) => onChange('businessAddress', event.target.value),
-                disabled: isViewMode,
-              }}
-            />
+            <SelectLegend label="Tỉnh/TP hoạt động KD"
+              select={{ value: form.businessProvinceData.key || '', onChange: (e) => {
+                const p = provinces.find((p) => p.code === Number(e.target.value))
+                if (p) onSelectBusinessProvince(p); else onClearBusinessProvince()
+              }, disabled: isViewMode }}>
+              <option value="">Chọn tỉnh/thành phố</option>
+              {provinces.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
+            </SelectLegend>
+            <SelectLegend label="Phường/Xã hoạt động KD"
+              select={{ value: form.businessWardData.key || '', onChange: (e) => {
+                const w = businessWards.find((w) => w.code === Number(e.target.value))
+                if (w) onSelectBusinessWard(w); else onClearBusinessWard()
+              }, disabled: isViewMode || !form.businessProvinceData.key }}>
+              <option value="">Chọn phường/xã</option>
+              {businessWards.map((w) => <option key={w.code} value={w.code}>{w.name}</option>)}
+            </SelectLegend>
+            <InputLegend label="Địa điểm kinh doanh"
+              input={{ type: 'text', value: form.businessAddress, onChange: (e) => onChange('businessAddress', e.target.value), disabled: isViewMode }} />
           </div>
           <div className="grid grid-cols-3 gap-4 mt-4">
-            <InputLegend
-              label="Người đứng đầu doanh nghiệp"
-              input={{
-                type: 'text',
-                placeholder: 'Người đứng đầu doanh nghiệp',
-                value: form.representative,
-                onChange: (event) => onChange('representative', event.target.value),
-                disabled: isViewMode,
-              }}
-              errorMess={errors.representative}
-            />
-            <InputLegend
-              label="SĐT liên hệ người đứng đầu"
-              input={{
-                type: 'text',
-                placeholder: 'SĐT liên hệ người đứng đầu',
-                value: form.representativePhone,
-                onChange: (event) => onChange('representativePhone', event.target.value.replace(/[^0-9+]/g, '')),
-                disabled: isViewMode,
-              }}
-              errorMess={errors.representativePhone}
-            />
+            <InputLegend label="Người đứng đầu doanh nghiệp"
+              input={{ type: 'text', value: form.representative, onChange: (e) => onChange('representative', e.target.value), disabled: isViewMode }}
+              errorMess={errors.representative} />
+            <InputLegend label="SĐT liên hệ người đứng đầu"
+              input={{ type: 'text', value: form.representativePhone, onChange: (e) => onChange('representativePhone', e.target.value.replace(/[^0-9+]/g, '')), disabled: isViewMode }}
+              errorMess={errors.representativePhone} />
             <div />
           </div>
         </div>
 
+        {/* ── Section 3: File đính kèm ── */}
         <div>
           <h3 className="text-sm font-bold text-gray-800 mb-3">File đính kèm</h3>
           {errors.attachments && <p className="text-red-600 text-xs mb-2">{errors.attachments}</p>}
           <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="grid grid-cols-[40px_1fr_1fr_140px] bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200">
-              <div className="px-3 py-2.5 text-center">STT</div>
-              <div className="px-4 py-2.5">Tên file</div>
-              <div className="px-4 py-2.5">Thông tin file</div>
-              <div className="px-4 py-2.5 text-center">Thao tác</div>
+            <div className="grid grid-cols-[1fr_1fr_140px] bg-gray-50 text-xs font-semibold text-gray-500 border-b border-gray-200 uppercase tracking-wider">
+              <div className="px-6 py-3.5">Tên file</div>
+              <div className="px-6 py-3.5">Thông tin file</div>
+              <div className="px-6 py-3.5 text-center">Thao tác</div>
             </div>
-
-            {attachmentGroups.map((group, groupIdx) => (
-              <div key={group.groupName}>
-                <div className="grid grid-cols-[40px_1fr_1fr_140px] bg-primary/5 border-b border-gray-200">
-                  <div className="px-3 py-2.5 text-center text-xs font-semibold text-gray-600">{groupIdx + 1}</div>
-                  <div className="px-4 py-2.5 text-sm font-semibold text-gray-800 col-span-2">{group.groupName}</div>
-                  <div className="px-4 py-2.5 flex items-center justify-center">
+            {attachmentGroups.map((group, groupIdx) => {
+              const file = group.files[0]
+              return (
+                <div key={group.groupName} className="grid grid-cols-[1fr_1fr_140px] text-sm text-gray-700 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors items-center">
+                  <div className="px-6 py-4 font-medium text-gray-900">{group.groupName}</div>
+                  <div className="px-6 py-4">
+                    {file ? (
+                      <span className={`font-normal ${file.error ? 'text-red-500' : 'text-gray-800'}`}>
+                        {file.uploading ? 'Đang upload...' : file.error || file.name}
+                      </span>
+                    ) : (<span className="text-gray-400 italic">Chưa tải</span>)}
+                  </div>
+                  <div className="px-6 py-4 flex items-center justify-center gap-4">
+                    {file && (
+                      <button type="button" onClick={() => handlePreview(file)} disabled={!file.url}
+                        className="text-gray-400 hover:text-primary disabled:opacity-30 transition-colors" title="Xem trước">
+                        <i className="fa-solid fa-eye text-base" />
+                      </button>
+                    )}
                     {!isViewMode && (
                       <>
-                        <label
-                          htmlFor={`file-input-${groupIdx}`}
-                          className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer"
-                          title="Upload file"
-                        >
-                          <i className="fa-solid fa-upload text-xs" />
-                          <span>Upload</span>
+                        <label htmlFor={`file-input-${groupIdx}`}
+                          className="text-gray-400 hover:text-primary transition-colors cursor-pointer"
+                          title={file ? 'Thay thế file' : 'Tải lên file'}>
+                          <i className="fa-solid fa-upload text-base" />
                         </label>
-                        <input
-                          id={`file-input-${groupIdx}`}
-                          type="file"
-                          multiple
-                          className="hidden"
-                          onChange={(event) => handleFileChange(groupIdx, event)}
-                          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-                        />
+                        <input id={`file-input-${groupIdx}`} type="file" className="hidden"
+                          onChange={(e) => handleFileChange(groupIdx, e)} accept=".pdf,.jpg,.jpeg,.png,.webp" />
                       </>
+                    )}
+                    {file && !isViewMode && (
+                      <button type="button" onClick={() => onRemoveFile(groupIdx, file.id)}
+                        className="text-gray-400 hover:text-red-500 transition-colors" title="Xóa file">
+                        <i className="fa-solid fa-trash text-base" />
+                      </button>
                     )}
                   </div>
                 </div>
-
-                {group.files.length === 0 ? (
-                  <div className="px-4 py-4 text-center text-sm text-gray-400 italic border-b border-gray-100">
-                    Chưa có file nào
-                  </div>
-                ) : (
-                  group.files.map((file, fileIdx) => (
-                    <div
-                      key={file.id}
-                      className="grid grid-cols-[40px_1fr_1fr_140px] text-sm text-gray-700 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors"
-                    >
-                      <div className="px-3 py-2.5 text-center text-xs text-gray-400">{groupIdx + 1}.{fileIdx + 1}</div>
-                      <div className="px-4 py-2.5 flex items-center gap-2 min-w-0">
-                        <i className="fa-solid fa-file-lines text-primary/60 text-xs" />
-                        <span className="truncate">{file.name}</span>
-                      </div>
-                      <div className={`px-4 py-2.5 ${file.error ? 'text-red-500' : 'text-gray-500'}`}>
-                        {file.uploading ? 'Đang upload...' : file.error || file.size}
-                      </div>
-                      <div className="px-4 py-2.5 flex items-center justify-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => handlePreview(file)}
-                          disabled={!file.url}
-                          className="text-gray-400 hover:text-primary disabled:opacity-30 transition-colors"
-                          title="Xem"
-                        >
-                          <i className="fa-solid fa-eye text-xs" />
-                        </button>
-                        {!isViewMode && (
-                          <button
-                            type="button"
-                            onClick={() => onRemoveFile(groupIdx, file.id)}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
-                            title="Xóa"
-                          >
-                            <i className="fa-solid fa-trash text-xs" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
 
+      {/* Preview modal */}
       {previewFile && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden">
@@ -581,9 +470,7 @@ export default function EnterpriseStepOne({
               </div>
             </div>
             <div className="px-5 py-3 border-t border-gray-100 flex justify-end">
-              <button type="button" onClick={() => setPreviewFile(null)} className="px-4 py-2 text-sm text-primary hover:text-primary/80 font-medium transition-colors">
-                Đóng
-              </button>
+              <button type="button" onClick={() => setPreviewFile(null)} className="px-4 py-2 text-sm text-primary hover:text-primary/80 font-medium transition-colors">Đóng</button>
             </div>
           </div>
         </div>
