@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DateLengend from '@/src/components/DateLengend'
 import InputLegend from '@/src/components/InputLegend'
-import SelectLegend from '@/src/components/SelectLegend'
 import type { IBusinessType } from '@/src/api/BusinessType'
 import type { IIndustry } from '@/src/api/Industry'
 import type { ElementAddress } from '@/src/api/User'
@@ -311,32 +310,26 @@ export default function EnterpriseStepOne({
               value={form.gpkdDate} onChange={(v) => onChange('gpkdDate', v)}
               disabled={isViewMode} errorMess={errors.gpkdDate} errorInput="Ngày cấp GPKD không hợp lệ"
             />
-            <SelectLegend
+            <SearchableSelectLegend
               label="Tỉnh/Thành phố ĐKKD" require
-              select={{ value: form.gpkdProvinceData.key || '', onChange: (e) => {
-                const p = provinces.find((p) => p.code === Number(e.target.value))
-                if (p) onSelectGpkdProvince(p); else onClearGpkdProvince()
-              }, disabled: isViewMode }}
+              placeholder="Tìm tỉnh/thành phố" value={form.gpkdProvince} disabled={isViewMode}
+              options={provinces}
+              onSelect={(p) => onSelectGpkdProvince(p)} onClear={onClearGpkdProvince}
+              getKey={(o) => o.code} getDisplayString={(o) => o.name} getSearchString={(o) => o.name}
               errorMess={errors.gpkdProvince}
-            >
-              <option value="">Chọn tỉnh/thành phố</option>
-              {provinces.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
-            </SelectLegend>
+            />
           </div>
 
           {/* Row 3 */}
           <div className="grid grid-cols-3 gap-4 mt-4">
-            <SelectLegend
+            <SearchableSelectLegend
               label="Phường/Xã ĐKKD" require
-              select={{ value: form.gpkdWardData.key || '', onChange: (e) => {
-                const w = wards.find((w) => w.code === Number(e.target.value))
-                if (w) onSelectGpkdWard(w); else onClearGpkdWard()
-              }, disabled: isViewMode || !form.gpkdProvinceData.key }}
+              placeholder="Tìm phường/xã" value={form.gpkdWard} disabled={isViewMode || !form.gpkdProvinceData.key}
+              options={wards}
+              onSelect={(w) => onSelectGpkdWard(w)} onClear={onClearGpkdWard}
+              getKey={(o) => o.code} getDisplayString={(o) => o.name} getSearchString={(o) => o.name}
               errorMess={errors.gpkdWard}
-            >
-              <option value="">Chọn phường/xã</option>
-              {wards.map((w) => <option key={w.code} value={w.code}>{w.name}</option>)}
-            </SelectLegend>
+            />
             <div className="col-span-2">
               <InputLegend
                 label="Địa chỉ"
@@ -361,22 +354,18 @@ export default function EnterpriseStepOne({
               errorMess={errors.phone} />
           </div>
           <div className="grid grid-cols-3 gap-4 mt-4">
-            <SelectLegend label="Tỉnh/TP hoạt động KD"
-              select={{ value: form.businessProvinceData.key || '', onChange: (e) => {
-                const p = provinces.find((p) => p.code === Number(e.target.value))
-                if (p) onSelectBusinessProvince(p); else onClearBusinessProvince()
-              }, disabled: isViewMode }}>
-              <option value="">Chọn tỉnh/thành phố</option>
-              {provinces.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
-            </SelectLegend>
-            <SelectLegend label="Phường/Xã hoạt động KD"
-              select={{ value: form.businessWardData.key || '', onChange: (e) => {
-                const w = businessWards.find((w) => w.code === Number(e.target.value))
-                if (w) onSelectBusinessWard(w); else onClearBusinessWard()
-              }, disabled: isViewMode || !form.businessProvinceData.key }}>
-              <option value="">Chọn phường/xã</option>
-              {businessWards.map((w) => <option key={w.code} value={w.code}>{w.name}</option>)}
-            </SelectLegend>
+            <SearchableSelectLegend label="Tỉnh/TP hoạt động KD"
+              placeholder="Tìm tỉnh/thành phố" value={form.businessProvince} disabled={isViewMode}
+              options={provinces}
+              onSelect={(p) => onSelectBusinessProvince(p)} onClear={onClearBusinessProvince}
+              getKey={(o) => o.code} getDisplayString={(o) => o.name} getSearchString={(o) => o.name}
+            />
+            <SearchableSelectLegend label="Phường/Xã hoạt động KD"
+              placeholder="Tìm phường/xã" value={form.businessWard} disabled={isViewMode || !form.businessProvinceData.key}
+              options={businessWards}
+              onSelect={(w) => onSelectBusinessWard(w)} onClear={onClearBusinessWard}
+              getKey={(o) => o.code} getDisplayString={(o) => o.name} getSearchString={(o) => o.name}
+            />
             <InputLegend label="Địa điểm kinh doanh"
               input={{ type: 'text', value: form.businessAddress, onChange: (e) => onChange('businessAddress', e.target.value), disabled: isViewMode }} />
           </div>
