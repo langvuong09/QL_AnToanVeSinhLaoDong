@@ -360,6 +360,12 @@ const AccountIdPage = () => {
             notificate?.showNotification({ type: "error", message: "Chi chấp nhập file là hình ảnh" });
             return;
         }
+
+        if (file.size > 5 * 1024 * 1024) {
+            notificate?.showNotification({ type: "error", message: "Kích thước tối đa 5MB" });
+            return;
+        }
+
         setFileAvater(file);
         const object = URL.createObjectURL(file);
         setImagePreview(object);

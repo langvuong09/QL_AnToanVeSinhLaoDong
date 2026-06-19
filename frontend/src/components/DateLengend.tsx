@@ -147,7 +147,7 @@ export default function DatePicker({ label, require, errorMess, errorInput, valu
     return (
         <div className="flex flex-col gap-2 flex-1">
             <div ref={containerRef} className="relative">
-                <div className={`relative ${disabled ? 'bg-gray-100' : ''} ring ${displayError || isInternalErr ? 'ring-red-600' : 'ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2'} px-3 py-2 rounded-lg`}>
+                <div className={`relative ${disabled ? 'bg-gray-100' : ''} ring ${displayError || isInternalErr ? 'ring-red-600' : 'ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2'} px-2.5 py-[9.5px] rounded-sm`}>
                     {label && (
                         <label className="absolute bg-white bottom-full translate-y-1/2 text-sm px-1 text-gray-500" htmlFor={id}>
                             {label}

@@ -13,16 +13,18 @@ import Loading from "@/src/components/Loading";
 import Link from "next/link";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import BulkDeleteBar from "@/src/components/common/BulkDeleteBar";
+import { ConfirmContext } from "@/src/contexts/confirm/confirm";
+import { exportToExcel } from "@/src/utils/excel";
 
 const DEBOUNCE_MS = 500;
 
 const AccountPage = () => {
     const notificate = useContext(NotificateContext);
+    const confirm = useContext(ConfirmContext);
 
     const [users, setUsers] = useState<IUser[]>([]);
     const [roles, setRoles] = useState<IRole[]>([]);
     const [loading, setLoading] = useState(false);
-    const [updatingStatusIds, setUpdatingStatusIds] = useState<string[]>([]);
     const [pagination, setPagination] = useState({
         page: 1,
         pageSize: 10,
@@ -181,10 +183,12 @@ const AccountPage = () => {
                 <BulkDeleteBar
                     selectedCount={selectedList.length}
                     onClearSelection={() => {
-                        console.log("hhee")
                         setSelectedList([]);
                     }}
                     onDelete={async () => {
+                        const wait = await confirm.waitConfirm();
+                        if (!wait) return;
+
                         const cls = new User();
                         const result = await cls.DeleteUser(selectedList);
                         if (result.success) {
@@ -285,7 +289,6 @@ const AccountPage = () => {
                                 <InputLegend
                                     input={{
                                         type: "text",
-                                        placeholder: "Tìm theo họ tên",
                                         value: filters.fullName,
                                         onChange: (e) => handleFilterChange('fullName', e.target.value)
                                     }}
@@ -297,7 +300,6 @@ const AccountPage = () => {
                                 <InputLegend
                                     input={{
                                         type: "text",
-                                        placeholder: "Tìm theo tài khoản",
                                         value: filters.username,
                                         onChange: (e) => handleFilterChange('username', e.target.value)
                                     }}
@@ -309,7 +311,6 @@ const AccountPage = () => {
                                 <InputLegend
                                     input={{
                                         type: "text",
-                                        placeholder: "Tìm theo email",
                                         value: filters.email,
                                         onChange: (e) => handleFilterChange('email', e.target.value)
                                     }}
@@ -338,7 +339,6 @@ const AccountPage = () => {
                                 <InputLegend
                                     input={{
                                         type: "text",
-                                        placeholder: "Tìm theo chức danh",
                                         value: filters.position,
                                         onChange: (e) => handleFilterChange('position', e.target.value)
                                     }}
@@ -402,13 +402,32 @@ const AccountPage = () => {
                     </div>
                 </div>
 
-                <Pagination
-                    totalCount={pagination.total}
-                    pageSize={pagination.pageSize}
-                    currentPage={pagination.page}
-                    setPageSize={(newSize) => fetchUsers(1, newSize)}
-                    setCurrentPage={(newPage) => fetchUsers(newPage, pagination.pageSize)}
-                />
+                <div className="flex px-2">
+                    <button className="text-sm font-semibold flex gap-2 items-center text-gray-800" onClick={() => {
+                        exportToExcel<any>(users, [
+                            { key: "id", label: "Mã" },
+                            { key: "fullName", label: "Họ và tên" },
+                            { key: "username", label: "Tên đăng nhập" },
+                            { key: "email", label: "Email" },
+                            { key: "position", label: "Chức vụ" },
+                            { key: "role", label: "Vai trò" },
+                            { key: "status", label: "Trạng thái" },
+                            { key: "createdAt", label: "Ngày tạo" },
+                        ], "Account-" + Date.now());
+                    }}>
+                        <i className="fa-solid fa-download"></i>
+                        <span>Export Data</span>
+                    </button>
+                    <div className="flex-1">
+                        <Pagination
+                            totalCount={pagination.total}
+                            pageSize={pagination.pageSize}
+                            currentPage={pagination.page}
+                            setPageSize={(newSize) => fetchUsers(1, newSize)}
+                            setCurrentPage={(newPage) => fetchUsers(newPage, pagination.pageSize)}
+                        />
+                    </div>
+                </div>
             </div>
         </main>
     );
