@@ -23,15 +23,21 @@ export class ReportService {
     }
 
     const parsedDetails = dto.details.map(detail => {
-      const med = Number(detail.medicalCost) || 0;
-      const sal = Number(detail.salaryCompensation) || 0;
-      const prop = Number(detail.propertyDamage) || 0;
+      const hasFinancialData = detail.medicalCost !== null || detail.salaryCompensation !== null || detail.propertyDamage !== null;
+      let calculatedTotal: number | null = null;
+      
+      if (hasFinancialData) {
+        calculatedTotal = (Number(detail.medicalCost) || 0) + 
+                          (Number(detail.salaryCompensation) || 0) + 
+                          (Number(detail.propertyDamage) || 0);
+      }
+
       return {
         ...detail,
-        medicalCost: med,
-        salaryCompensation: sal,
-        propertyDamage: prop,
-        totalCost: med + sal + prop 
+        medicalCost: detail.medicalCost !== undefined ? detail.medicalCost : null,
+        salaryCompensation: detail.salaryCompensation !== undefined ? detail.salaryCompensation : null,
+        propertyDamage: detail.propertyDamage !== undefined ? detail.propertyDamage : null,
+        totalCost: calculatedTotal
       };
     });
 
@@ -41,7 +47,7 @@ export class ReportService {
       reportTypeId: dto.reportTypeId,
       doetId: user.doetId,
       status: ReportStatus.DRAFT,
-      details: parsedDetails,
+      details: parsedDetails as any,
     });
 
     if (dto.fileIds && dto.fileIds.length > 0) {
@@ -65,14 +71,18 @@ export class ReportService {
   }
 
   async changeStatus(id: number, dto: UpdateStatusDto, user: any) {
-    const report = await this.reportRepository.findOne({ where: { id } });
+    const report = await this.reportRepository.findOne({ 
+      where: { id },
+      relations: { details: true }
+    });
     if (!report) throw new NotFoundException('Không tìm thấy báo cáo yêu cầu');
 
     const current = report.status;
     const target = dto.status;
 
     const validTransitions: Record<ReportStatus, ReportStatus[]> = {
-      [ReportStatus.DRAFT]: [ReportStatus.SUBMITTED],                    
+      [ReportStatus.DRAFT]: [ReportStatus.SUBMITTED, ReportStatus.OVERDUE_WARNING],                    
+      [ReportStatus.OVERDUE_WARNING]: [ReportStatus.SUBMITTED],                    
       [ReportStatus.SUBMITTED]: [ReportStatus.APPROVED, ReportStatus.REJECTED], 
       [ReportStatus.APPROVED]: [],                                        
       [ReportStatus.REJECTED]: [ReportStatus.SUBMITTED],                 
@@ -80,6 +90,30 @@ export class ReportService {
 
     if (!validTransitions[current].includes(target)) {
       throw new BadRequestException(`Sai tiến độ! Không thể chuyển trạng thái từ [${current}] sang [${target}].`);
+    }
+
+    // 🎯 KIỂM TRA TOÀN VẸN: Front-End kích hoạt kiểm tra khi doanh nghiệp bấm "GỬI BÁO CÁO"
+    if (target === ReportStatus.SUBMITTED) {
+      if (!report.details || report.details.length === 0) {
+        throw new BadRequestException('Không thể gửi báo cáo trống dữ liệu biểu mẫu!');
+      }
+
+      const requiredFields = [
+        'totalCases', 'fatalCases', 'multiVictimCases', 
+        'totalVictims', 'femaleVictims', 'fatalVictims', 'severeInjuries',
+        'nonManagedVictims', 'nonManagedFemaleVictims', 'nonManagedFatalVictims', 'nonManagedSevereInjuries',
+        'medicalCost', 'salaryCompensation', 'propertyDamage'
+      ];
+
+      for (const [index, detail] of report.details.entries()) {
+        for (const field of requiredFields) {
+          const value = (detail as any)[field];
+          if (value === null || value === undefined) {
+            const rowIdentifier = detail.traumaId ? `Dòng Nguyên nhân ID ${detail.traumaId}` : `Dòng Chấn thương ID ${detail.injuryTypeId}`;
+            throw new BadRequestException(`Trường [${field}] tại [${rowIdentifier}] (Dòng số ${index + 1}) chưa được điền số liệu!`);
+          }
+        }
+      }
     }
 
     report.status = target;
@@ -226,10 +260,10 @@ export class ReportService {
       nonManagedFatalVictims: detail.nonManagedFatalVictims,
       nonManagedSevereInjuries: detail.nonManagedSevereInjuries,
 
-      medicalCost: Number(detail.medicalCost),
-      salaryCompensation: Number(detail.salaryCompensation),
-      propertyDamage: Number(detail.propertyDamage),
-      totalCost: Number(detail.totalCost)
+      medicalCost: detail.medicalCost ? Number(detail.medicalCost) : null,
+      salaryCompensation: detail.salaryCompensation ? Number(detail.salaryCompensation) : null,
+      propertyDamage: detail.propertyDamage ? Number(detail.propertyDamage) : null,
+      totalCost: detail.totalCost ? Number(detail.totalCost) : null
     }));
 
     return Response.get({
@@ -317,7 +351,7 @@ export class ReportService {
       throw new BadRequestException('Bạn không có quyền chỉnh sửa báo cáo của doanh nghiệp khác!');
     }
 
-    if (report.status !== ReportStatus.DRAFT && report.status !== ReportStatus.REJECTED) {
+    if (report.status !== ReportStatus.DRAFT && report.status !== ReportStatus.OVERDUE_WARNING && report.status !== ReportStatus.REJECTED) {
       throw new BadRequestException(`Báo cáo đang ở trạng thái [${report.status}], không được phép chỉnh sửa!`);
     }
 
@@ -339,18 +373,38 @@ export class ReportService {
         await transactionalEntityManager.delete(ReportDetail, { reportId: report.id });
 
         const newDetails = dto.details.map(detail => {
-          const med = Number(detail.medicalCost) || 0;
-          const sal = Number(detail.salaryCompensation) || 0;
-          const prop = Number(detail.propertyDamage) || 0;
+          const hasFinancialData = detail.medicalCost !== null || detail.salaryCompensation !== null || detail.propertyDamage !== null;
+          let calculatedTotal: number | null = null;
           
-          return transactionalEntityManager.create(ReportDetail, {
-            ...detail,
+          if (hasFinancialData) {
+            calculatedTotal = (Number(detail.medicalCost) || 0) + 
+                              (Number(detail.salaryCompensation) || 0) + 
+                              (Number(detail.propertyDamage) || 0);
+          }
+
+          const cleanDetail: any = {
             reportId: report.id,
-            medicalCost: med,
-            salaryCompensation: sal,
-            propertyDamage: prop,
-            totalCost: med + sal + prop
-          });
+            totalCases: detail.totalCases !== undefined ? detail.totalCases : null,
+            fatalCases: detail.fatalCases !== undefined ? detail.fatalCases : null,
+            multiVictimCases: detail.multiVictimCases !== undefined ? detail.multiVictimCases : null,
+            totalVictims: detail.totalVictims !== undefined ? detail.totalVictims : null,
+            femaleVictims: detail.femaleVictims !== undefined ? detail.femaleVictims : null,
+            fatalVictims: detail.fatalVictims !== undefined ? detail.fatalVictims : null,
+            severeInjuries: detail.severeInjuries !== undefined ? detail.severeInjuries : null,
+            nonManagedVictims: detail.nonManagedVictims !== undefined ? detail.nonManagedVictims : null,
+            nonManagedFemaleVictims: detail.nonManagedFemaleVictims !== undefined ? detail.nonManagedFemaleVictims : null,
+            nonManagedFatalVictims: detail.nonManagedFatalVictims !== undefined ? detail.nonManagedFatalVictims : null,
+            nonManagedSevereInjuries: detail.nonManagedSevereInjuries !== undefined ? detail.nonManagedSevereInjuries : null,
+            medicalCost: detail.medicalCost !== undefined ? detail.medicalCost : null,
+            salaryCompensation: detail.salaryCompensation !== undefined ? detail.salaryCompensation : null,
+            propertyDamage: detail.propertyDamage !== undefined ? detail.propertyDamage : null,
+            totalCost: calculatedTotal
+          };
+
+          if (detail.traumaId) cleanDetail.traumaId = detail.traumaId;
+          if (detail.injuryTypeId) cleanDetail.injuryTypeId = detail.injuryTypeId;
+
+          return transactionalEntityManager.create(ReportDetail, cleanDetail);
         });
 
         report.details = newDetails;
@@ -361,12 +415,7 @@ export class ReportService {
 
     const updatedReport = await this.reportRepository.findOne({
       where: { id },
-      relations: {
-        doet: true,
-        reportType: true,
-        files: true,
-        details: true
-      }
+      relations: { doet: true, reportType: true, files: true, details: true }
     });
 
     return Response.get(updatedReport);

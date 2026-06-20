@@ -6,7 +6,8 @@ import { ReportDetail } from "./report-detail.entity";
 import { FileEntity } from "../media/media.entity";
 
 export enum ReportStatus {
-  DRAFT = 'DRAFT',               // Đang báo cáo (Nháp)
+  DRAFT = 'DRAFT',               // Đang báo cáo 
+  OVERDUE_WARNING = 'OVERDUE_WARNING',
   SUBMITTED = 'SUBMITTED',       // Đã gửi báo cáo (Chờ tiếp nhận)
   APPROVED = 'APPROVED',         // Đã tiếp nhận / Duyệt
   REJECTED = 'REJECTED'          // Từ chối báo cáo

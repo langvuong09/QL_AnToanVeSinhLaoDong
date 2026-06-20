@@ -18,28 +18,26 @@ export class ReportDetail {
   @Column({ nullable: true }) injuryTypeId!: number;
   @ManyToOne(() => InjuryType) @JoinColumn({ name: "injuryTypeId" }) injuryType!: InjuryType;
 
-  // --- 2. Nhóm số liệu thống kê về Vụ/Người (Số người bị nạn) ---
-  @Column({ type: "int", default: 0 }) totalCases!: number;           // Tổng số vụ
-  @Column({ type: "int", default: 0 }) fatalCases!: number;           // Số vụ chết người
-  @Column({ type: "int", default: 0 }) multiVictimCases!: number;     // Số vụ tai nạn nhiều người
+  // --- 2. Nhóm số liệu thống kê về Vụ/Người (Cho phép nullable để phục vụ lưu nháp) ---
+  @Column({ type: "int", nullable: true }) totalCases?: number;           
+  @Column({ type: "int", nullable: true }) fatalCases?: number;           
+  @Column({ type: "int", nullable: true }) multiVictimCases?: number;     
   
-  @Column({ type: "int", default: 0 }) totalVictims!: number;         // Tổng số người bị nạn
-  @Column({ type: "int", default: 0 }) femaleVictims!: number;        // Số người bị nạn là nữ
-  @Column({ type: "int", default: 0 }) fatalVictims!: number;         // Số người chết
-  @Column({ type: "int", default: 0 }) severeInjuries!: number;       // Số người bị thương nặng
+  @Column({ type: "int", nullable: true }) totalVictims?: number;         
+  @Column({ type: "int", nullable: true }) femaleVictims?: number;        
+  @Column({ type: "int", nullable: true }) fatalVictims?: number;         
+  @Column({ type: "int", nullable: true }) severeInjuries?: number;       
   
   // --- 3. Nhóm thống kê đối tượng không thuộc quản lý ---
-  @Column({ type: "int", default: 0 }) nonManagedVictims!: number;           // Tổng người không thuộc quản lý
-  @Column({ type: "int", default: 0 }) nonManagedFemaleVictims!: number;     // Nữ không thuộc quản lý
-  @Column({ type: "int", default: 0 }) nonManagedFatalVictims!: number;      // Chết không thuộc quản lý
-  @Column({ type: "int", default: 0 }) nonManagedSevereInjuries!: number;    // Nặng không thuộc quản lý
+  @Column({ type: "int", nullable: true }) nonManagedVictims?: number;           
+  @Column({ type: "int", nullable: true }) nonManagedFemaleVictims?: number;     
+  @Column({ type: "int", nullable: true }) nonManagedFatalVictims?: number;      
+  @Column({ type: "int", nullable: true }) nonManagedSevereInjuries?: number;    
 
-  // --- 4. Nhóm số liệu tài chính (Chi phí) ---
-  // Dùng decimal(15,2) để tránh sai số tiền tệ
-  @Column({ type: "decimal", precision: 15, scale: 2, default: 0 }) medicalCost!: number;       // Chi phí y tế
-  @Column({ type: "decimal", precision: 15, scale: 2, default: 0 }) salaryCompensation!: number; // Chi phí bồi thường lương
-  @Column({ type: "decimal", precision: 15, scale: 2, default: 0 }) propertyDamage!: number;     // Thiệt hại tài sản
+  // --- 4. Nhóm số liệu tài chính ---
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) medicalCost?: number;       
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) salaryCompensation?: number; 
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) propertyDamage?: number;     
   
-  // Tổng thiệt hại tính toán 
-  @Column({ type: "decimal", precision: 15, scale: 2, default: 0 }) totalCost!: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) totalCost?: number;
 }

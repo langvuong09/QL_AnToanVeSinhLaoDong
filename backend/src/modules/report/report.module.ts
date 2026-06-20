@@ -6,6 +6,7 @@ import { FileEntity } from '../media/media.entity';
 import { ReportService } from './report.service';
 import { ReportController } from './report.controller';
 import { PermissionModule } from '../permission/permission.module';
+import { ReportSchedulerService } from './report-scheduler.service';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { PermissionModule } from '../permission/permission.module';
     PermissionModule
   ],
   controllers: [ReportController],
-  providers: [ReportService],
+  providers: [ReportService , ReportSchedulerService],
   exports: [ReportService] 
 })
 export class ReportModule {}
