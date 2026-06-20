@@ -8,6 +8,7 @@ import { PermissionGuard } from '../../commons/guards/permissionGuard';
 import { RequirePermissions } from 'src/commons/guards/permission.decorator';
 import { GetUser } from 'src/commons/guards/user.decorator';
 import { PermissionCode } from 'src/commons/enums/permission.enum';
+import { UpdateReportDto } from './dto/update-report.dto';
 
 
 @ApiTags('Reports (Quản lý và tổng hợp báo cáo Tai nạn lao động)')
@@ -33,6 +34,17 @@ export class ReportController {
     @GetUser() user: any
   ) {
     return await this.reportService.changeStatus(id, dto, user);
+  }
+
+  @Put(':id')
+  @RequirePermissions(PermissionCode.REPORT_UPDATE) 
+  @ApiOperation({ summary: '🎯 Doanh nghiệp cập nhật sửa đổi nội dung bản nháp/bản bị từ chối (Chỉ sửa được khi trạng thái là DRAFT hoặc REJECTED)' })
+  async updateReport(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateReportDto,
+    @GetUser() user: any
+  ) {
+    return await this.reportService.updateReport(id, dto, user);
   }
 
   @Get('admin')

@@ -1,14 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import { StatusHistory } from '../reportHistory/report-history.entity';
 import { FileEntity } from '../media/media.entity';
 import Response from '../../commons/response'; 
 import { CreateReportDto } from '../report/dto/create-report.dto';
 import { Report, ReportStatus } from '../report/report.entity';
 import { UpdateStatusDto } from '../report/dto/update-status.dto';
 import { ReportDetail } from '../report/report-detail.entity';
-
+import { UpdateReportDto } from './dto/update-report.dto';
 
 @Injectable()
 export class ReportService {
@@ -52,16 +51,18 @@ export class ReportService {
 
     const savedReport = await this.reportRepository.save(report);
 
-    await this.dataSource.getRepository(StatusHistory).save({
-      status: ReportStatus.DRAFT,
-      note: 'Khởi tạo bản nháp báo cáo định kỳ.',
-      reportId: savedReport.id,
-      userId: user.id
+    const fullyLoadedReport = await this.reportRepository.findOne({
+      where: { id: savedReport.id },
+      relations: {
+        doet: true,        
+        reportType: true, 
+        files: true,       
+        details: true     
+      }
     });
 
-    return Response.get(savedReport);
+    return Response.get(fullyLoadedReport);
   }
-
 
   async changeStatus(id: number, dto: UpdateStatusDto, user: any) {
     const report = await this.reportRepository.findOne({ where: { id } });
@@ -82,16 +83,7 @@ export class ReportService {
     }
 
     report.status = target;
-    
-    await this.dataSource.transaction(async (transactionalEntityManager) => {
-      await transactionalEntityManager.save(report);
-      await transactionalEntityManager.save(StatusHistory, {
-        status: target,
-        note: dto.note || `Chuyển trạng thái sang ${target}`,
-        reportId: report.id,
-        userId: user.id
-      });
-    });
+    await this.reportRepository.save(report);
 
     return Response.SUCCESSFULLY;
   }
@@ -155,8 +147,9 @@ export class ReportService {
     const { year, period, status } = query;
 
     const queryBuilder = this.reportRepository.createQueryBuilder('r')
+      .leftJoinAndSelect('r.doet', 'd') 
       .leftJoinAndSelect('r.reportType', 'rt')
-      .where('r.doetId = :doetId', { doetId: user.doetId }); 
+      .where('r.doetId = :doetId', { doetId: user.doetId });
 
     if (year) queryBuilder.andWhere('r.year = :year', { year: Number(year) });
     if (status) queryBuilder.andWhere('r.status = :status', { status });
@@ -174,15 +167,22 @@ export class ReportService {
       title: report.title,
       year: report.year,
       status: report.status,
-      period: report.reportType?.period || 'N/A',
+      period: report.reportType?.period || 'Cả năm',
       startDate: report.reportType?.startDate || null,
       endDate: report.reportType?.endDate || null,
+      business: {
+        id: report.doet?.id,
+        name: report.doet?.name,
+        taxCode: report.doet?.taxCode,
+        province: report.doet?.province,
+        district: report.doet?.district,
+        ward: report.doet?.ward
+      },
       attachedFiles: report.files || []
     }));
 
     return Response.getList({ items: formattedItems, count: totalCount, pageSize, pageNumber: page });
   }
-
 
   async getDetailForFE(id: number) {
     const report = await this.reportRepository.findOne({
@@ -249,13 +249,13 @@ export class ReportService {
         attachedFiles: report.files || []
       },
       tableRows,
-      timeline: report.statusHistories.map(h => ({
+      timeline: report.statusHistories?.map(h => ({
         id: h.id,
         status: h.status,
         note: h.note,
         createdAt: h.createdAt,
         handler: h.user?.fullName || h.user?.username || 'Hệ thống'
-      }))
+      })) || []
     });
   }
 
@@ -303,5 +303,72 @@ export class ReportService {
     }));
 
     return Response.get(formattedSummary);
+  }
+
+  async updateReport(id: number, dto: UpdateReportDto, user: any) {
+    const report = await this.reportRepository.findOne({
+      where: { id },
+      relations: { details: true, files: true }
+    });
+
+    if (!report) throw new NotFoundException('Không tìm thấy báo cáo cần cập nhật!');
+    
+    if (user.doetId && report.doetId !== user.doetId) {
+      throw new BadRequestException('Bạn không có quyền chỉnh sửa báo cáo của doanh nghiệp khác!');
+    }
+
+    if (report.status !== ReportStatus.DRAFT && report.status !== ReportStatus.REJECTED) {
+      throw new BadRequestException(`Báo cáo đang ở trạng thái [${report.status}], không được phép chỉnh sửa!`);
+    }
+
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      if (dto.title) report.title = dto.title;
+      if (dto.year) report.year = dto.year;
+      if (dto.reportTypeId) report.reportTypeId = dto.reportTypeId;
+
+      if (dto.fileIds) {
+        if (dto.fileIds.length > 0) {
+          const files = await transactionalEntityManager.findBy(FileEntity, { id: In(dto.fileIds) });
+          report.files = files;
+        } else {
+          report.files = [];
+        }
+      }
+
+      if (dto.details) {
+        await transactionalEntityManager.delete(ReportDetail, { reportId: report.id });
+
+        const newDetails = dto.details.map(detail => {
+          const med = Number(detail.medicalCost) || 0;
+          const sal = Number(detail.salaryCompensation) || 0;
+          const prop = Number(detail.propertyDamage) || 0;
+          
+          return transactionalEntityManager.create(ReportDetail, {
+            ...detail,
+            reportId: report.id,
+            medicalCost: med,
+            salaryCompensation: sal,
+            propertyDamage: prop,
+            totalCost: med + sal + prop
+          });
+        });
+
+        report.details = newDetails;
+      }
+
+      await transactionalEntityManager.save(report);
+    });
+
+    const updatedReport = await this.reportRepository.findOne({
+      where: { id },
+      relations: {
+        doet: true,
+        reportType: true,
+        files: true,
+        details: true
+      }
+    });
+
+    return Response.get(updatedReport);
   }
 }
