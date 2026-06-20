@@ -40,7 +40,8 @@ async function seedSampleData(app: any) {
     '03_doets.sql',  
     '04_permission.sql',  
     '05_user.sql',              
-    '06_view.sql'            
+    '06_view.sql',
+    '07_trauma_injury.sql',           
   ];
 
   for (const fileName of seedFiles) {
