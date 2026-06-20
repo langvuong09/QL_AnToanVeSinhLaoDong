@@ -10,6 +10,8 @@ import { UpdateDoetDto } from './dto/update-doet.dto';
 import { Role } from '../role/role.entity';
 import { Industry } from '../industry/industry.entity';
 import { BusinessType } from '../bussinessType/business-type.entity';
+import { ReportType } from '../typeReport/report-type.entity';
+import { Report, ReportStatus } from '../report/report.entity';
 
 @Injectable()
 export class DoetService {
@@ -34,6 +36,12 @@ export class DoetService {
       throw new BadRequestException('Mã số thuế này đã tồn tại trên hệ thống!');
     }
 
+    const isEmailExist = await this.userRepository.findOne({
+      where: { email: dto.email }
+    });
+    if (isEmailExist) {
+      throw new BadRequestException('Email này đã tồn tại trên hệ thống!');
+    }
     const businessRole = await this.roleRepository.findOneBy({ code: 'business' });
     if (!businessRole) {
       throw new NotFoundException('Hệ thống chưa cấu hình quyền (Role) dành cho Doanh Nghiệp!');
@@ -85,6 +93,27 @@ export class DoetService {
       });
       
       await queryRunner.manager.save(User, newUser);
+
+      const currentDate = new Date();
+      const reportTypes = await queryRunner.manager.createQueryBuilder(ReportType, 'rt')
+        .where('rt.isActive = :isActive', { isActive: true })
+        .andWhere(':currentDate >= rt.startDate', { currentDate })
+        .andWhere(':currentDate <= rt.endDate', { currentDate })
+        .getMany();
+
+      if (reportTypes.length > 0) {
+        for (const reportType of reportTypes) {
+          const autoReport = queryRunner.manager.create(Report, {
+            title: `Báo cáo định kỳ - ${reportType.name} (Tự động khởi tạo)`,
+            year: reportType.year,
+            status: ReportStatus.DRAFT, 
+            reportTypeId: reportType.id,
+            doetId: savedDoet.id,
+            details: []
+          });
+          await queryRunner.manager.save(Report, autoReport);
+        }
+      }
       await queryRunner.commitTransaction();
 
       return Response.get(savedDoet);
@@ -134,7 +163,7 @@ export class DoetService {
       queryBuilder.andWhere('doet.industryId = :industryId', { industryId: Number(industryId) });
     }
 
-   if (ward) {
+    if (ward) {
       queryBuilder.andWhere(
         "(doet.ward->>'key' = :wardKey OR doet.ward->>'value' ILike :wardValue)",
         { 
@@ -217,15 +246,63 @@ export class DoetService {
     }
   }
 
-  async toggleStatus(id: number, status: boolean) {
+  async toggleStatus(id: number, status: boolean, adminUser?: any) {
     const doet = await this.doetRepository.findOneBy({ id });
     if (!doet || doet.deletedAt) {
       throw new NotFoundException('Không tìm thấy thông tin doanh nghiệp này');
     }
 
-    doet.status = status;
-    await this.doetRepository.save(doet);
-    return Response.SUCCESSFULLY;
+    if (doet.status === status) {
+      return Response.SUCCESSFULLY;
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      doet.status = status;
+      await queryRunner.manager.save(Doet, doet);
+
+      if (status === true) {
+        const currentDate = new Date();
+
+        const activeReportTypes = await queryRunner.manager.createQueryBuilder(ReportType, 'rt')
+          .where('rt.isActive = :isActive', { isActive: true })
+          .andWhere(':currentDate >= rt.startDate', { currentDate })
+          .andWhere(':currentDate <= rt.endDate', { currentDate })
+          .getMany();
+
+        for (const reportType of activeReportTypes) {
+          const isReportExist = await queryRunner.manager.findOne(Report, {
+            where: {
+              reportTypeId: reportType.id,
+              doetId: doet.id
+            }
+          });
+
+          if (!isReportExist) {
+            const autoReport = queryRunner.manager.create(Report, {
+              title: `Báo cáo định kỳ - ${reportType.name} (Tự động khởi tạo)`,
+              year: reportType.year,
+              status: ReportStatus.DRAFT, 
+              reportTypeId: reportType.id,
+              doetId: doet.id,
+              details: []
+            });
+            await queryRunner.manager.save(Report, autoReport);
+          }
+        }
+      }
+
+      await queryRunner.commitTransaction();
+      return Response.SUCCESSFULLY;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async bulkRemove(ids: number[]) {

@@ -11,6 +11,7 @@ import { PermissionCode } from 'src/commons/enums/permission.enum';
 import { RequirePermissions } from 'src/commons/guards/permission.decorator';
 import { PermissionGuard } from 'src/commons/guards/permissionGuard';
 import { GetUser } from 'src/commons/guards/user.decorator';
+import { Public } from 'src/commons/guards/public.decorator';
 
 @ApiTags('Doets (Quản lý doanh nghiệp)')
 @Controller('doets')
@@ -21,6 +22,7 @@ export class DoetController {
   constructor(private readonly doetService: DoetService) {}
 
   @Post()
+  @Public()
   @RequirePermissions(PermissionCode.DOET_CREATE)
   @ApiOperation({ summary: 'Đăng ký doanh nghiệp mới (Tự động cấp tài khoản User)' })
   async create(@Body() dto: CreateDoetDto) {
