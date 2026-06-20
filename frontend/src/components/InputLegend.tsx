@@ -11,12 +11,13 @@ type InputLegendProps = {
 
     fillWhite?: boolean;
     isSmall?: boolean;
+    suffix?: React.ReactNode;
 }
 
 const InputLegend = ({
-    label, require, errorMess, input, fillWhite, isSmall
+    label, require, errorMess, input, fillWhite, isSmall, suffix
 }: InputLegendProps) => {
-    const classname = `outline-none w-full bg-transparent peer ${isSmall ? "text-sm px-2 pb-1.5 pt-2" : "px-2.5 pb-2 pt-3"}`;
+    const classname = `outline-none w-full bg-transparent peer ${isSmall ? "text-sm px-2 pb-1.5 pt-2" : "px-2.5 pb-2 pt-3"} ${suffix ? "pr-16" : ""}`;
     const value = input.value || "";
 
     const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
@@ -54,6 +55,13 @@ const InputLegend = ({
                     }}
                     placeholder={!label ? input.placeholder : ""}
                 />
+
+                {/* Suffix */}
+                {suffix && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center">
+                        {suffix}
+                    </div>
+                )}
 
                 {/* Eye button */}
                 {input.type === "password" && (
