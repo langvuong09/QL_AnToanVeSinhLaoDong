@@ -216,6 +216,7 @@ type Props = {
   onRemoveFile: (groupIndex: number, fileId: number | string) => void
   mode?: EnterpriseFormMode
   userRole?: string
+  onChangeEmailClick?: () => void
 }
 
 export default function EnterpriseStepOne({
@@ -227,14 +228,14 @@ export default function EnterpriseStepOne({
   onClearGpkdProvince, onClearGpkdWard,
   onClearBusinessProvince, onClearBusinessWard,
   onAddFiles, onRemoveFile,
-  mode = 'create', userRole = '',
+  mode = 'create', userRole = '', onChangeEmailClick,
 }: Props) {
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null)
 
   const isViewMode = mode === 'view'
   const isEditMode = mode === 'edit'
   const isTaxCodeDisabled = isViewMode || isEditMode
-  const isEmailDisabled = isViewMode
+  const isEmailDisabled = isViewMode || userRole === 'business'
 
   const level4Industries = useMemo(() => industries.filter((i) => i.level === 4), [industries])
 
@@ -348,7 +349,19 @@ export default function EnterpriseStepOne({
               input={{ type: 'text', value: form.foreignName, maxLength: 255, onChange: (e) => onChange('foreignName', e.target.value), disabled: isViewMode }} />
             <InputLegend label="Email" require
               input={{ type: 'email', value: form.email, onChange: (e) => onChange('email', e.target.value), disabled: isEmailDisabled }}
-              errorMess={errors.email} />
+              errorMess={errors.email}
+              suffix={
+                !isViewMode && userRole === 'business' && onChangeEmailClick && (
+                  <button
+                    type="button"
+                    onClick={onChangeEmailClick}
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    Thay đổi
+                  </button>
+                )
+              }
+            />
             <InputLegend label="Số điện thoại cơ quan"
               input={{ type: 'text', value: form.phone, onChange: (e) => onChange('phone', e.target.value.replace(/[^0-9+]/g, '')), disabled: isViewMode }}
               errorMess={errors.phone} />

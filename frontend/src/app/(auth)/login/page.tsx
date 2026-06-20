@@ -11,6 +11,7 @@ import { Auth } from "@/src/api/Auth";
 import { AuthData } from "@/src/api/types/auth";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { AuthenticateContext } from "@/src/contexts/authenticate/authenticate";
+import { parseAccessToken } from "@/src/utils/jwt-parser";
 
 type FormErrors = {
   account?: string;
@@ -43,7 +44,12 @@ export default function LoginPage() {
 
     const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     if (token) {
-      router.replace("/dashboard");
+      const parsed = parseAccessToken(token);
+      if (parsed?.role?.code === 'business') {
+        router.replace("/business-info");
+      } else {
+        router.replace("/dashboard");
+      }
     }
   }, [router]);
 
@@ -111,12 +117,19 @@ export default function LoginPage() {
           localStorage.removeItem("rememberedPassword");
         }
 
+        const parsed = parseAccessToken(result.token);
+        const isBusiness = parsed?.role?.code === 'business';
+
         await authenticate?.refreshAuth();
 
         notificate?.showNotification({ type: "success", message: "Đăng nhập thành công." });
 
         setTimeout(() => {
-          router.replace("/dashboard");
+          if (isBusiness) {
+            router.replace("/business-info");
+          } else {
+            router.replace("/dashboard");
+          }
         }, 200);
 
         return;

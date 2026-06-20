@@ -47,13 +47,13 @@ export default function EnterpriseStepConfirm({ form, attachmentGroups }: Props)
             <InfoRow label="Tên doanh nghiệp :" value={form.companyName} />
             <InfoRow label="Tên viết bằng tiếng nước ngoài :" value={form.foreignName} />
             <InfoRow label="Ngày cấp GPKD:" value={form.gpkdDate ? form.gpkdDate.split('-').reverse().join('-') : ''} />
-            <InfoRow label="Email:" value={form.email} />
+            <InfoRow label="Email" value={form.email} />
             <InfoRow label="Loại hình kinh doanh:" value={form.businessType} />
             <InfoRow label="Ngành nghề kinh doanh" value={form.industry} />
             <InfoRow label="Địa chỉ đăng kí giấy phép kinh doanh :" value={gpkdAddress} />
             <InfoRow label="Địa điểm kinh doanh :" value={businessAddr} />
-            <InfoRow label="Người đại diện" value={form.representative} />
-            <InfoRow label="SĐT liên hệ người đại diện" value={form.representativePhone} />
+            <InfoRow label="Người đứng đầu doanh nghiệp" value={form.representative} />
+            <InfoRow label="SĐT người đứng đầu" value={form.representativePhone} />
           </div>
         </div>
 

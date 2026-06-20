@@ -40,7 +40,7 @@ const ChangeEmail = ({ email, onClose, onResend, onSuccess }: ChangeEmailProps) 
             setCountDown(0);
             setOtp("");
         } else {
-            notificate?.showNotification({ type: "error", message: "Mã đã hết hạn hoặc không tồn tại" });
+            notificate?.showNotification({ type: "error", message: "Mã OTP không chính xác, vui lòng kiểm tra lại" });
         }
 
         setLoading(false);
@@ -53,12 +53,16 @@ const ChangeEmail = ({ email, onClose, onResend, onSuccess }: ChangeEmailProps) 
             error = "Email không được để trống";
             hasError = true;
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valEmail.email)) {
-            error = "Email không đúng định dạng";
+            error = "Email không hợp lệ , vui lòng kiểm tra lại dữ liệu";
+            hasError = true;
+        } else if (valEmail.email.trim().toLowerCase() === email.trim().toLowerCase()) {
+            error = "Email mới không được trùng email hiện tại , vui lòng kiểm tra lại dữ liệu";
             hasError = true;
         }
 
         if (hasError) {
             setValEmail(prev => ({ ...prev, error: error }));
+            notificate?.showNotification({ type: "error", message: error });
             return;
         }
 
@@ -70,9 +74,8 @@ const ChangeEmail = ({ email, onClose, onResend, onSuccess }: ChangeEmailProps) 
             onSuccess(valEmail.email);
             setValEmail({ email: "", error: "" });
         } else {
-            notificate?.showNotification({ type: "error", message: result.message });
-            setStep("opt");
-            onResend(countDown, () => setCountDown(60));
+            const msg = "Email mới đã tồn tại trên hệ thống, vui lòng kiểm tra lại dữ liệu";
+            notificate?.showNotification({ type: "error", message: msg });
         }
         setLoading(false);
     }
@@ -143,7 +146,7 @@ const ChangeEmail = ({ email, onClose, onResend, onSuccess }: ChangeEmailProps) 
                         <div className="text-center space-y-2">
                             <h1 className="text-xl text-blue-600 font-semibold">THAY ĐỔI EMAIL</h1>
                             <p className="text-sm">
-                                Vui lòng nhập địa chỉ email mới
+                                Vui lòng nhập email mới
                             </p>
                         </div>
 
@@ -153,7 +156,7 @@ const ChangeEmail = ({ email, onClose, onResend, onSuccess }: ChangeEmailProps) 
                                 require={true}
                                 input={{
                                     type: "text",
-                                    placeholder: "Điền địa chỉ email mới",
+                                    placeholder: "vnagroup01@gmail.com",
                                     value: valEmail.email,
                                     onChange: (e) => {
                                         setValEmail({ email: e.target.value, error: "" });

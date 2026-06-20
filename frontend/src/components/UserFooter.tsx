@@ -45,7 +45,11 @@ export default function UserFooter() {
             <li className="text-[14px] text-black font-semibold">
               <button className="flex items-center gap-4 hover:bg-gray-200 w-full px-5 py-2" onClick={() => {
                 setIsClicked(false);
-                router.push("/information");
+                if (authenticate?.state?.role?.code === 'business') {
+                  router.push("/business-info");
+                } else {
+                  router.push("/information");
+                }
               }}>
                 <i className="fa-solid fa-user text-gray-500 text-2xl"></i>
                 <span>Thông tin tài khoản</span>
