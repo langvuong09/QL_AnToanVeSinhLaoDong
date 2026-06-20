@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useContext } from 'react'
 import UserFooter from './UserFooter'
+import { AuthenticateContext } from '../contexts/authenticate/authenticate'
 
 type RequiredPermission = {
   id: string;
@@ -31,6 +32,7 @@ type SidebarMenuItem = {
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const authenticate = useContext(AuthenticateContext)
   const [sidebarMenus, setSidebarMenus] = useState<SidebarMenuItem[] | null>(null);
 
   useEffect(() => {
@@ -54,6 +56,38 @@ export default function Sidebar() {
       .find((item) => pathname?.startsWith(item.url))
     return active?.id.toString() || ''
   }, [pathname, sidebarMenus])
+
+  const filteredMenus = useMemo(() => {
+    if (!sidebarMenus) return null;
+    const isBusiness = authenticate?.state?.role?.code === 'business';
+    if (!isBusiness) return sidebarMenus;
+
+    const result = sidebarMenus
+      .map((menu) => {
+        if (menu.id === 8) { // Hệ thống
+          return {
+            ...menu,
+            isOpen: true,
+            children: menu.children?.filter((c) => c.url === '/business-info') || [],
+          }
+        }
+        if (menu.id === 5) { // Tai nạn lao động
+          return {
+            ...menu,
+            isOpen: true,
+            children: menu.children?.filter((c) => c.url === '/tnld-hdld') || [],
+          }
+        }
+        return null;
+      })
+      .filter((menu): menu is SidebarMenuItem => menu !== null && menu.children.length > 0);
+
+    return result.sort((a, b) => {
+      if (a.id === 8) return -1;
+      if (b.id === 8) return 1;
+      return 0;
+    });
+  }, [sidebarMenus, authenticate?.state?.role?.code])
 
   const handleToggleMenu = (menuId: number) => {
     setSidebarMenus((prevMenus) =>
@@ -80,7 +114,7 @@ export default function Sidebar() {
 
       {/* Menu Items */}
       <div className="flex-1 border-t border-white/25 pt-2 overflow-y-auto">
-        {sidebarMenus && sidebarMenus.map((menu) => (
+        {filteredMenus && filteredMenus.map((menu) => (
           <div key={menu.id} className="mb-1">
             <button
               type="button"

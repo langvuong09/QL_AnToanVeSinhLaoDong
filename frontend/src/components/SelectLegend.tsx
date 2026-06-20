@@ -19,7 +19,10 @@ const SelectLegend = ({
 
     return (
         <div className="flex flex-col gap-2">
-            <div className={`relative ${fillWhite && "bg-white"} ${select.disabled ? "bg-gray-100 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} px-3 ${isSmall ? "py-1.5" : "py-2"} rounded-sm`}>
+            <div className={`relative
+            ${fillWhite && "bg-white"} 
+            ${select.disabled ? "bg-gray-100 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`}
+            ${isSmall ? "text-sm px-1.5 pb-1 pt-2.5" : "px-2.5 pb-2 pt-2.5"} rounded-sm`}>
                 {label && (
                     <label
                         className="absolute bg-white bottom-full translate-y-1/2 text-sm text-gray-500 px-1"

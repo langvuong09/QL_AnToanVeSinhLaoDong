@@ -42,7 +42,7 @@ const Pagination = ({
     const rangeEnd = Math.min(currentPage * pageSize, totalCount);
 
     return (
-        <div className="shrink-0 flex items-center justify-end gap-4 px-5 py-3 border-t border-gray-200 text-sm text-gray-500">
+        <div className="shrink-0 flex items-center justify-end gap-4 py-3 text-sm text-gray-500">
             <div className="flex items-center gap-1.5">
                 <select
                     value={pageSize}

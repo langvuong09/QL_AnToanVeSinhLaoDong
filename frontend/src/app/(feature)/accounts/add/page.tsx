@@ -74,7 +74,7 @@ const AccountAddPage = () => {
         },
         address: "",
 
-        status: false
+        status: true
     });
 
     const [errorForm, setErrorForm] = useState<{
@@ -125,6 +125,17 @@ const AccountAddPage = () => {
 
         if (!submitForm.username?.trim()) {
             newErrors.username = "Tên đăng nhập không được để trống";
+            hasError = true;
+        }
+
+        if (!/^[a-zA-Z0-9_]+$/.test(submitForm.username)) {
+            newErrors.username =
+                "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới (_)";
+            hasError = true;
+        }
+
+        if (submitForm.username.length < 6) {
+            newErrors.username = "Tên đăng nhập ít nhất 6 kí tự";
             hasError = true;
         }
 
@@ -310,6 +321,12 @@ const AccountAddPage = () => {
             notificate?.showNotification({ type: "error", message: "Chi chấp nhập file là hình ảnh" });
             return;
         }
+
+        if (file.size > 5 * 1024 * 1024) {
+            notificate?.showNotification({ type: "error", message: "Kích thước tối đa 5MB" });
+            return;
+        }
+
         setFileAvater(file);
         const object = URL.createObjectURL(file);
         setImagePreview(object);
@@ -394,7 +411,6 @@ const AccountAddPage = () => {
                                     require={true}
                                     input={{
                                         type: "text",
-                                        placeholder: "vnagroup",
                                         value: submitForm.username,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, username: event.target.value }));
@@ -405,11 +421,10 @@ const AccountAddPage = () => {
                                 />
 
                                 <InputLegend
-                                    label="Họ và tên (*)"
+                                    label="Họ và tên"
                                     require={true}
                                     input={{
                                         type: "text",
-                                        placeholder: "Nhập họ và tên",
                                         value: submitForm.fullName,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, fullName: event.target.value }));
@@ -460,7 +475,6 @@ const AccountAddPage = () => {
                                     require={true}
                                     input={{
                                         type: "password",
-                                        placeholder: "Nhập mật khẩu",
                                         value: submitForm.password,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, password: event.target.value }));
@@ -486,7 +500,6 @@ const AccountAddPage = () => {
                                     label="Chức danh"
                                     input={{
                                         type: "text",
-                                        placeholder: "Nhập chức danh",
                                         value: submitForm.position,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
@@ -499,7 +512,6 @@ const AccountAddPage = () => {
                                     require={true}
                                     input={{
                                         type: "email",
-                                        placeholder: "Nhập địa chỉ email",
                                         value: submitForm.email,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, email: event.target.value }));
@@ -530,7 +542,6 @@ const AccountAddPage = () => {
                                             require={true}
                                             input={{
                                                 type: "text",
-                                                placeholder: "Tìm tỉnh/thành phố",
                                                 value: provinceSearch,
                                                 onChange: (event) => {
                                                     setProvinceSearch(event.target.value);
@@ -584,7 +595,6 @@ const AccountAddPage = () => {
                                             require={true}
                                             input={{
                                                 type: "text",
-                                                placeholder: "Tìm phường xã",
                                                 value: submitForm.ward.value || wardSearch,
                                                 onChange: (event) => {
                                                     setWardSearch(event.target.value);
@@ -629,7 +639,6 @@ const AccountAddPage = () => {
                                 require={true}
                                 input={{
                                     type: "text",
-                                    placeholder: "Địa chỉ nơi ở",
                                     value: submitForm.address,
                                     onChange: (event) => {
                                         setSubmitForm((prev) => ({ ...prev, address: event.target.value }));

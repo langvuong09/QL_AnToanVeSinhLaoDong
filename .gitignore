@@ -62,3 +62,4 @@ Thumbs.db
 # Optional package manager cache
 .pnpm-store/
 
+imgs-prompt

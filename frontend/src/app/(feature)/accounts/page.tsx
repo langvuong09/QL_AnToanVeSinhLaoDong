@@ -13,16 +13,19 @@ import Loading from "@/src/components/Loading";
 import Link from "next/link";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import BulkDeleteBar from "@/src/components/common/BulkDeleteBar";
+import { ConfirmContext } from "@/src/contexts/confirm/confirm";
+import { exportToExcel } from "@/src/utils/excel";
+import PasswordResetModal from "@/src/components/modals/PasswordResetModal";
 
 const DEBOUNCE_MS = 500;
 
 const AccountPage = () => {
     const notificate = useContext(NotificateContext);
+    const confirm = useContext(ConfirmContext);
 
     const [users, setUsers] = useState<IUser[]>([]);
     const [roles, setRoles] = useState<IRole[]>([]);
     const [loading, setLoading] = useState(false);
-    const [updatingStatusIds, setUpdatingStatusIds] = useState<string[]>([]);
     const [pagination, setPagination] = useState({
         page: 1,
         pageSize: 10,
@@ -131,45 +134,6 @@ const AccountPage = () => {
     }
 
     const [stateChangePassword, setStateChangePassword] = useState<{ username: string, id: string }>({ username: "", id: "" });
-    const [stateValChangePassword, setStateValChangePassword] = useState<{ password: string, error: string }>({ password: "", error: "" });
-    const handleChangePassword = async () => {
-        let hasError = false;
-        let error = "";
-        if (!stateValChangePassword.password) {
-            error = "Mật khẩu không được để trống";
-            hasError = true;
-        } else if (stateValChangePassword.password.length < 8) {
-            error = "Mật khẩu phải có ít nhất 8 ký tự";
-            hasError = true;
-        } else if (!/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/.test(stateValChangePassword.password)) {
-            error = "Mật khẩu phải bao gồm: chữ hoa, chữ thường, số hoặc ký tự đặc biệt";
-            hasError = true;
-        }
-
-        if (hasError) {
-            notificate?.showNotification({ type: "error", message: "Vui lòng nhập mật khẩu đúng định dạng " });
-            setStateValChangePassword(prev => ({ ...prev, error: error }));
-            return;
-        }
-
-        try {
-            setLoading(true);
-            const cls = new User();
-            const result = await cls.SetPassword(stateChangePassword.id, stateValChangePassword.password);
-            if (result.success) {
-                notificate?.showNotification({ type: "success", message: "Đổi mật khẩu thành công" });
-                setStateChangePassword({ username: "", id: "" });
-                setStateValChangePassword({ password: "", error: "" });
-            } else {
-                notificate?.showNotification({ type: "error", message: "Đổi mật khẩu thất bại " });
-            }
-        } catch (error: any) {
-            notificate?.showNotification({ type: "error", message: error.message || "Có lỗi xảy ra vui lòng thử lại sau" });
-        } finally {
-            setLoading(false);
-        }
-
-    }
 
     return (
         <main className="flex flex-col min-h-screen">
@@ -181,10 +145,12 @@ const AccountPage = () => {
                 <BulkDeleteBar
                     selectedCount={selectedList.length}
                     onClearSelection={() => {
-                        console.log("hhee")
                         setSelectedList([]);
                     }}
                     onDelete={async () => {
+                        const wait = await confirm.waitConfirm();
+                        if (!wait) return;
+
                         const cls = new User();
                         const result = await cls.DeleteUser(selectedList);
                         if (result.success) {
@@ -204,48 +170,29 @@ const AccountPage = () => {
             )}
 
             {stateChangePassword.username && stateChangePassword.id && (
-                <div className="fixed top-0 left-0 w-full h-screen bg-gray-800/50 z-50 flex items-center justify-center">
-                    <div className="bg-white w-md rounded overflow-hidden">
-                        <div className="bg-blue-600 py-2 text-xl font-semibold text-white text-center">
-                            <h1>Xác nhận</h1>
-                        </div>
-                        <div className="px-5 py-4 space-y-5">
-                            <div className="text-[16px]">
-                                <p>
-                                    Khởi tạo mật khẩu cho tài khoản
-                                    <strong>{" "}{stateChangePassword.username}</strong>
-                                </p>
-                            </div>
-
-                            <div className="">
-                                <InputLegend
-                                    label="Mật khẩu"
-                                    require={true}
-                                    input={{
-                                        type: "password",
-                                        placeholder: "Nhập mật khẩu khởi tạo mong muốn",
-                                        value: stateValChangePassword.password,
-                                        onChange: (event) => {
-                                            setStateValChangePassword({ password: event.target.value, error: "" });
-                                        }
-                                    }}
-                                    errorMess={stateValChangePassword.error}
-                                />
-                            </div>
-
-                            <div className="flex gap-3 justify-end">
-                                <button className="text-blue-600 font-semibold" onClick={() => {
-                                    setStateChangePassword({ username: "", id: "" });
-                                    setStateValChangePassword({ password: "", error: "" });
-                                }}>Hủy bỏ</button>
-                                <button className="px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 rounded flex items-center gap-2 text-white" onClick={handleChangePassword}>
-                                    <i className="fa-solid fa-floppy-disk"></i>
-                                    <span>Lưu</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <PasswordResetModal
+                    isOpen={!!stateChangePassword.id}
+                    onClose={() => {
+                        setStateChangePassword({ username: "", id: "" });
+                    }}
+                    username={stateChangePassword.username}
+                    targetName={users.find(u => u.id === stateChangePassword.id)?.fullName || stateChangePassword.username}
+                    onConfirm={async (password) => {
+                        try {
+                            setLoading(true);
+                            const result = await userApi.SetPassword(stateChangePassword.id, password);
+                            if (result.success) {
+                                notificate?.showNotification({ type: "success", message: "Đặt lại mật khẩu thành công" });
+                            } else {
+                                notificate?.showNotification({ type: "error", message: "Đặt lại mật khẩu thất bại" });
+                            }
+                        } catch (error: any) {
+                            notificate?.showNotification({ type: "error", message: error.message || "Có lỗi xảy ra vui lòng thử lại sau" });
+                        } finally {
+                            setLoading(false);
+                        }
+                    }}
+                />
             )}
 
             <TopHero
@@ -285,7 +232,6 @@ const AccountPage = () => {
                                 <InputLegend
                                     input={{
                                         type: "text",
-                                        placeholder: "Tìm theo họ tên",
                                         value: filters.fullName,
                                         onChange: (e) => handleFilterChange('fullName', e.target.value)
                                     }}
@@ -297,7 +243,6 @@ const AccountPage = () => {
                                 <InputLegend
                                     input={{
                                         type: "text",
-                                        placeholder: "Tìm theo tài khoản",
                                         value: filters.username,
                                         onChange: (e) => handleFilterChange('username', e.target.value)
                                     }}
@@ -309,7 +254,6 @@ const AccountPage = () => {
                                 <InputLegend
                                     input={{
                                         type: "text",
-                                        placeholder: "Tìm theo email",
                                         value: filters.email,
                                         onChange: (e) => handleFilterChange('email', e.target.value)
                                     }}
@@ -338,7 +282,6 @@ const AccountPage = () => {
                                 <InputLegend
                                     input={{
                                         type: "text",
-                                        placeholder: "Tìm theo chức danh",
                                         value: filters.position,
                                         onChange: (e) => handleFilterChange('position', e.target.value)
                                     }}
@@ -402,13 +345,32 @@ const AccountPage = () => {
                     </div>
                 </div>
 
-                <Pagination
-                    totalCount={pagination.total}
-                    pageSize={pagination.pageSize}
-                    currentPage={pagination.page}
-                    setPageSize={(newSize) => fetchUsers(1, newSize)}
-                    setCurrentPage={(newPage) => fetchUsers(newPage, pagination.pageSize)}
-                />
+                <div className="flex px-2">
+                    <button className="text-sm font-semibold flex gap-2 items-center text-gray-800" onClick={() => {
+                        exportToExcel<any>(users, [
+                            { key: "id", label: "Mã" },
+                            { key: "fullName", label: "Họ và tên" },
+                            { key: "username", label: "Tên đăng nhập" },
+                            { key: "email", label: "Email" },
+                            { key: "position", label: "Chức vụ" },
+                            { key: "role", label: "Vai trò" },
+                            { key: "status", label: "Trạng thái" },
+                            { key: "createdAt", label: "Ngày tạo" },
+                        ], "Account-" + Date.now());
+                    }}>
+                        <i className="fa-solid fa-download"></i>
+                        <span>Export Data</span>
+                    </button>
+                    <div className="flex-1">
+                        <Pagination
+                            totalCount={pagination.total}
+                            pageSize={pagination.pageSize}
+                            currentPage={pagination.page}
+                            setPageSize={(newSize) => fetchUsers(1, newSize)}
+                            setCurrentPage={(newPage) => fetchUsers(newPage, pagination.pageSize)}
+                        />
+                    </div>
+                </div>
             </div>
         </main>
     );

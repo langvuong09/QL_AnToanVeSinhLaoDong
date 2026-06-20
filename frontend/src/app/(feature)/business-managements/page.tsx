@@ -4,9 +4,11 @@ import { useCallback, useContext, useEffect, useState } from 'react'
 import TopHero from '@/src/components/TopHero'
 import ToggleSwitch from '@/src/components/ToggleSwitch'
 import EnterpriseModal from '@/src/components/modals/EnterpriseModal'
+import EnterpriseImportModal from '@/src/components/modals/EnterpriseImportModal'
 import PasswordResetModal from '@/src/components/modals/PasswordResetModal'
 import BulkDeleteBar from '@/src/components/common/BulkDeleteBar'
 import DeleteConfirmModal from '@/src/components/common/DeleteConfirmModal'
+import { User } from '@/src/api/User'
 import { DoetApi, type DoetPayload, type IDoetUser } from '@/src/api/Doet'
 import { BusinessTypeApi, type IBusinessType } from '@/src/api/BusinessType'
 import { IndustryApi, type IIndustry } from '@/src/api/Industry'
@@ -55,6 +57,7 @@ function mapDoetUserToEnterprise(item: IDoetUser): Enterprise {
 
   return {
     id: doet.id,
+    userId: item.id,
     companyName: doet.name || '',
     taxCode: doet.taxCode || '',
     businessType: doet.businessType?.name || '',
@@ -119,6 +122,7 @@ export default function BusinessManagementsPage() {
   const [businessTypes, setBusinessTypes] = useState<IBusinessType[]>([])
   const [industries, setIndustries] = useState<IIndustry[]>([])
   const [totalItems, setTotalItems] = useState(0)
+  const [isImportOpen, setIsImportOpen] = useState(false)
 
   const [filterName, setFilterName] = useState('')
   const [filterTaxCode, setFilterTaxCode] = useState('')
@@ -316,6 +320,7 @@ export default function BusinessManagementsPage() {
           <div className="flex gap-2">
             <button
               type="button"
+              onClick={() => setIsImportOpen(true)}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
             >
               <i className="fa-solid fa-upload text-xs text-primary" />
@@ -453,11 +458,20 @@ export default function BusinessManagementsPage() {
           isOpen={showResetPassword}
           onClose={() => { setShowResetPassword(false); setResetTarget(null) }}
           username={resetTarget.taxCode.replace(/-/g, '')}
-          companyName={resetTarget.companyName}
-          onConfirm={() => {
-            notificate?.showNotification({ type: 'success', message: `Đặt lại mật khẩu cho doanh nghiệp ${resetTarget.companyName} thành công.` })
-            setShowResetPassword(false)
-            setResetTarget(null)
+          targetName={resetTarget.companyName}
+          onConfirm={async (password) => {
+            if (!resetTarget.userId) {
+              notificate?.showNotification({ type: 'error', message: 'Không tìm thấy tài khoản liên kết với doanh nghiệp này.' })
+              return
+            }
+            const res = await new User().SetPassword(resetTarget.userId, password)
+            if (res.success) {
+              notificate?.showNotification({ type: 'success', message: 'Đặt lại mật khẩu thành công' })
+              setShowResetPassword(false)
+              setResetTarget(null)
+            } else {
+              notificate?.showNotification({ type: 'error', message: res.message || 'Có lỗi xảy ra khi đặt lại mật khẩu.' })
+            }
           }}
         />
       )}
@@ -472,6 +486,18 @@ export default function BusinessManagementsPage() {
         onCancel={() => setShowDeleteConfirm(false)}
         loading={isDeleting}
       />
+
+      {isImportOpen && (
+        <EnterpriseImportModal
+          isOpen
+          onClose={() => setIsImportOpen(false)}
+          businessTypes={businessTypes}
+          industries={industries}
+          onSuccess={() => {
+            fetchData()
+          }}
+        />
+      )}
     </main>
   )
 }
