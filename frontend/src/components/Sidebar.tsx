@@ -43,7 +43,7 @@ export default function Sidebar() {
     }
     try {
       const parsed: SidebarMenuItem[] = JSON.parse(stored);
-      setSidebarMenus(parsed?.length ? parsed.map(p => ({ ...p, isOpen: false })) : null);
+      setSidebarMenus(parsed?.length ? parsed.map(p => ({ ...p, isOpen: true })) : null);
     } catch {
       setSidebarMenus(null);
     }
@@ -62,20 +62,20 @@ export default function Sidebar() {
     const isBusiness = authenticate?.state?.role?.code === 'business';
     if (!isBusiness) return sidebarMenus;
 
+    console.log(sidebarMenus)
+
     const result = sidebarMenus
       .map((menu) => {
-        if (menu.id === 8) { // Hệ thống
+        if (menu.id === 2) {
           return {
             ...menu,
             isOpen: true,
-            children: menu.children?.filter((c) => c.url === '/business-info') || [],
           }
         }
-        if (menu.id === 5) { // Tai nạn lao động
+        if (menu.id === 3) {
           return {
             ...menu,
             isOpen: true,
-            children: menu.children?.filter((c) => c.url === '/tnld-hdld') || [],
           }
         }
         return null;

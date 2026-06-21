@@ -17,6 +17,7 @@ const AuthenticateProvider = ({ children }: { children: React.ReactNode }) => {
         const stored = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || null;
         if (!stored) return;
         const jwt = parseAccessToken(stored) || null;
+        console.log(jwt)
         if (!jwt) return;
         const cls = new User();
         const result = await cls.GetUserDetailById(jwt.id);

@@ -1,16 +1,23 @@
 INSERT INTO views (id, name, url, icon, "parentId", "order") VALUES 
-(1, 'Quản trị phần mềm', '#', 'setting-icon', null, 1),
-(5, 'Tai nạn lao động', '#', 'hazard-icon', null, 2),
-(8, 'Hệ thống', '#', 'setting-icon', null, 3),
+(1, 'Quản trị phần mềm',        '#',        'fa-solid fa-gear',     null,   1),
+(2, 'Tai nạn lao động',         '#',        'fa-solid fa-gear',     null,   2),
+(3, 'Hệ thống',                 '#',        'fa-solid fa-gear',     null,   3),
 
-(2, 'Quản lý người dùng', '/accounts', 'user-icon', 1, 1),
-(3, 'Quản lý doanh nghiệp', '/business-managements', 'briefcase-icon', 1, 2),
-(4, 'Kỳ báo cáo', '/report-periods', 'calendar-icon', 1, 3),
+-- Children
+---
+(4, 'Quản lý người dùng',           '/accounts',                'fa-solid fa-circle', 1, 1),
+---
+(5, 'Loại hình doanh nghiệp',       '/business-types',          'fa-solid fa-circle', 1, 2),
+(6, 'Ngành nghề kinh doanh',        'business-industries',      'fa-solid fa-circle', 1, 3),
+(7, 'Quản lý doanh nghiệp',         '/business-managements',    'fa-solid fa-circle', 1, 4),
+---
+(8, 'Kỳ báo cáo',                   '/report-periods',          'fa-solid fa-circle', 1, 5),
 
-(6, 'Danh mục chung', '/categories', 'list-icon', 5, 1),
-(7, 'TNLĐ theo HĐLĐ', '/tnld-hdld', 'file-text-icon', 5, 2),
+-- Children
+(9,  'Danh mục chung',               '/categories',              'fa-solid fa-circle',          2, 1),
+(10, 'TNLĐ theo HĐLĐ',               '/tnld-hdld',               'fa-solid fa-circle',          2, 2),
 
-(9, 'Thông tin doanh nghiệp', '/business-info', 'building-icon', 8, 1)
+(11, 'Thông tin doanh nghiệp',       '/business-info',           'fa-solid fa-circle',          3, 1)
 
 ON CONFLICT (id) DO UPDATE SET 
     name = EXCLUDED.name, 
@@ -20,38 +27,41 @@ ON CONFLICT (id) DO UPDATE SET
     icon = EXCLUDED.icon;
 
 
---- =======================================================================
---- 4. LIÊN KẾT VIEW VÀ QUYỀN TRUY CẬP TRÊN GIAO DIỆN (Bảng view_permissions)
---- =======================================================================
-
--- 🟢 VIEW 2: Quản lý người dùng (Có FULL quyền về USER)
 INSERT INTO view_permissions ("viewId", "permissionId")
-SELECT 2, id FROM permissions 
+SELECT 4, id FROM permissions 
 WHERE code IN ('USER_VIEW', 'USER_CREATE', 'USER_UPDATE', 'USER_DELETE')
 ON CONFLICT DO NOTHING;
 
 
--- 🟢 VIEW 3: Quản lý doanh nghiệp (Có FULL quyền về DOET, INDUSTRY, BUSINESS_TYPE)
 INSERT INTO view_permissions ("viewId", "permissionId")
-SELECT 3, id FROM permissions 
+SELECT 5, id FROM permissions 
+WHERE code IN ('BUSINESS_TYPE_VIEW', 'BUSINESS_TYPE_CREATE', 'BUSINESS_TYPE_UPDATE', 'BUSINESS_TYPE_DELETE')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO view_permissions ("viewId", "permissionId")
+SELECT 6, id FROM permissions 
+WHERE code IN ('INDUSTRY_VIEW', 'INDUSTRY_CREATE', 'INDUSTRY_UPDATE', 'INDUSTRY_DELETE',
+               'DOET_VIEW', 'BUSINESS_TYPE_VIEW')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO view_permissions ("viewId", "permissionId")
+SELECT 7, id FROM permissions 
 WHERE code IN (
     'DOET_VIEW', 'DOET_CREATE', 'DOET_UPDATE', 'DOET_DELETE',
-    'INDUSTRY_VIEW', 'INDUSTRY_CREATE', 'INDUSTRY_UPDATE', 'INDUSTRY_DELETE',
-    'BUSINESS_TYPE_VIEW', 'BUSINESS_TYPE_CREATE', 'BUSINESS_TYPE_UPDATE', 'BUSINESS_TYPE_DELETE'
+    'REPORT_VIEW', 'REPORT_CREATE', 'REPORT_UPDATE', 'REPORT_DELETE', 'REPORT_CHANGE_STATUS',
+    'REPORT_TYPE_VIEW', 'INJURY_TYPE_VIEW', 'TRAUMA_FACTOR_VIEW',
+    'INDUSTRY_VIEW', 'BUSINESS_TYPE_VIEW'
 )
 ON CONFLICT DO NOTHING;
 
 
--- 🟢 VIEW 4: Kỳ báo cáo (Có các quyền về REPORT_TYPE)
 INSERT INTO view_permissions ("viewId", "permissionId")
-SELECT 4, id FROM permissions 
+SELECT 8, id FROM permissions 
 WHERE code IN ('REPORT_TYPE_VIEW', 'REPORT_TYPE_CREATE', 'REPORT_TYPE_UPDATE', 'REPORT_TYPE_DELETE')
 ON CONFLICT DO NOTHING;
 
-
--- 🟢 VIEW 6: Danh mục chung (Có các quyền về TRAUMA, INJURY, DOET, BUSINESS_TYPE)
 INSERT INTO view_permissions ("viewId", "permissionId")
-SELECT 6, id FROM permissions 
+SELECT 9, id FROM permissions 
 WHERE code IN (
     'TRAUMA_FACTOR_VIEW', 'TRAUMA_FACTOR_CREATE', 'TRAUMA_FACTOR_UPDATE', 'TRAUMA_FACTOR_DELETE',
     'INJURY_TYPE_VIEW', 'INJURY_TYPE_CREATE', 'INJURY_TYPE_UPDATE', 'INJURY_TYPE_DELETE',
@@ -60,67 +70,70 @@ WHERE code IN (
 ON CONFLICT DO NOTHING;
 
 
--- 🟢 VIEW 7: TNLĐ theo HĐLĐ (Có các quyền về DOET, REPORT, REPORT_TYPE, INJURY, TRAUMA, INDUSTRY, BUSINESS_TYPE)
 INSERT INTO view_permissions ("viewId", "permissionId")
-SELECT 7, id FROM permissions 
+SELECT 10, id FROM permissions 
 WHERE code IN (
-    'DOET_VIEW', 'DOET_CREATE', 'DOET_UPDATE', 'DOET_DELETE',
     'REPORT_VIEW', 'REPORT_CREATE', 'REPORT_UPDATE', 'REPORT_DELETE', 'REPORT_CHANGE_STATUS',
-    'REPORT_TYPE_VIEW',
-    'INJURY_TYPE_VIEW',
-    'TRAUMA_FACTOR_VIEW',
-    'INDUSTRY_VIEW',
-    'BUSINESS_TYPE_VIEW'
+    'DOET_VIEW', 'INJURY_TYPE_VIEW', 'TRAUMA_FACTOR_VIEW', 'BUSINESS_TYPE_VIEW'
 )
 ON CONFLICT DO NOTHING;
 
-
--- 🟢 VIEW 9: Thông tin doanh nghiệp (Doanh nghiệp tự xem/sửa hồ sơ của mình qua JWT)
 INSERT INTO view_permissions ("viewId", "permissionId")
-SELECT 9, id FROM permissions 
+SELECT 11, id FROM permissions 
 WHERE code IN ('DOET_VIEW', 'DOET_UPDATE')
 ON CONFLICT DO NOTHING;
 
-
---- =======================================================================
---- 5. CẤP FULL QUYỀN CHO CÁC VAI TRÒ NỘI BỘ (Roles: 1, 2, 3, 4)
---- Bao gồm: Nhân viên, Chuyên viên, Lãnh đạo và Quản trị viên hệ thống
---- =======================================================================
-WITH all_permissions AS (
-    SELECT id AS permission_id FROM permissions
-),
-target_roles AS (
-    SELECT unnest(ARRAY[1, 2, 3, 4]) AS role_id
-)
+-- Role 4: Admin — toàn quyền
 INSERT INTO role_permissions ("roleId", "permissionId")
-SELECT target_roles.role_id, all_permissions.permission_id 
-FROM target_roles, all_permissions
-ON CONFLICT ("roleId", "permissionId") DO NOTHING;
+SELECT 4, id FROM permissions
+ON CONFLICT DO NOTHING;
 
-
---- =======================================================================
---- 6. PHÂN QUYỀN GIỚI HẠN & ĐẶC THÙ CHO DOANH NGHIỆP (Role 5 - business)
---- Đầy đủ thao tác với DOET, REPORT và chỉ được XEM (VIEW) các danh mục phục vụ điền Form
---- =======================================================================
-WITH business_allowed_permissions AS (
-    SELECT id AS permission_id 
-    FROM permissions 
-    WHERE code IN (
-        -- Quyền xử lý hồ sơ doanh nghiệp của chính họ
-        'DOET_VIEW', 'DOET_CREATE', 'DOET_UPDATE', 'DOET_DELETE',
-        
-        -- Quyền tương tác, tạo nháp, cập nhật, gửi và duyệt quy trình trạng thái báo cáo
-        'REPORT_VIEW', 'REPORT_CREATE', 'REPORT_UPDATE', 'REPORT_DELETE', 'REPORT_CHANGE_STATUS',
-        
-        -- Chỉ cấu hình quyền VIEW (XEM) danh mục cấu hình để load dữ liệu dropdown select khi khai báo form
-        'BUSINESS_TYPE_VIEW',
-        'INDUSTRY_VIEW',
-        'TRAUMA_FACTOR_VIEW',
-        'INJURY_TYPE_VIEW',
-        'REPORT_TYPE_VIEW'
-    )
-)
+-- Role 3: Lãnh đạo — xem + duyệt, không quản lý hệ thống
 INSERT INTO role_permissions ("roleId", "permissionId")
-SELECT 5, permission_id 
-FROM business_allowed_permissions
-ON CONFLICT ("roleId", "permissionId") DO NOTHING;
+SELECT 3, id FROM permissions
+WHERE code IN (
+    'DOET_VIEW', 'DOET_CREATE', 'DOET_UPDATE',
+    'REPORT_VIEW', 'REPORT_CREATE', 'REPORT_UPDATE', 'REPORT_CHANGE_STATUS',
+    'BUSINESS_TYPE_VIEW', 'INDUSTRY_VIEW', 'TRAUMA_FACTOR_VIEW', 'INJURY_TYPE_VIEW', 'REPORT_TYPE_VIEW'
+)
+ON CONFLICT DO NOTHING;
+
+-- Role 2: Chuyên viên — xử lý hồ sơ, không duyệt cuối
+INSERT INTO role_permissions ("roleId", "permissionId")
+SELECT 2, id FROM permissions
+WHERE code IN (
+    'DOET_VIEW', 'DOET_CREATE', 'DOET_UPDATE',
+    'REPORT_VIEW', 'REPORT_CREATE', 'REPORT_UPDATE', 'REPORT_CHANGE_STATUS',
+    'BUSINESS_TYPE_VIEW', 'INDUSTRY_VIEW', 'TRAUMA_FACTOR_VIEW', 'INJURY_TYPE_VIEW', 'REPORT_TYPE_VIEW',
+    -- Danh mục: chuyên viên có thể config
+    'BUSINESS_TYPE_CREATE', 'BUSINESS_TYPE_UPDATE',
+    'INDUSTRY_CREATE', 'INDUSTRY_UPDATE',
+    'TRAUMA_FACTOR_CREATE', 'TRAUMA_FACTOR_UPDATE',
+    'INJURY_TYPE_CREATE', 'INJURY_TYPE_UPDATE',
+    'REPORT_TYPE_CREATE', 'REPORT_TYPE_UPDATE'
+)
+ON CONFLICT DO NOTHING;
+
+
+-- Role 1: Nhân viên — chỉ xem và nhập liệu cơ bản
+INSERT INTO role_permissions ("roleId", "permissionId")
+SELECT 1, id FROM permissions
+WHERE code IN (
+    'DOET_VIEW',
+    'REPORT_VIEW', 'REPORT_CREATE', 'REPORT_UPDATE',
+    'BUSINESS_TYPE_VIEW', 'INDUSTRY_VIEW', 'TRAUMA_FACTOR_VIEW', 'INJURY_TYPE_VIEW', 'REPORT_TYPE_VIEW'
+)
+ON CONFLICT DO NOTHING;
+
+
+-- Role 5: Doanh nghiệp — chỉ quản lý hồ sơ và báo cáo của chính mình
+INSERT INTO role_permissions ("roleId", "permissionId")
+SELECT 5, id FROM permissions 
+WHERE code IN (
+    'DOET_VIEW', 'DOET_CREATE', 'DOET_UPDATE',
+    -- Không có DOET_DELETE — DN không được tự xóa hồ sơ
+    'REPORT_VIEW', 'REPORT_CREATE', 'REPORT_UPDATE', 'REPORT_DELETE',
+    -- Không có REPORT_CHANGE_STATUS — DN không tự duyệt báo cáo của mình
+    'BUSINESS_TYPE_VIEW', 'INDUSTRY_VIEW', 'TRAUMA_FACTOR_VIEW', 'INJURY_TYPE_VIEW', 'REPORT_TYPE_VIEW'
+)
+ON CONFLICT DO NOTHING;

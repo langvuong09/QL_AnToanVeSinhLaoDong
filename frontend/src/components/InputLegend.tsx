@@ -2,7 +2,7 @@
 
 import { InputHTMLAttributes, useState } from "react";
 
-type InputLegendProps = {
+export type InputLegendProps = {
     label?: string;
     require?: boolean;
     errorMess?: string;

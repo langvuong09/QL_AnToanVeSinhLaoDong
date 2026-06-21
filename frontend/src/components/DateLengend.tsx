@@ -27,6 +27,9 @@ type DatePickerProps = {
     disabled?: boolean;
     id?: string;
     defaultLang?: Lang;
+
+    fillWhite?: boolean;
+    isSmall?: boolean;
 }
 
 function pad(n: number) { return String(n).padStart(2, '0'); }
@@ -45,7 +48,7 @@ function displayToIso(display: string): string {
     return `${yyyy}-${mm}-${dd}`;
 }
 
-export default function DatePicker({ label, require, errorMess, errorInput, value, onChange, disabled, id, defaultLang = 'vi' }: DatePickerProps) {
+export default function DatePicker({ label, require, errorMess, errorInput, value, onChange, disabled, id, defaultLang = 'vi', fillWhite, isSmall }: DatePickerProps) {
     const today = new Date();
     const [lang, setLang] = useState<Lang>(defaultLang);
 
@@ -147,7 +150,7 @@ export default function DatePicker({ label, require, errorMess, errorInput, valu
     return (
         <div className="flex flex-col gap-2 flex-1">
             <div ref={containerRef} className="relative">
-                <div className={`relative ${disabled ? 'bg-gray-100' : ''} ring ${displayError || isInternalErr ? 'ring-red-600' : 'ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2'} px-2.5 py-[9.5px] rounded-sm`}>
+                <div className={`relative ${disabled ? 'bg-gray-100' : fillWhite ? 'bg-white': ''} ring ${displayError || isInternalErr ? 'ring-red-600' : 'ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2'} ${isSmall ? 'px-2 py-[5.5px] text-sm': 'px-2.5 py-[9.5px]'} rounded-sm`}>
                     {label && (
                         <label className="absolute bg-white bottom-full translate-y-1/2 text-sm px-1 text-gray-500" htmlFor={id}>
                             {label}
