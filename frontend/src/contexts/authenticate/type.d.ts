@@ -4,4 +4,5 @@ export type AuthenticateContextType = {
     state: UserDetail | null;
     isFetch: boolean;
     refreshAuth: () => void;
+    clearAuth: () => void;
 }

@@ -25,10 +25,11 @@ export class Auth extends Base {
         }
     }
 
-    async Logout(): Promise<void> {
+    async Logout(token?: string): Promise<void> {
         const _ = await this.execute({
             url: "/logout",
-            method: "POST"
+            method: "POST",
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
     }
 

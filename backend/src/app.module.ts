@@ -24,7 +24,7 @@ import { TraumaModule } from './modules/traumaFactor/trauma-factor.module';
 import { InjuryTypeModule } from './modules/typeInjury/injury.module';
 import { ReportModule } from './modules/report/report.module';
 import { RoleModule } from './modules/role/role.module';
-import { ScheduleModule } from '@nestjs/schedule/dist/schedule.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [

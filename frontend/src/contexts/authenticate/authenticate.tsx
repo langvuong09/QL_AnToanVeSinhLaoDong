@@ -15,12 +15,31 @@ const AuthenticateProvider = ({ children }: { children: React.ReactNode }) => {
     const fetchState = async () => {
         setIsFetch(true);
         const stored = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || null;
-        if (!stored) return;
+        if (!stored) {
+            setState(null);
+            setIsFetch(false);
+            return;
+        }
         const jwt = parseAccessToken(stored) || null;
-        if (!jwt) return;
-        const cls = new User();
-        const result = await cls.GetUserDetailById(jwt.id);
-        setState(result);
+        if (!jwt) {
+            setState(null);
+            setIsFetch(false);
+            return;
+        }
+
+        try {
+            const cls = new User();
+            const result = await cls.GetUserDetailById(jwt.id);
+            setState(result);
+        } catch {
+            setState(null);
+        } finally {
+            setIsFetch(false);
+        }
+    }
+
+    const clearAuth = () => {
+        setState(null);
         setIsFetch(false);
     }
 
@@ -29,7 +48,7 @@ const AuthenticateProvider = ({ children }: { children: React.ReactNode }) => {
     }, [])
 
     return (
-        <AuthenticateContext.Provider value={{ state, isFetch, refreshAuth: fetchState }}>
+        <AuthenticateContext.Provider value={{ state, isFetch, refreshAuth: fetchState, clearAuth }}>
             {children}
         </AuthenticateContext.Provider>
     )

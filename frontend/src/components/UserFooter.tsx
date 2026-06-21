@@ -19,8 +19,7 @@ export default function UserFooter() {
   const [isOpenChangePassword, setIsChangePassword] = useState<boolean>(false);
 
   const handleLogout = async () => {
-    const auth = new Auth();
-    await auth.Logout();
+    const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || undefined;
 
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -30,11 +29,13 @@ export default function UserFooter() {
     sessionStorage.removeItem("views");
 
     document.cookie = "accessToken=; path=/; max-age=0";
+    authenticate?.clearAuth();
+    router.replace("/login");
+
+    const auth = new Auth();
+    auth.Logout(accessToken).catch(() => undefined);
 
     notificate?.showNotification({ type: "success", message: "Đăng xuất thành công." });
-    setTimeout(() => {
-      router.push("/login");
-    }, 100);
   }
 
   return (
