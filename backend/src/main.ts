@@ -60,7 +60,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
   app.setGlobalPrefix('api/v1');
   app.enableCors({
-    origin: '*',
+    origin: 'http://localhost:3000',
     methods: ['GET', 'PUT', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',

@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, CreateAxiosDefaults } from "axios";
+import { getRefresh, setRefresh, getAccessToken } from "./common/Refresh";
 
 interface ApiResponse<T = any> {
     success: boolean;
@@ -11,7 +12,10 @@ export class Base {
     private api: AxiosInstance;
 
     constructor(config: CreateAxiosDefaults = {}) {
-        this.api = axios.create(config);
+        this.api = axios.create({
+            withCredentials: true,
+            ...config
+        });
         this.setupInterceptors();
     }
 
@@ -39,13 +43,42 @@ export class Base {
 
         this.api.interceptors.response.use(
             (response) => response,
-            (error) => {
+            async (error: AxiosError) => {
                 // Handle error later
                 /**
                  * - Unauthenticate
                  * - Forbiden
                  * - ...
                  */
+                const origin: any = error.config;
+                if (error.response?.status === 401 && !origin._retry) {
+                    origin._retry = true;
+
+                    if (!getRefresh()) {
+                        const promise = getAccessToken().finally(() => setRefresh(null));
+                        setRefresh(promise);
+                    }
+
+                    const newToken = await getRefresh();
+                    if (!newToken) {
+                        alert("Phiên đăng nhập hết hạn, đăng nhập lại");
+                        window.location.href = "/login";
+                        return;
+                    }
+
+                    const local = localStorage.getItem("accessToken") !== "";
+                    if (local) {
+                        localStorage.setItem("accessToken", newToken);
+                    } else {
+                        sessionStorage.setItem("accessToken", newToken);
+                    }
+                    origin.headers.Authorization =
+                        `Bearer ${newToken}`;
+
+                    return this.api(origin);
+
+                }
+
                 return Promise.reject(error);
             }
         );
