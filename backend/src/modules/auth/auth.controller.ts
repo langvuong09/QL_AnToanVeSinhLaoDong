@@ -48,7 +48,7 @@ export class AuthController {
     if (refreshToken) {
       response.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: true,
+        secure: false,
         sameSite: 'lax',
         maxAge: ms(expiresIn as ms.StringValue),
       });
