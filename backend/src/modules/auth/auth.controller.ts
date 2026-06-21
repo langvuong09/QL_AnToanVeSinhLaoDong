@@ -18,6 +18,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { Public } from '../../commons/guards/public.decorator';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Res } from '@nestjs/common';
 import type { Response } from 'express';
@@ -147,4 +148,41 @@ export class AuthController {
   ) {
     return await this.authService.confirmResetEmail(resetToken, newEmail);
   }
+
+  @Post('send-register-otp')
+  @Public()
+  @ApiOperation({ summary: 'Gửi mã OTP đăng ký doanh nghiệp về email' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'doanhnghiep@gmail.com' }
+      },
+      required: ['email']
+    }
+  })
+  async sendRegisterOtp(@Body('email') email: string) {
+    return this.authService.sendRegisterOtp(email);
+  }
+
+  @Post('verify-register-otp')
+  @Public()
+  @ApiOperation({ summary: 'Xác thực mã OTP đăng ký doanh nghiệp' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'doanhnghiep@gmail.com' },
+        otp: { type: 'string', example: '123456' }
+      },
+      required: ['email', 'otp']
+    }
+  })
+  async verifyRegisterOtp(
+    @Body('email') email: string,
+    @Body('otp') otp: string,
+  ) {
+    return this.authService.verifyRegisterOtp(email, otp);
+  }
 }
+

@@ -9,6 +9,7 @@ import { AuthGuard } from "../../commons/guards/authGuard";
 import { PermissionGuard } from 'src/commons/guards/permissionGuard';
 import { PermissionCode } from 'src/commons/enums/permission.enum';
 import { RequirePermissions } from 'src/commons/guards/permission.decorator';
+import { Public } from 'src/commons/guards/public.decorator';
 
 @ApiTags('Business Types (Loại hình doanh nghiệp)')
 @Controller('business-types')
@@ -40,8 +41,10 @@ export class BusinessTypeController {
   }
 
   @Get()
+  @Public()
   @RequirePermissions(PermissionCode.BUSINESS_TYPE_VIEW)
   @ApiOperation({ summary: 'Lấy danh sách loại hình doanh nghiệp đang hoạt động (Dành cho Doanh nghiệp - Lọc độc lập)' })
+
   @ApiQuery({ name: 'page', required: false, example: 1, description: 'Số trang hiện tại' })
   @ApiQuery({ name: 'pageSize', required: false, example: 10, description: 'Số lượng bản ghi trên một trang' })
   @ApiQuery({ name: 'code', required: false, description: 'Tìm kiếm gần đúng theo mã loại hình' })

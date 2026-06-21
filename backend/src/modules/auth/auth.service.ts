@@ -257,4 +257,52 @@ export class AuthService {
       throw new BadRequestException('Mã xác thực Reset Token đã quá hạn 3 phút hoặc không hợp lệ');
     }
   }
+
+  async sendRegisterOtp(email: string) {
+    const cleanEmail = email.trim().toLowerCase();
+    const isEmailExist = await this.dataSource.manager.findOne(User, {
+      where: { email: cleanEmail },
+    });
+    if (isEmailExist) {
+      throw new BadRequestException('Email này đã tồn tại trên hệ thống!');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const redisKey = `otp:register:${cleanEmail}`;
+    const ttl = this.configService.get<number>('OTP_EXPIRATION_TIME') || 300;
+    await this.redis.set(redisKey, otp, 'EX', ttl);
+
+    const templatePath = path.join(
+      process.cwd(),
+      'src',
+      'templates',
+      'register-otp.html',
+    );
+    let template = fs.readFileSync(templatePath, { encoding: 'utf-8' });
+
+    template = template.split('$1').join(otp);
+    template = template.split('$2').join((ttl / 60).toString());
+
+    await this.emailService.sendMail(
+      cleanEmail,
+      'Mã xác thực đăng ký doanh nghiệp',
+      template,
+    );
+    return Response.SUCCESSFULLY;
+  }
+
+  async verifyRegisterOtp(email: string, otp: string) {
+    const cleanEmail = email.trim().toLowerCase();
+    const redisKey = `otp:register:${cleanEmail}`;
+    const savedOtp = await this.redis.get(redisKey);
+
+    if (!savedOtp || savedOtp !== otp) {
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    await this.redis.del(redisKey);
+
+    return Response.SUCCESSFULLY;
+  }
 }
+
