@@ -36,6 +36,7 @@ export class UserController {
   @ApiQuery({ name: "position", required: false, description: "Tìm kiếm gần đúng theo Chức danh công việc" })
   @ApiQuery({ name: "status", required: false, type: Boolean, description: "Lọc theo Trạng thái hoạt động (true = Bật, false = Tắt)" })
   async getAll(
+    @GetUser() currentUser: CurrentUser,
     @Query() query: { 
       page?: number; 
       pageSize?: number; 
@@ -47,7 +48,7 @@ export class UserController {
       status?: boolean; 
     }
   ) {
-    return await this.userService.getAll(query);
+    return await this.userService.getAll(query ,currentUser.id);
   }
 
   @Get(":id")

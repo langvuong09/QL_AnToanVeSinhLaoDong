@@ -34,19 +34,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } 
     else if (exception instanceof Error) {
       const dbError = exception as any;
-
-      if (dbError.code === '23505') {
-        status = HttpStatus.BAD_REQUEST;
-        code = 400;
-        
-        if (dbError.detail?.includes('taxCode') || dbError.detail?.includes('username')) {
-          message = 'Mã số thuế hoặc tài khoản đăng nhập này đã tồn tại trên hệ thống!';
-        } else {
-          message = 'Dữ liệu nhập vào bị trùng lặp, vui lòng kiểm tra lại!';
-        }
-      } else {
-        message = exception.message;
-      }
+      message = dbError.message || 'Lỗi xử lý hệ thống dữ liệu';
     }
 
     response.status(status).json({

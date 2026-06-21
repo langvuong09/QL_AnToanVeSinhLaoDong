@@ -69,12 +69,44 @@ export class UserService {
       where: { id: userId }
     });
     if (!user || user.deletedAt) throw new NotFoundException('Không tìm thấy người dùng');
+
+    if (updateDto.email) {
+      const cleanEmail = updateDto.email.trim().toLowerCase();
+      
+      const existedEmail = await this.userRepository.findOne({
+        where: { 
+          email: cleanEmail,
+          id: Not(userId)
+        },
+      });
+
+      if (existedEmail) {
+        throw new BadRequestException(`Địa chỉ email [${cleanEmail}] đã được sử dụng bởi một tài khoản khác!`);
+      }
+      
+      updateDto.email = cleanEmail;
+    }
     
     Object.assign(user, updateDto);
     return await this.userRepository.save(user);
   }
 
   async createUser(createUserDto: CreateUserDto) {
+    const cleanUsername = createUserDto.username.trim();
+    const existedUsername = await this.userRepository.findOne({
+      where: { username: cleanUsername},
+    });
+    if (existedUsername) {
+      throw new BadRequestException(`Tên đăng nhập [${cleanUsername}] đã tồn tại trên hệ thống!`);
+    }
+
+    const cleanEmail = createUserDto.email.trim().toLowerCase();
+    const existedEmail = await this.userRepository.findOne({
+      where: { email: cleanEmail},
+    });
+    if (existedEmail) {
+      throw new BadRequestException(`Địa chỉ email [${cleanEmail}] đã được sử dụng bởi tài khoản khác!`);
+    }
     const newUser = this.userRepository.create(createUserDto);
     return await this.userRepository.save(newUser);
   }
@@ -107,7 +139,7 @@ export class UserService {
     roleId?: number;      
     position?: string;    
     status?: any;       
-  }) {
+  },currentUserId: string) {
     const page = Number(query.page) || 1;
     const pageSize = Number(query.pageSize) || 10;
     const { fullName, username, email, roleId, position, status } = query;
@@ -116,7 +148,8 @@ export class UserService {
       .leftJoinAndSelect('user.role', 'role')
       .leftJoinAndSelect('user.doet', 'doet')
       .where('user.deletedAt IS NULL')
-      .andWhere('user.doetId IS NULL');
+      .andWhere('user.doetId IS NULL')
+      .andWhere('user.id != :currentUserId', { currentUserId });
 
     if (fullName) {
       queryBuilder.andWhere('user.fullName ILike :fullName', { fullName: `%${fullName.trim()}%` });
