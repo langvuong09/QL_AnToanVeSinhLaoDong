@@ -88,4 +88,22 @@ export class Auth extends Base {
         console.log(result)
         return result;
     }
+
+    async SendRegisterOtp(email: string): Promise<{ success: boolean; message: string }> {
+        const result = await this.execute({
+            url: "/send-register-otp",
+            method: "POST",
+            data: { email }
+        });
+        return { success: result.success, message: result.message || "" };
+    }
+
+    async VerifyRegisterOtp(email: string, otp: string): Promise<{ success: boolean; message: string }> {
+        const result = await this.execute({
+            url: "/verify-register-otp",
+            method: "POST",
+            data: { email, otp }
+        });
+        return { success: result.success, message: result.message || "" };
+    }
 }
