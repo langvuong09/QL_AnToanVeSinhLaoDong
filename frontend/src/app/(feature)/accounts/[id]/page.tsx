@@ -265,7 +265,7 @@ const AccountIdPage = () => {
                 notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
             } else {
                 notificate?.showNotification({ type: "error", message: "Dữ liệu đã có trên hệ thống" });
-                setErrorMessage("Dữ liệu đã tồn tại vui lòng kiểm tra lại thông tin");
+                setErrorMessage(result.message || "");
                 setTimeout(() => {
                     setErrorMessage("");
                 }, 2000);
@@ -373,9 +373,9 @@ const AccountIdPage = () => {
 
     return (
         <main className="space-y-10 px-3">
-            {loading && (
+            {/* {loading && (
                 <Loading />
-            )}
+            )} */}
 
             <TopHero
                 lable="Chi tiết người dùng"

@@ -137,9 +137,9 @@ const AccountPage = () => {
 
     return (
         <main className="flex flex-col min-h-screen">
-            {loading && (
+            {/* {loading && (
                 <Loading />
-            )}
+            )} */}
 
             {selectedList && selectedList.length > 0 && (
                 <BulkDeleteBar

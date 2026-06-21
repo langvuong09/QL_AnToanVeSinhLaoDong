@@ -334,9 +334,9 @@ const AccountAddPage = () => {
 
     return (
         <main className="space-y-10 px-3">
-            {loading && (
+            {/* {loading && (
                 <Loading />
-            )}
+            )} */}
 
             <TopHero
                 lable="Chi tiết người dùng"
