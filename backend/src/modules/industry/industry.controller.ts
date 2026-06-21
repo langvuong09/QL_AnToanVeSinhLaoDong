@@ -9,6 +9,7 @@ import { AuthGuard } from "../../commons/guards/authGuard";
 import { PermissionGuard } from 'src/commons/guards/permissionGuard';
 import { PermissionCode } from 'src/commons/enums/permission.enum';
 import { RequirePermissions } from 'src/commons/guards/permission.decorator';
+import { Public } from 'src/commons/guards/public.decorator';
 
 @ApiTags('Industries (Ngành nghề kinh doanh)')
 @Controller('industries')
@@ -40,8 +41,10 @@ export class IndustryController {
   }
 
   @Get()
+  @Public()
   @RequirePermissions(PermissionCode.INDUSTRY_VIEW)
   @ApiOperation({ summary: 'Lấy danh sách ngành nghề đang hoạt động (Dành cho Doanh nghiệp)' })
+
   @ApiQuery({ name: 'page', required: false, example: 1, description: 'Số trang hiện tại' })
   @ApiQuery({ name: 'pageSize', required: false, example: 10, description: 'Số lượng bản ghi trên một trang' })
   @ApiQuery({ name: 'code', required: false, description: 'Tìm chính xác hoặc gần đúng theo Mã ngành' })

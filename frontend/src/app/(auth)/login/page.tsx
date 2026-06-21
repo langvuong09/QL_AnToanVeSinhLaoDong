@@ -12,6 +12,13 @@ import { AuthData } from "@/src/api/types/auth";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { AuthenticateContext } from "@/src/contexts/authenticate/authenticate";
 import { parseAccessToken } from "@/src/utils/jwt-parser";
+import { BusinessTypeApi, type IBusinessType } from "@/src/api/BusinessType";
+import { IndustryApi, type IIndustry } from "@/src/api/Industry";
+import { DoetApi } from "@/src/api/Doet";
+import { Media } from "@/src/api/Media";
+import EnterpriseModal from "@/src/components/modals/EnterpriseModal";
+import type { EnterpriseFormData, AttachmentGroup } from "@/src/components/modals/EnterpriseStepOne";
+
 
 type FormErrors = {
   account?: string;
@@ -30,6 +37,98 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [alert, setAlert] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [businessTypes, setBusinessTypes] = useState<IBusinessType[]>([]);
+  const [industries, setIndustries] = useState<IIndustry[]>([]);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+
+  useEffect(() => {
+    const loadOptions = async () => {
+      const [businessTypeResult, industryResult] = await Promise.all([
+        new BusinessTypeApi().getAllForBusiness({ page: 1, pageSize: 1000 }),
+        new IndustryApi().getAllForBusiness({ page: 1, pageSize: 1000, level: 4 }),
+      ]);
+
+      if (businessTypeResult.success) {
+        setBusinessTypes(businessTypeResult.data?.items.filter((item) => item.isActive) || []);
+      }
+      if (industryResult.success) {
+        setIndustries((industryResult.data?.items || []).filter((item) => item.level === 4 && item.isActive));
+      }
+    };
+
+    loadOptions();
+  }, []);
+
+  const handleUploadPendingFiles = async (doetId: number, attachments: AttachmentGroup[]) => {
+    const media = new Media();
+    const failedFiles: string[] = [];
+
+    for (const group of attachments) {
+      for (const file of group.files) {
+        if (!file.file) continue;
+        const formData = new FormData();
+        formData.append("fileType", group.fileType);
+        formData.append("doetId", String(doetId));
+        formData.append("file", file.file);
+
+        try {
+          const res = await media.UploadImage(formData);
+          if (!res.success) failedFiles.push(file.name);
+        } catch {
+          failedFiles.push(file.name);
+        }
+      }
+    }
+
+    if (failedFiles.length > 0) {
+      throw new Error(`Upload thất bại: ${failedFiles.join(", ")}`);
+    }
+  };
+
+  const handleRegisterSave = async (form: EnterpriseFormData, attachments: AttachmentGroup[]) => {
+    const api = new DoetApi();
+    const payload = {
+      name: form.companyName.trim(),
+      issuedDate: form.gpkdDate,
+      businessTypeId: Number(form.businessTypeId),
+      industryId: Number(form.industryId),
+      foreignName: form.foreignName.trim() || undefined,
+      representative: form.representative.trim() || undefined,
+      repPhone: form.representativePhone.trim() || undefined,
+      phone: form.phone.trim() || undefined,
+      email: form.email.trim() || undefined,
+      address: form.address.trim() || undefined,
+      province: form.gpkdProvinceData,
+      district: { key: 0, value: "" },
+      ward: form.gpkdWardData,
+      taxCode: form.taxCode.trim(),
+    };
+
+    const result = await api.create(payload);
+
+    if (!result.success || !result.data) {
+      return { success: false, message: result.message };
+    }
+
+    try {
+      await handleUploadPendingFiles(result.data.id, attachments);
+      return {
+        success: true,
+        message: "Đăng ký doanh nghiệp thành công",
+        savedId: result.data.id,
+        rawResult: result.data,
+      };
+    } catch {
+      return {
+        success: false,
+        message: "Doanh nghiệp đã được lưu nhưng upload tài liệu thất bại. Vui lòng liên hệ quản trị viên để hoàn tất tài liệu.",
+        savedId: result.data.id,
+        rawResult: result.data,
+      };
+    }
+  };
+
 
   useEffect(() => {
     const savedAccount = localStorage.getItem("rememberedAccount");
@@ -146,9 +245,27 @@ export default function LoginPage() {
     }
   }
 
+  if (showRegisterModal) {
+    return (
+      <div className="fixed inset-0 z-50 bg-white h-screen overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+          <EnterpriseModal
+            isOpen={showRegisterModal}
+            onClose={() => setShowRegisterModal(false)}
+            onSave={handleRegisterSave}
+            isRegister={true}
+            businessTypes={businessTypes}
+            industries={industries}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="shadow-3drops p-8 flex flex-col justify-center items-center rounded-2xl ">
+
 
         {/* logo */}
         <div className="h-30 w-30">
@@ -239,6 +356,7 @@ export default function LoginPage() {
               variant="outline"
               type="button"
               disabled={loading}
+              onClick={() => setShowRegisterModal(true)}
             >
               Đăng ký tài khoản doanh nghiệp
             </Button>

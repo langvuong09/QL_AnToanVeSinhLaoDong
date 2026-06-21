@@ -9,6 +9,8 @@ import { useFileAttachment } from '@/src/hooks/useFileAttachment'
 import EnterpriseStepOne from './EnterpriseStepOne'
 import EnterpriseStepConfirm from './EnterpriseStepConfirm'
 import AccountInfoPopup from './AccountInfoPopup'
+import OtpVerificationModal from './OtpVerificationModal'
+import { Auth } from '@/src/api/Auth'
 import type { EnterpriseFormData, EnterpriseFormErrors, EnterpriseFormMode, AttachmentGroup } from './EnterpriseStepOne'
 import type { Enterprise } from '@/src/mocks/enterprises'
 
@@ -27,7 +29,9 @@ type Props = {
   userRole?: string
   businessTypes: IBusinessType[]
   industries: IIndustry[]
+  isRegister?: boolean
 }
+
 
 const emptyAddress: ElementAddress = { key: 0, value: '' }
 
@@ -121,11 +125,13 @@ export default function EnterpriseModal({
   userRole = '',
   businessTypes,
   industries,
+  isRegister = false,
 }: Props) {
   const [currentStep, setCurrentStep] = useState(1)
   const [form, setForm] = useState<EnterpriseFormData>(cloneEmptyForm())
   const [errors, setErrors] = useState<EnterpriseFormErrors>({})
   const [submitting, setSubmitting] = useState(false)
+  const [showOtpModal, setShowOtpModal] = useState(false)
 
   // ── File attachment hook (thay thế state rời rạc cũ) ─────────────
   const {
@@ -146,6 +152,7 @@ export default function EnterpriseModal({
   })
 
   const [provinces, setProvinces] = useState<Province[]>([])
+
   const [addressLoading, setAddressLoading] = useState(false)
 
   useEffect(() => {
@@ -255,8 +262,28 @@ export default function EnterpriseModal({
     return valid
   }
 
-  const handleNext = () => {
-    if (validate()) setCurrentStep(2)
+  const handleNext = async () => {
+    if (!validate()) return
+
+    if (isRegister) {
+      setSubmitting(true)
+      const auth = new Auth()
+      try {
+        const result = await auth.SendRegisterOtp(form.email)
+        if (result.success) {
+          showToast('success', 'Mã OTP đã được gửi đến email của bạn')
+          setShowOtpModal(true)
+        } else {
+          showToast('error', result.message || 'Không thể gửi mã OTP. Vui lòng thử lại.')
+        }
+      } catch (err: any) {
+        showToast('error', err?.message || 'Có lỗi xảy ra khi gửi mã OTP')
+      } finally {
+        setSubmitting(false)
+      }
+    } else {
+      setCurrentStep(2)
+    }
   }
 
   const resetAndClose = () => {
@@ -278,12 +305,13 @@ export default function EnterpriseModal({
       return
     }
 
-    if (mode === 'create') {
+    if (mode === 'create' || isRegister) {
       setAccountInfo(generateAccountInfo(form.taxCode, (result as any).rawResult))
       showToast('success', result.message || 'Khai báo thành công')
       setShowAccountPopup(true)
       return
     }
+
 
     showToast('success', result.message || 'Cập nhật doanh nghiệp thành công')
     setTimeout(resetAndClose, 800)
@@ -307,11 +335,13 @@ export default function EnterpriseModal({
   }
 
   const isViewMode = mode === 'view'
-  const pageTitle = mode === 'create'
-    ? 'Thêm mới doanh nghiệp'
-    : mode === 'edit'
-      ? 'Chỉnh sửa doanh nghiệp'
-      : 'Chi tiết doanh nghiệp'
+  const pageTitle = isRegister
+    ? 'Đăng ký doanh nghiệp'
+    : mode === 'create'
+      ? 'Thêm mới doanh nghiệp'
+      : mode === 'edit'
+        ? 'Chỉnh sửa doanh nghiệp'
+        : 'Chi tiết doanh nghiệp'
 
   const steps = [
     { number: 1, label: 'Thông tin doanh nghiệp' },
@@ -323,15 +353,16 @@ export default function EnterpriseModal({
       <div className="h-screen flex flex-col py-2">
         <div className="shrink-0 bg-white px-5 py-3 rounded-lg border border-gray-100 shadow-sm flex items-center justify-between">
           <h1 className="text-base font-bold text-gray-800">{pageTitle}</h1>
-          <button
+          {/* <button
             type="button"
             onClick={resetAndClose}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
           >
             <i className="fa-solid fa-arrow-left text-xs" />
-            <span>Quay lại danh sách</span>
-          </button>
+            <span>{isRegister ? 'Quay lại đăng nhập' : 'Quay lại danh sách'}</span>
+          </button> */}
         </div>
+
 
         <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden mt-2">
           {!isViewMode && (
@@ -437,9 +468,14 @@ export default function EnterpriseModal({
                 <button type="button" onClick={resetAndClose} className="px-5 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
                   Hủy bỏ
                 </button>
-                <button type="button" onClick={handleNext} className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={submitting}
+                  className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity flex items-center gap-2"
+                >
                   <i className="fa-solid fa-chevron-right text-xs" />
-                  Tiếp tục
+                  {submitting ? 'Đang xử lý...' : 'Tiếp tục'}
                 </button>
               </>
             )}
@@ -463,6 +499,7 @@ export default function EnterpriseModal({
         </div>
       </div>
 
+
       {toast.show && (
         <div className="fixed top-4 right-4 z-[80] animate-[slideInRight_0.3s_ease-out]">
           <div className={`rounded-lg px-5 py-3 flex items-center gap-3 shadow-lg ${toast.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
@@ -481,7 +518,7 @@ export default function EnterpriseModal({
         </div>
       )}
 
-      {mode === 'create' && (
+      {(mode === 'create' || isRegister) && (
         <AccountInfoPopup
           isOpen={showAccountPopup}
           onClose={() => {
@@ -492,6 +529,43 @@ export default function EnterpriseModal({
           password={accountInfo.password}
         />
       )}
+
+      {isRegister && (
+        <OtpVerificationModal
+          isOpen={showOtpModal}
+          email={form.email}
+          onClose={() => setShowOtpModal(false)}
+          onVerify={async (otp) => {
+            const auth = new Auth()
+            try {
+              const result = await auth.VerifyRegisterOtp(form.email, otp)
+              if (result.success) {
+                showToast('success', 'Xác thực email thành công!')
+                setShowOtpModal(false)
+                setCurrentStep(2)
+                return { success: true }
+              }
+              return { success: false, message: result.message }
+            } catch (err: any) {
+              return { success: false, message: err?.message || 'Có lỗi xảy ra khi xác thực OTP' }
+            }
+          }}
+          onResend={async () => {
+            const auth = new Auth()
+            try {
+              const result = await auth.SendRegisterOtp(form.email)
+              if (result.success) {
+                showToast('success', 'Đã gửi lại mã OTP thành công!')
+                return { success: true }
+              }
+              return { success: false, message: result.message }
+            } catch (err: any) {
+              return { success: false, message: err?.message || 'Có lỗi xảy ra khi gửi lại mã OTP' }
+            }
+          }}
+        />
+      )}
     </>
   )
 }
+
