@@ -26,7 +26,7 @@ export class DoetService {
     private readonly roleRepository: Repository<Role>,
   ) {}
 
-  async create(dto: CreateDoetDto) {
+  async create(dto: CreateDoetDto, isActive: boolean = true) {
     const trimmedTaxCode = dto.taxCode.trim();
 
     const isTaxCodeExist = await this.doetRepository.findOne({
@@ -71,18 +71,22 @@ export class DoetService {
       if (!industry) {
         throw new BadRequestException('Ngành nghề đã chọn không tồn tại hoặc đã bị ngừng hoạt động!');
       }
+
+      // Tạo thông tin doanh nghiệp
       const newDoet = queryRunner.manager.create(Doet, {
         ...dto,
         taxCode: trimmedTaxCode,
+        status: isActive,
       });
       const savedDoet = await queryRunner.manager.save(Doet, newDoet);
 
       const defaultPassword = 'Doet@123456';
+      
       const newUser = queryRunner.manager.create(User, {
         username: trimmedTaxCode,
         password: defaultPassword,
         fullName: dto.name,
-        status: true,
+        status: isActive,
         roleId: businessRole.id,
         doetId: savedDoet.id,
         province: dto.province,
@@ -94,26 +98,29 @@ export class DoetService {
       
       await queryRunner.manager.save(User, newUser);
 
-      const currentDate = new Date();
-      const reportTypes = await queryRunner.manager.createQueryBuilder(ReportType, 'rt')
-        .where('rt.isActive = :isActive', { isActive: true })
-        .andWhere(':currentDate >= rt.startDate', { currentDate })
-        .andWhere(':currentDate <= rt.endDate', { currentDate })
-        .getMany();
+      if (isActive === true) {
+        const currentDate = new Date();
+        const reportTypes = await queryRunner.manager.createQueryBuilder(ReportType, 'rt')
+          .where('rt.isActive = :isActive', { isActive: true })
+          .andWhere(':currentDate >= rt.startDate', { currentDate })
+          .andWhere(':currentDate <= rt.endDate', { currentDate })
+          .getMany();
 
-      if (reportTypes.length > 0) {
-        for (const reportType of reportTypes) {
-          const autoReport = queryRunner.manager.create(Report, {
-            title: `Báo cáo định kỳ - ${reportType.name} (Tự động khởi tạo)`,
-            year: reportType.year,
-            status: ReportStatus.DRAFT, 
-            reportTypeId: reportType.id,
-            doetId: savedDoet.id,
-            details: []
-          });
-          await queryRunner.manager.save(Report, autoReport);
+        if (reportTypes.length > 0) {
+          for (const reportType of reportTypes) {
+            const autoReport = queryRunner.manager.create(Report, {
+              title: `Báo cáo định kỳ - ${reportType.name} (Tự động khởi tạo)`,
+              year: reportType.year,
+              status: ReportStatus.DRAFT, 
+              reportTypeId: reportType.id,
+              doetId: savedDoet.id,
+              details: []
+            });
+            await queryRunner.manager.save(Report, autoReport);
+          }
         }
       }
+
       await queryRunner.commitTransaction();
 
       return Response.get(savedDoet);

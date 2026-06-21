@@ -84,4 +84,13 @@ export class CreateDoetDto {
   @IsNotEmpty()
   @IsObject()
   ward!: KeyValue;
+
+  @ApiProperty({ 
+    description: 'Mã token chứng thực sau khi xác thực OTP thành công (Chỉ bắt buộc truyền ở luồng public-register)', 
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    required: false 
+  })
+  @IsOptional()
+  @IsString()
+  registerToken?: string;
 }

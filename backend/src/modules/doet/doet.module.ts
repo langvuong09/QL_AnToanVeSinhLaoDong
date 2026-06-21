@@ -7,9 +7,10 @@ import { MediaModule } from '../media/media.module';
 import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
 import { PermissionModule } from 'src/modules/permission/permission.module';
+import { JwtModule } from '@nestjs/jwt/dist/jwt.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Doet, User, Role]), MediaModule, PermissionModule],
+  imports: [TypeOrmModule.forFeature([Doet, User, Role]), MediaModule, PermissionModule,JwtModule.register({}),],
   providers: [DoetService],
   controllers: [DoetController],
 })

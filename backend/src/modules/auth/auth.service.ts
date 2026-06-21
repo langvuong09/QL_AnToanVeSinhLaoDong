@@ -302,7 +302,11 @@ export class AuthService {
 
     await this.redis.del(redisKey);
 
-    return Response.SUCCESSFULLY;
+    const registerToken = this.jwtService.sign(
+      { email: cleanEmail, purpose: 'REGISTER_VERIFIED' },
+      { expiresIn: '5m' }, 
+    );
+    return Response.get({ registerToken });
   }
 }
 

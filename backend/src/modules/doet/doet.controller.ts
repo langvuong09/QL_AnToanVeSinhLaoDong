@@ -12,6 +12,7 @@ import { RequirePermissions } from 'src/commons/guards/permission.decorator';
 import { PermissionGuard } from 'src/commons/guards/permissionGuard';
 import { GetUser } from 'src/commons/guards/user.decorator';
 import { Public } from 'src/commons/guards/public.decorator';
+import { JwtService } from '@nestjs/jwt/dist/jwt.service';
 
 @ApiTags('Doets (Quản lý doanh nghiệp)')
 @Controller('doets')
@@ -19,14 +20,40 @@ import { Public } from 'src/commons/guards/public.decorator';
 @ApiBearerAuth()
 @UseInterceptors(ClassSerializerInterceptor)
 export class DoetController {
-  constructor(private readonly doetService: DoetService) {}
+  constructor(private readonly doetService: DoetService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post()
-  @Public()
   @RequirePermissions(PermissionCode.DOET_CREATE)
-  @ApiOperation({ summary: 'Đăng ký doanh nghiệp mới (Tự động cấp tài khoản User)' })
-  async create(@Body() dto: CreateDoetDto) {
-    return await this.doetService.create(dto);
+  @ApiOperation({ summary: 'Sở quản lý trực tiếp thêm mới doanh nghiệp (Không cần OTP)' })
+  async createByAdmin(@Body() dto: CreateDoetDto) {
+    return await this.doetService.create(dto, true);
+  }
+
+  @Post('public-register')
+  @Public()
+  @ApiOperation({ summary: 'Doanh nghiệp tự đăng ký tài khoản (Yêu cầu Register Token hợp lệ)' })
+  async publicRegister(
+    @Body() dto: CreateDoetDto,
+    
+  ) {
+    const { registerToken } = dto;
+    if (!registerToken) {
+      throw new BadRequestException('Yêu cầu mã token chứng thực đăng ký (registerToken)!');
+    }
+
+    try {
+      const decoded: any = this.jwtService.verify(registerToken);
+      if (decoded.purpose !== 'REGISTER_VERIFIED') {
+        throw new BadRequestException('Mã cấu hình Token không đúng mục đích xử lý đăng ký!');
+      }
+      dto.email = decoded.email;
+
+    } catch (error) {
+      throw new BadRequestException('Mã token chứng thực đã quá hạn 5 phút hoặc không hợp lệ, vui lòng xác thực OTP lại!');
+    }
+    return await this.doetService.create(dto, true);
   }
 
   @Get()
