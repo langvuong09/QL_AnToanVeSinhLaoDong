@@ -62,8 +62,6 @@ export default function Sidebar() {
     const isBusiness = authenticate?.state?.role?.code === 'business';
     if (!isBusiness) return sidebarMenus;
 
-    console.log(sidebarMenus)
-
     const result = sidebarMenus
       .map((menu) => {
         if (menu.id === 2) {

@@ -172,6 +172,7 @@ export class ReportService {
   }
 
   async getAllForBusiness(query: any, user: any) {
+    console.log(user)
     if (!user.doetId) {
       throw new BadRequestException('Tài khoản của bạn không gắn liền với doanh nghiệp nào!');
     }
