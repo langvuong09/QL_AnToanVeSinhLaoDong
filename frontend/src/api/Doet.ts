@@ -127,6 +127,20 @@ export class DoetApi extends Base {
         };
     }
 
+    async publicRegister(dto: DoetPayload & { registerToken: string }): Promise<{ success: boolean; message: string; data?: IDoet }> {
+        const result = await this.execute<IDoet>({
+            url: "/public-register",
+            method: "POST",
+            data: dto,
+        });
+
+        return {
+            success: result.success,
+            message: result.message || "Có lỗi xảy ra khi tạo doanh nghiệp",
+            data: result.data ?? undefined,
+        };
+    }
+
     async update(id: number, dto: Omit<DoetPayload, "taxCode">): Promise<{ success: boolean; message: string; data?: IDoet }> {
         const result = await this.execute<IDoet>({
             url: `/${id}`,

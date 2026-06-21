@@ -86,7 +86,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleRegisterSave = async (form: EnterpriseFormData, attachments: AttachmentGroup[]) => {
+  const handleRegisterSave = async (form: EnterpriseFormData, attachments: AttachmentGroup[], registerToken?: string) => {
     const api = new DoetApi();
     const payload = {
       name: form.companyName.trim(),
@@ -105,7 +105,9 @@ export default function LoginPage() {
       taxCode: form.taxCode.trim(),
     };
 
-    const result = await api.create(payload);
+    const result = registerToken
+      ? await api.publicRegister({ ...payload, registerToken })
+      : await api.create(payload);
 
     if (!result.success || !result.data) {
       return { success: false, message: result.message };
