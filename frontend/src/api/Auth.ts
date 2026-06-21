@@ -98,12 +98,16 @@ export class Auth extends Base {
         return { success: result.success, message: result.message || "" };
     }
 
-    async VerifyRegisterOtp(email: string, otp: string): Promise<{ success: boolean; message: string }> {
-        const result = await this.execute({
+    async VerifyRegisterOtp(email: string, otp: string): Promise<{ success: boolean; message: string; registerToken?: string }> {
+        const result = await this.execute<{ registerToken: string }>({
             url: "/verify-register-otp",
             method: "POST",
             data: { email, otp }
         });
-        return { success: result.success, message: result.message || "" };
+        return {
+            success: result.success,
+            message: result.message || "",
+            registerToken: result.data?.registerToken
+        };
     }
 }

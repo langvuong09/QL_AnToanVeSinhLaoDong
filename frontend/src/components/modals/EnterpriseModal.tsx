@@ -23,7 +23,7 @@ type SaveResult = {
 type Props = {
   isOpen: boolean
   onClose: () => void
-  onSave: (form: EnterpriseFormData, attachments: AttachmentGroup[]) => Promise<SaveResult>
+  onSave: (form: EnterpriseFormData, attachments: AttachmentGroup[], registerToken?: string) => Promise<SaveResult>
   mode?: EnterpriseFormMode
   initialData?: Enterprise | null
   userRole?: string
@@ -132,6 +132,8 @@ export default function EnterpriseModal({
   const [errors, setErrors] = useState<EnterpriseFormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [showOtpModal, setShowOtpModal] = useState(false)
+  const [registerToken, setRegisterToken] = useState<string>('')
+  const [verifiedEmail, setVerifiedEmail] = useState<string>('')
 
   // ── File attachment hook (thay thế state rời rạc cũ) ─────────────
   const {
@@ -266,6 +268,11 @@ export default function EnterpriseModal({
     if (!validate()) return
 
     if (isRegister) {
+      if (registerToken && form.email.trim().toLowerCase() === verifiedEmail.trim().toLowerCase()) {
+        setCurrentStep(2)
+        return
+      }
+
       setSubmitting(true)
       const auth = new Auth()
       try {
@@ -291,17 +298,36 @@ export default function EnterpriseModal({
     setErrors({})
     resetAttachments()
     setCurrentStep(1)
+    setRegisterToken('')
+    setVerifiedEmail('')
     onClose()
   }
 
   const handleConfirm = async () => {
     if (!validate()) return
     setSubmitting(true)
-    const result = await onSave(form, attachmentGroups)
+    const result = await onSave(form, attachmentGroups, registerToken)
     setSubmitting(false)
 
     if (!result.success) {
       showToast('error', result.message)
+      
+      const newErrors: EnterpriseFormErrors = {}
+      let hasFieldError = false
+
+      if (result.message.includes('Mã số thuế') || result.message.toLowerCase().includes('taxcode') || result.message.toLowerCase().includes('tax code')) {
+        newErrors.taxCode = result.message
+        hasFieldError = true
+      }
+      if (result.message.includes('Email') || result.message.toLowerCase().includes('email')) {
+        newErrors.email = result.message
+        hasFieldError = true
+      }
+
+      if (hasFieldError) {
+        setErrors(newErrors)
+        setCurrentStep(1)
+      }
       return
     }
 
@@ -539,13 +565,15 @@ export default function EnterpriseModal({
             const auth = new Auth()
             try {
               const result = await auth.VerifyRegisterOtp(form.email, otp)
-              if (result.success) {
+              if (result.success && result.registerToken) {
+                setRegisterToken(result.registerToken)
+                setVerifiedEmail(form.email)
                 showToast('success', 'Xác thực email thành công!')
                 setShowOtpModal(false)
                 setCurrentStep(2)
                 return { success: true }
               }
-              return { success: false, message: result.message }
+              return { success: false, message: result.message || 'Mã OTP không đúng hoặc đã hết hạn' }
             } catch (err: any) {
               return { success: false, message: err?.message || 'Có lỗi xảy ra khi xác thực OTP' }
             }
