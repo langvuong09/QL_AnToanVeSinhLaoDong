@@ -181,19 +181,41 @@ export class AuthService {
     return Response.SUCCESSFULLY;
   }
 
-  async refreshToken(oldRefreshToken: string) {
+ async refreshToken(oldRefreshToken: string) {
     const decoded: any = this.jwtService.verify(oldRefreshToken, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
     });
-    const user = await this.dataSource.manager.findOne(User, {
-      where: { id: decoded.id },
-    });
-    if (!user) throw new NotFoundException('Not found email');
 
-    const newAccessToken = this.jwtService.sign({
-      id: user.id,
-      email: user.email,
+    const userEntity = await this.dataSource.manager.findOne(User, {
+      where: { id: decoded.id },
+      relations: { role: true }, 
     });
+
+    if (!userEntity) {
+      throw new NotFoundException('Không tìm thấy tài khoản người dùng tương ứng với Token');
+    }
+
+    if (!userEntity.role || !userEntity.role.code) {
+      throw new BadRequestException('User không có thông tin Role hợp lệ');
+    }
+
+    const currentUser = new CurrentUser({
+      id: userEntity.id,
+      username: userEntity.username,
+      fullname: userEntity.fullName,
+      doet: (userEntity as any).doetId || null, 
+      role: userEntity.role,
+      avatar: userEntity.avatar ? (typeof userEntity.avatar === 'string' ? userEntity.avatar : (userEntity.avatar as any).url || '') : '', 
+    });
+
+    const userPayload = JSON.parse(JSON.stringify(currentUser));
+
+    const accessTtl = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m';
+
+    const newAccessToken = this.jwtService.sign(userPayload, {
+      expiresIn: accessTtl,
+    } as JwtSignOptions);
+
     return Response.get({ accessToken: newAccessToken });
   }
 
