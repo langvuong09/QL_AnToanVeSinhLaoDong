@@ -19,8 +19,28 @@ export type UserDetail = {
     ward: ElementAddress;
 
     quarter: string;
-    doet: string;
-    doetId: string;
+    doet: {
+        address: string;
+        businessTypeId: number;
+        createdAt: string;
+        createdBy: string;
+        district: { key: string; value: string; }
+        foreignName: string;
+        id: number
+        industryId: number;
+        issuedDate: string;
+        name: string;
+        phone: string;
+        province: { key: string; value: string; }
+        quarter: { key: string; value: string; }
+        repPhone: string;
+        representative: string;
+        status: boolean;
+        taxCode: string;
+        updatedAt: string;
+        updatedBy: string;
+    };
+    doetId: number;
     roleId: number;
     role: {
         id: number;
