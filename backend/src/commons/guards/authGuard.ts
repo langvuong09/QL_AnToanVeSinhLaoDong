@@ -1,12 +1,15 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core/services/reflector.service';
 import { JwtService } from '@nestjs/jwt';
 import { IS_PUBLIC_KEY } from './public.decorator';
+import Redis from 'ioredis/built/Redis';
+import { REDIS_CLIENT } from 'src/redis/redis.module';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService,
     private readonly reflector: Reflector,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -27,6 +30,10 @@ export class AuthGuard implements CanActivate {
     }
 
     const token = authHeader.split(' ')[1];
+    const isBlacklisted = await this.redis.get(`blacklist:${token}`);
+    if (isBlacklisted) {
+      throw new UnauthorizedException('Token đã bị vô hiệu hóa (Đã đăng xuất)');
+    }
 
     try {
       const payload = await this.jwtService.verifyAsync(token);
