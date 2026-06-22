@@ -60,7 +60,10 @@ export class ReportService {
     const fullyLoadedReport = await this.reportRepository.findOne({
       where: { id: savedReport.id },
       relations: {
-        doet: true,        
+        doet: {
+          businessType: true, // Nạp kèm loại hình kinh doanh
+          industry: true,     // Nạp kèm ngành nghề
+        },        
         reportType: true, 
         files: true,       
         details: true     
@@ -92,7 +95,6 @@ export class ReportService {
       throw new BadRequestException(`Sai tiến độ! Không thể chuyển trạng thái từ [${current}] sang [${target}].`);
     }
 
-    // 🎯 KIỂM TRA TOÀN VẸN: Front-End kích hoạt kiểm tra khi doanh nghiệp bấm "GỬI BÁO CÁO"
     if (target === ReportStatus.SUBMITTED) {
       if (!report.details || report.details.length === 0) {
         throw new BadRequestException('Không thể gửi báo cáo trống dữ liệu biểu mẫu!');
@@ -129,6 +131,8 @@ export class ReportService {
 
     const queryBuilder = this.reportRepository.createQueryBuilder('r')
       .leftJoinAndSelect('r.doet', 'd')
+      .leftJoinAndSelect('d.businessType', 'bt')
+      .leftJoinAndSelect('d.industry', 'i')      
       .leftJoinAndSelect('r.reportType', 'rt')
       .where('1=1');
 
@@ -163,7 +167,9 @@ export class ReportService {
         taxCode: report.doet?.taxCode,
         province: report.doet?.province,
         district: report.doet?.district,
-        ward: report.doet?.ward
+        ward: report.doet?.ward,
+        businessType: report.doet?.businessType || null, 
+        industry: report.doet?.industry || null       
       },
       attachedFiles: report.files || []
     }));
@@ -172,7 +178,6 @@ export class ReportService {
   }
 
   async getAllForBusiness(query: any, user: any) {
-    console.log(user)
     if (!user.doetId) {
       throw new BadRequestException('Tài khoản của bạn không gắn liền với doanh nghiệp nào!');
     }
@@ -183,6 +188,8 @@ export class ReportService {
 
     const queryBuilder = this.reportRepository.createQueryBuilder('r')
       .leftJoinAndSelect('r.doet', 'd') 
+      .leftJoinAndSelect('d.businessType', 'bt') 
+      .leftJoinAndSelect('d.industry', 'i')      
       .leftJoinAndSelect('r.reportType', 'rt')
       .where('r.doetId = :doetId', { doetId: user.doetId });
 
@@ -211,7 +218,9 @@ export class ReportService {
         taxCode: report.doet?.taxCode,
         province: report.doet?.province,
         district: report.doet?.district,
-        ward: report.doet?.ward
+        ward: report.doet?.ward,
+        businessType: report.doet?.businessType || null, // Map thêm dữ liệu trả ra
+        industry: report.doet?.industry || null          // Map thêm dữ liệu trả ra
       },
       attachedFiles: report.files || []
     }));
@@ -416,7 +425,15 @@ export class ReportService {
 
     const updatedReport = await this.reportRepository.findOne({
       where: { id },
-      relations: { doet: true, reportType: true, files: true, details: true }
+      relations: { 
+        doet: {
+          businessType: true, 
+          industry: true,    
+        }, 
+        reportType: true, 
+        files: true, 
+        details: true 
+      }
     });
 
     return Response.get(updatedReport);
