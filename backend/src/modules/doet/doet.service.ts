@@ -71,8 +71,7 @@ export class DoetService {
       if (!industry) {
         throw new BadRequestException('Ngành nghề đã chọn không tồn tại hoặc đã bị ngừng hoạt động!');
       }
-
-      // Tạo thông tin doanh nghiệp
+      
       const newDoet = queryRunner.manager.create(Doet, {
         ...dto,
         taxCode: trimmedTaxCode,
@@ -107,22 +106,20 @@ export class DoetService {
           .getMany();
 
         if (reportTypes.length > 0) {
-          for (const reportType of reportTypes) {
-            const autoReport = queryRunner.manager.create(Report, {
+          const autoReports = reportTypes.map(reportType => 
+            queryRunner.manager.create(Report, {
               title: `Báo cáo định kỳ - ${reportType.name} (Tự động khởi tạo)`,
               year: reportType.year,
               status: ReportStatus.DRAFT, 
               reportTypeId: reportType.id,
               doetId: savedDoet.id,
               details: []
-            });
-            await queryRunner.manager.save(Report, autoReport);
-          }
+            })
+          );
+          await queryRunner.manager.insert(Report, autoReports);
         }
       }
-
       await queryRunner.commitTransaction();
-
       return Response.get(savedDoet);
     } catch (error) {
       await queryRunner.rollbackTransaction();

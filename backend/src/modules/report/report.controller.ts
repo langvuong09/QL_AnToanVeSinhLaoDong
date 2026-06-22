@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, Query, ParseIntPipe, UseGuards, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ReportService } from './report.service';
-import { CreateReportDto } from './dto/create-report.dto';
+import { CreateReportDto, ReportDetailDto } from './dto/create-report.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { AuthGuard } from '../../commons/guards/authGuard';
 import { PermissionGuard } from '../../commons/guards/permissionGuard';
@@ -9,11 +9,13 @@ import { RequirePermissions } from 'src/commons/guards/permission.decorator';
 import { GetUser } from 'src/commons/guards/user.decorator';
 import { PermissionCode } from 'src/commons/enums/permission.enum';
 import { UpdateReportDto } from './dto/update-report.dto';
+import { ApiExtraModels } from '@nestjs/swagger';
 
 
 @ApiTags('Reports (Quản lý và tổng hợp báo cáo Tai nạn lao động)')
 @Controller('reports')
 @UseGuards(AuthGuard, PermissionGuard)
+@ApiExtraModels(CreateReportDto, UpdateReportDto, ReportDetailDto)
 @ApiBearerAuth()
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
