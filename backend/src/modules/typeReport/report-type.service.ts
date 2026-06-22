@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { ReportType } from './report-type.entity';
 import { CreateReportTypeDto } from './dto/create-report-type.dto';
 import { UpdateReportTypeDto } from './dto/update-report-type.dto';
@@ -30,22 +30,23 @@ export class ReportTypeService {
       const savedConfig = await queryRunner.manager.save(ReportType, newConfig);
 
       const activeCompanies = await queryRunner.manager.find(Doet, {
-        where: { status: true },
+        where: { status: true, deletedAt: IsNull() },
         select: { id: true } 
       });
 
       if (activeCompanies.length > 0) {
-        for (const company of activeCompanies) {
-          const autoReport = queryRunner.manager.create(Report, {
+        const autoReports = activeCompanies.map(company => 
+          queryRunner.manager.create(Report, {
             title: `Báo cáo định kỳ - ${savedConfig.name} (Tự động khởi tạo)`,
             year: savedConfig.year,
             status: ReportStatus.DRAFT,
             reportTypeId: savedConfig.id,
             doetId: company.id,
             details: []
-          });
-          await queryRunner.manager.save(Report, autoReport);
-        }
+          })
+        );
+
+        await queryRunner.manager.insert(Report, autoReports);
       }
 
       await queryRunner.commitTransaction();

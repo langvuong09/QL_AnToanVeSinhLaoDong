@@ -1,7 +1,8 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Trauma } from "../traumaFactor/trauma-factor.entity";
 import { InjuryType } from "../typeInjury/injury.entity";
-import { Report } from "../report/report.entity";
+import { Report } from "./report.entity";
+import { AccidentCauseEnum } from "../../commons/enums/accident.enum";
 
 @Entity("report_details")
 export class ReportDetail {
@@ -12,32 +13,38 @@ export class ReportDetail {
   @JoinColumn({ name: "reportId" })
   report!: Report;
 
+  @Column({ 
+    type: "enum", 
+    enum: AccidentCauseEnum, 
+    nullable: true 
+  })
+  cause?: AccidentCauseEnum;
+
+  // --- 1. Nhóm định danh của vụ tai nạn ---
   @Column({ nullable: true }) traumaId!: number;
   @ManyToOne(() => Trauma) @JoinColumn({ name: "traumaId" }) trauma!: Trauma;
 
   @Column({ nullable: true }) injuryTypeId!: number;
   @ManyToOne(() => InjuryType) @JoinColumn({ name: "injuryTypeId" }) injuryType!: InjuryType;
 
-  // --- 2. Nhóm số liệu thống kê về Vụ/Người (Cho phép nullable để phục vụ lưu nháp) ---
+  // --- 2. Số liệu thống kê của vụ tai nạn này ---
   @Column({ type: "int", nullable: true }) totalCases?: number;           
   @Column({ type: "int", nullable: true }) fatalCases?: number;           
   @Column({ type: "int", nullable: true }) multiVictimCases?: number;     
-  
   @Column({ type: "int", nullable: true }) totalVictims?: number;         
   @Column({ type: "int", nullable: true }) femaleVictims?: number;        
   @Column({ type: "int", nullable: true }) fatalVictims?: number;         
   @Column({ type: "int", nullable: true }) severeInjuries?: number;       
   
-  // --- 3. Nhóm thống kê đối tượng không thuộc quản lý ---
+  // --- 3. Thống kê đối tượng không thuộc quản lý của vụ này ---
   @Column({ type: "int", nullable: true }) nonManagedVictims?: number;           
   @Column({ type: "int", nullable: true }) nonManagedFemaleVictims?: number;     
   @Column({ type: "int", nullable: true }) nonManagedFatalVictims?: number;      
   @Column({ type: "int", nullable: true }) nonManagedSevereInjuries?: number;    
 
-  // --- 4. Nhóm số liệu tài chính ---
+  // --- 4. Số liệu tài chính của vụ này ---
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) medicalCost?: number;       
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) salaryCompensation?: number; 
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) propertyDamage?: number;     
-  
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) totalCost?: number;
 }

@@ -6,11 +6,11 @@ import { ReportDetail } from "./report-detail.entity";
 import { FileEntity } from "../media/media.entity";
 
 export enum ReportStatus {
-  DRAFT = 'DRAFT',               // Đang báo cáo 
-  OVERDUE_WARNING = 'OVERDUE_WARNING',
-  SUBMITTED = 'SUBMITTED',       // Đã gửi báo cáo (Chờ tiếp nhận)
-  APPROVED = 'APPROVED',         // Đã tiếp nhận / Duyệt
-  REJECTED = 'REJECTED'          // Từ chối báo cáo
+  DRAFT = 'DRAFT',                     
+  OVERDUE_WARNING = 'OVERDUE_WARNING', 
+  SUBMITTED = 'SUBMITTED',             
+  APPROVED = 'APPROVED',               
+  REJECTED = 'REJECTED'                
 }
 
 @Entity("reports")
@@ -32,6 +32,57 @@ export class Report {
   @JoinColumn({ name: "doetId" })
   doet!: Doet;
 
+  // =========================================================
+  // THÔNG TIN CHUNG (Lao động cơ sở)
+  // =========================================================
+  @Column({ type: "int", nullable: true }) totalEmployees?: number;
+  @Column({ type: "int", nullable: true }) femaleEmployees?: number;
+
+  // =========================================================
+  // MỤC 1: TÌNH HÌNH TAI NẠN LAO ĐỘNG (Tổng số liệu chung Tab 1)
+  // =========================================================
+  @Column({ type: "int", nullable: true }) m1TotalCases?: number;
+  @Column({ type: "int", nullable: true }) m1FatalCases?: number;
+  @Column({ type: "int", nullable: true }) m1MultiVictimCases?: number;
+  @Column({ type: "int", nullable: true }) m1TotalVictims?: number;
+  @Column({ type: "int", nullable: true }) m1FemaleVictims?: number;
+  @Column({ type: "int", nullable: true }) m1FatalVictims?: number;
+  @Column({ type: "int", nullable: true }) m1SevereInjuries?: number;
+
+  @Column({ type: "int", nullable: true }) m1NonManagedVictims?: number;
+  @Column({ type: "int", nullable: true }) m1NonManagedFemaleVictims?: number;
+  @Column({ type: "int", nullable: true }) m1NonManagedFatalVictims?: number;
+  @Column({ type: "int", nullable: true }) m1NonManagedSevereInjuries?: number;
+
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m1MedicalCost?: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m1SalaryCompensation?: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m1PropertyDamage?: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m1TotalCost?: number;
+
+  // =========================================================
+  // MỤC 2: TNLĐ ĐƯỢC HƯỞNG TRỢ CẤP (Khoản 2 Điều 39)
+  // =========================================================
+  @Column({ type: "int", nullable: true }) m2TotalCases?: number;
+  @Column({ type: "int", nullable: true }) m2FatalCases?: number;
+  @Column({ type: "int", nullable: true }) m2MultiVictimCases?: number;
+  @Column({ type: "int", nullable: true }) m2TotalVictims?: number;
+  @Column({ type: "int", nullable: true }) m2FemaleVictims?: number;
+  @Column({ type: "int", nullable: true }) m2FatalVictims?: number;
+  @Column({ type: "int", nullable: true }) m2SevereInjuries?: number;
+
+  @Column({ type: "int", nullable: true }) m2NonManagedVictims?: number;
+  @Column({ type: "int", nullable: true }) m2NonManagedFemaleVictims?: number;
+  @Column({ type: "int", nullable: true }) m2NonManagedFatalVictims?: number;
+  @Column({ type: "int", nullable: true }) m2NonManagedSevereInjuries?: number;
+
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2MedicalCost?: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2SalaryCompensation?: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2PropertyDamage?: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2TotalCost?: number;
+
+  // =========================================================
+  // QUAN HỆ & FILE ĐÍNH KÈM
+  // =========================================================
   @OneToMany(() => ReportDetail, (detail) => detail.report, { cascade: true })
   details!: ReportDetail[];
 
