@@ -199,13 +199,11 @@ export class AuthService {
       throw new BadRequestException('User không có thông tin Role hợp lệ');
     }
 
+    const rawUserData = userEntity as any;
+
     const currentUser = new CurrentUser({
-      id: userEntity.id,
-      username: userEntity.username,
-      fullname: userEntity.fullName,
-      doet: (userEntity as any).doetId || null, 
-      role: userEntity.role,
-      avatar: userEntity.avatar ? (typeof userEntity.avatar === 'string' ? userEntity.avatar : (userEntity.avatar as any).url || '') : '', 
+      ...rawUserData,
+      doet: rawUserData.doetId || null, 
     });
 
     const userPayload = JSON.parse(JSON.stringify(currentUser));
