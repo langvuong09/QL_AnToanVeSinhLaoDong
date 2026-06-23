@@ -18,13 +18,11 @@ export class ReportService {
     private readonly dataSource: DataSource,
   ) {}
 
-  // 1. Hàm tính tổng an toàn, tự động loại bỏ giá trị null/undefined
   private calculateSum(...args: (number | undefined | null)[]): number | undefined {
     const sum = args.reduce<number>((acc, val) => acc + (Number(val) || 0), 0);
     return sum > 0 ? sum : undefined;
   }
 
-  // 2. Query dùng chung để lấy full relations
   private async findOneById(id: number) {
     return this.reportRepository.findOne({
       where: { id },
@@ -38,17 +36,15 @@ export class ReportService {
     });
   }
 
-  // 3. Tạo mới báo cáo (Có Transaction chống rác dữ liệu)
+  
   async createReport(dto: CreateReportDto, user: any) {
     if (!user.doetId) throw new BadRequestException('Tài khoản không thuộc doanh nghiệp nào!');
 
     let savedReportId: number;
 
     await this.dataSource.transaction(async (manager) => {
-      // Tách riêng các trường relation ra khỏi entity chính
       const { details, fileIds, ...reportBase } = dto;
       
-      // Khai báo kiểu any để bypass TS báo lỗi nếu CreateReportDto chưa khai báo đủ field M1, M2
       const basePayload: any = reportBase;
 
       const reportData = manager.create(Report, {
@@ -59,16 +55,13 @@ export class ReportService {
         m2TotalCost: this.calculateSum(basePayload.m2MedicalCost, basePayload.m2SalaryCompensation, basePayload.m2PropertyDamage),
       });
 
-      // Lấy danh sách file đính kèm nếu có
       if (fileIds?.length) {
         reportData.files = await manager.findBy(FileEntity, { id: In(fileIds) });
       }
 
-      // Lưu Report
       const savedReport = await manager.save(Report, reportData);
       savedReportId = savedReport.id;
 
-      // Lưu Details nếu có
       if (details?.length) {
         const detailsToSave = details.map(d => manager.create(ReportDetail, {
           ...d,
@@ -82,7 +75,6 @@ export class ReportService {
     return Response.get(await this.findOneById(savedReportId!));
   }
 
-  // 4. Cập nhật báo cáo
   async updateReport(id: number, dto: UpdateReportDto, user: any) {
     const report = await this.reportRepository.findOne({ where: { id }, relations: { details: true } });
     
@@ -95,7 +87,6 @@ export class ReportService {
     await this.dataSource.transaction(async (manager) => {
       const { details, fileIds, ...rest } = dto;
       
-      // Update thông tin chung
       Object.assign(report, rest);
       report.m1TotalCost = this.calculateSum(report.m1MedicalCost, report.m1SalaryCompensation, report.m1PropertyDamage);
       report.m2TotalCost = this.calculateSum(report.m2MedicalCost, report.m2SalaryCompensation, report.m2PropertyDamage);
