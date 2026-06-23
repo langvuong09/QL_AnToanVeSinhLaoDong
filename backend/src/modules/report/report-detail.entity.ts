@@ -47,4 +47,7 @@ export class ReportDetail {
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) salaryCompensation?: number; 
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) propertyDamage?: number;     
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) totalCost?: number;
+
+  @Column({ type: "int", nullable: true }) totalLeaveDays?: number; 
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) totalDamage?: number;
 }
