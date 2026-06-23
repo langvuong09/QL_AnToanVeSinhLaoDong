@@ -32,7 +32,7 @@ export default function UserFooter() {
     document.cookie = "accessToken=; path=/; max-age=0";
 
     notificate?.showNotification({ type: "success", message: "Đăng xuất thành công." });
-    router.push("/login");
+    window.location.href = "/login";
   }
 
   return (

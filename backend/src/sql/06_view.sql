@@ -15,7 +15,7 @@ INSERT INTO views (id, name, url, icon, "parentId", "order") VALUES
 
 -- Children
 (9,  'Danh mục chung',               '/categories',              'fa-solid fa-circle',          2, 1),
-(10, 'TNLĐ theo HĐLĐ',               '/tnld-theo-hdld',               'fa-solid fa-circle',          2, 2),
+(10, 'TNLĐ theo HĐLĐ',               '/tnld-theo-thdld',         'fa-solid fa-circle',          2, 2),
 
 (11, 'Thông tin doanh nghiệp',       '/business-info',           'fa-solid fa-circle',          3, 1)
 
@@ -30,8 +30,8 @@ ON CONFLICT (id) DO UPDATE SET
 INSERT INTO view_permissions ("viewId", "permissionId")
 SELECT 4, id FROM permissions 
 WHERE code IN (
-    'USER_VIEW', 'USER_CREATE', 'USER_UPDATE', 'USER_DELETE'
-    )
+    'USER_VIEW', 'USER_CREATE', 'USER_UPDATE', 'USER_DELETE',
+)
 ON CONFLICT DO NOTHING;
 
 -- Quản lý loại hình kinh doanh
@@ -54,7 +54,10 @@ ON CONFLICT DO NOTHING;
 INSERT INTO view_permissions ("viewId", "permissionId")
 SELECT 7, id FROM permissions 
 WHERE code IN (
-    'DOET_VIEW', 'DOET_CREATE', 'DOET_UPDATE', 'DOET_DELETE'
+    'DOET_VIEW', 'DOET_CREATE', 'DOET_UPDATE', 'DOET_DELETE',
+
+    'BUSINESS_TYPE_VIEW',
+    'INDUSTRY_VIEW'
 )
 ON CONFLICT DO NOTHING;
 
@@ -79,7 +82,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO view_permissions ("viewId", "permissionId")
 SELECT 10, id FROM permissions 
 WHERE code IN (
-    'REPORT_VIEW', 'REPORT_CREATE', 'REPORT_UPDATE', 'REPORT_DELETE', 'REPORT_CHANGE_STATUS'
+    'REPORT_VIEW', 'REPORT_CREATE', 'REPORT_UPDATE', 'REPORT_DELETE', 'REPORT_CHANGE_STATUS',
 )
 ON CONFLICT DO NOTHING;
 
