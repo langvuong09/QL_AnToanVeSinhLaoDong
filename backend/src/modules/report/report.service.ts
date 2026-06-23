@@ -225,6 +225,9 @@ export class ReportService {
   async getAllForBusiness(query: any, user: any) {
     const qb = this.reportRepository.createQueryBuilder('r')
       .leftJoinAndSelect('r.reportType', 'rt')
+      .leftJoinAndSelect('r.doet', 'd') 
+      .leftJoinAndSelect('d.businessType', 'bt') 
+      .leftJoinAndSelect('d.industry', 'i')      
       .where('r.doetId = :doetId', { doetId: user.doetId });
 
     if (query.year) qb.andWhere('r.year = :year', { year: Number(query.year) });
@@ -235,6 +238,7 @@ export class ReportService {
     qb.skip((page - 1) * pageSize).take(pageSize);
 
     const [items, total] = await qb.getManyAndCount();
+
     return Response.get({ items, total, page, pageSize });
   }
 

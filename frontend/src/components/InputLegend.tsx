@@ -32,7 +32,7 @@ const InputLegend = ({
         <div className="flex flex-col gap-2 flex-1">
             <div className={`relative 
                 ${fillWhite && "bg-white"} 
-                ${input.disabled ? "bg-gray-100 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} 
+                ${input.disabled ? "bg-gray-50 border border-gray-400 text-gray-600" : `ring ${errorMess ? "ring-red-600" : "ring-gray-400 focus-within:ring-blue-500 focus-within:ring-2"}`} 
                 rounded-sm
                 `}>
                 {/* Input */}

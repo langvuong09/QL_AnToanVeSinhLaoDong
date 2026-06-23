@@ -1,17 +1,17 @@
 -- ====================================================================================
 -- 1. DỮ LIỆU MẪU CHO BẢNG: traumas (Yếu tố chấn thương / Nguyên nhân gây tai nạn)
 -- ====================================================================================
-INSERT INTO "traumas" ("code", "name", "isActive", "deletedAt") VALUES
-('TRAUMA_01', 'Yếu tố cơ khí (Kẹt, cán, cắt, đâm bởi máy móc, thiết bị, dụng cụ)', true, NULL),
-('TRAUMA_02', 'Đổ sập vật liệu, công trình (Sập hầm, đổ tường, giàn giáo, đất đá sạt lở)', true, NULL),
-('TRAUMA_03', 'Rơi từ trên cao (Ngã cao từ giàn giáo, sàn thao tác, mái nhà, thang)', true, NULL),
-('TRAUMA_04', 'Vật rơi trúng (Dụng cụ, vật liệu từ trên cao rơi vào người)', true, NULL),
-('TRAUMA_05', 'Điện giật (Tiếp xúc nguồn điện hở, rò rỉ điện, phóng điện cao áp)', true, NULL),
-('TRAUMA_06', 'Bỏng nhiệt, hóa chất (Tiếp xúc lửa, nước sôi, kim loại nóng chảy, axit, kiềm)', true, NULL),
-('TRAUMA_07', 'Nhiễm độc, ngạt khí (Khí độc trong không gian kín, hóa chất độc hại)', true, NULL),
-('TRAUMA_08', 'Nổ vật lý, nổ hóa học (Nổ bình khí nén, nổ nồi hơi, nổ hóa chất, chất nổ)', true, NULL),
-('TRAUMA_09', 'Tai nạn giao thông trong giờ làm việc (Di chuyển bằng xe máy, ô tô, xe nâng)', true, NULL),
-('TRAUMA_10', 'Yếu tố khác (Động vật cắn, đuối nước, thiên tai tại nơi làm việc)', true, NULL);
+INSERT INTO "traumas" ("id", "code", "name", "isActive", "deletedAt") VALUES
+(1, 'TRAUMA_01', 'Yếu tố cơ khí (Kẹt, cán, cắt, đâm bởi máy móc, thiết bị, dụng cụ)',               true, NULL),
+(2, 'TRAUMA_02', 'Đổ sập vật liệu, công trình (Sập hầm, đổ tường, giàn giáo, đất đá sạt lở)',       true, NULL),
+(3, 'TRAUMA_03', 'Rơi từ trên cao (Ngã cao từ giàn giáo, sàn thao tác, mái nhà, thang)',            true, NULL),
+(4, 'TRAUMA_04', 'Vật rơi trúng (Dụng cụ, vật liệu từ trên cao rơi vào người)',                     true, NULL),
+(5, 'TRAUMA_05', 'Điện giật (Tiếp xúc nguồn điện hở, rò rỉ điện, phóng điện cao áp)',               true, NULL),
+(6, 'TRAUMA_06', 'Bỏng nhiệt, hóa chất (Tiếp xúc lửa, nước sôi, kim loại nóng chảy, axit, kiềm)',   true, NULL),
+(7, 'TRAUMA_07', 'Nhiễm độc, ngạt khí (Khí độc trong không gian kín, hóa chất độc hại)',            true, NULL),
+(8, 'TRAUMA_08', 'Nổ vật lý, nổ hóa học (Nổ bình khí nén, nổ nồi hơi, nổ hóa chất, chất nổ)',       true, NULL),
+(9, 'TRAUMA_09', 'Tai nạn giao thông trong giờ làm việc (Di chuyển bằng xe máy, ô tô, xe nâng)',    true, NULL),
+(10,'TRAUMA_10', 'Yếu tố khác (Động vật cắn, đuối nước, thiên tai tại nơi làm việc)',               true, NULL);
 
 
 -- ====================================================================================
@@ -23,15 +23,31 @@ INSERT INTO "traumas" ("code", "name", "isActive", "deletedAt") VALUES
 INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
 (1, 'INJ_01', 'Chấn thương sọ não và hàm mặt', true, NULL, NULL);
 
+-- --- Nhóm 2: Chấn thương hệ xương khớp và chi ---
+INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+(2, 'INJ_02', 'Chấn thương hệ xương khớp và cơ chi', true, NULL, NULL);
+
+-- --- Nhóm 3: Chấn thương ngực, bụng và cột sống ---
+INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+(3, 'INJ_03', 'Chấn thương ngực, bụng và cột sống', true, NULL, NULL);
+
+-- --- Nhóm 4: Bỏng và tổn thương bề mặt ---
+INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+(4, 'INJ_04', 'Bỏng và tổn thương bề mặt da', true, NULL, NULL);
+
+-- --- Nhóm 5: Ngộ độc và ngạt khí độc ---
+INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+(5, 'INJ_05', 'Nhiễm độc và ngạt khí cấp tính', true, NULL, NULL);
+
+-- --- Nhóm 6: Tổn thương các giác quan độc lập ---
+INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+(6, 'INJ_06', 'Tổn thương cơ quan thị giác và thính giác', true, NULL, NULL);
+
+-- //////
 INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
 ('INJ_01_01', 'Chấn thương sọ não kín (Chấn động não, giập não)', true, 1, NULL),
 ('INJ_01_02', 'Vỡ xương sọ / Hàm mặt', true, 1, NULL),
 ('INJ_01_03', 'Vết thương phần mềm vùng đầu, mặt', true, 1, NULL);
-
-
--- --- Nhóm 2: Chấn thương hệ xương khớp và chi ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(2, 'INJ_02', 'Chấn thương hệ xương khớp và cơ chi', true, NULL, NULL);
 
 INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
 ('INJ_02_01', 'Gãy xương chi trên (Xương đòn, cánh tay, cẳng tay, bàn tay)', true, 2, NULL),
@@ -39,39 +55,19 @@ INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt")
 ('INJ_02_03', 'Trật khớp / Giập nát chi', true, 2, NULL),
 ('INJ_02_04', 'Đứt lìa chi (Ngón tay, bàn tay, ngón chân, bàn chân)', true, 2, NULL);
 
-
--- --- Nhóm 3: Chấn thương ngực, bụng và cột sống ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(3, 'INJ_03', 'Chấn thương ngực, bụng và cột sống', true, NULL, NULL);
-
 INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
 ('INJ_03_01', 'Chấn thương ngực kín (Gãy xương sườn, giập phổi, tràn máu màng phổi)', true, 3, NULL),
 ('INJ_03_02', 'Chấn thương bụng kín (Vỡ gan, vỡ lách, thủng tạng rỗng)', true, 3, NULL),
 ('INJ_03_03', 'Chấn thương cột sống, tủy sống', true, 3, NULL);
-
-
--- --- Nhóm 4: Bỏng và tổn thương bề mặt ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(4, 'INJ_04', 'Bỏng và tổn thương bề mặt da', true, NULL, NULL);
 
 INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
 ('INJ_04_01', 'Bỏng nhiệt độ (Do lửa, chất lỏng sôi, kim loại nóng)', true, 4, NULL),
 ('INJ_04_02', 'Bỏng hóa chất (Axit, kiềm công nghiệp)', true, 4, NULL),
 ('INJ_04_03', 'Bỏng điện (Hồ quang điện, dòng điện đi qua cơ thể)', true, 4, NULL);
 
-
--- --- Nhóm 5: Ngộ độc và ngạt khí độc ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(5, 'INJ_05', 'Nhiễm độc và ngạt khí cấp tính', true, NULL, NULL);
-
 INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
 ('INJ_05_01', 'Ngạt khí cấp tính trong không gian kín (Thiếu Oxy, khí CO, H2S)', true, 5, NULL),
 ('INJ_05_02', 'Nhiễm độc hóa chất, dung môi công nghiệp qua da/đường hô hấp', true, 5, NULL);
-
-
--- --- Nhóm 6: Tổn thương các giác quan độc lập ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(6, 'INJ_06', 'Tổn thương cơ quan thị giác và thính giác', true, NULL, NULL);
 
 INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
 ('INJ_06_01', 'Tổn thương mắt (Dị vật đâm thủng, hóa chất bắn vào mắt, mù lòa)', true, 6, NULL),

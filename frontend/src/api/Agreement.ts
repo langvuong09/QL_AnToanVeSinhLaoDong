@@ -1,4 +1,12 @@
 import { Base } from "./Base";
+import { AgreementBusiness, AgreementTable } from "./types/agreement";
+
+type IAgreemnent = {
+    count: number;
+    items: AgreementBusiness[];
+    pageNumber: number;
+    pageSize: number;
+}
 
 export class Agreement extends Base {
     constructor() {
@@ -9,13 +17,30 @@ export class Agreement extends Base {
         });
     }
 
-    async GetAll(query: {}) {
-        const result = await this.execute({
+    async GetAll(query: {}): Promise<IAgreemnent> {
+        const result = await this.execute<IAgreemnent>({
             url: "/my-reports",
             method: "GET",
             params: query
         });
 
-        console.log(result);
+        if (result.success && result.data) {
+            return result.data
+        }
+
+        throw Error("Lỗi khi lấy dữ liệu");
+    }
+
+    async GetFeTableById(id: string): Promise<AgreementTable> {
+        const result = await this.execute<AgreementTable>({
+            url: `${id}/fe-table`,
+            method: "GET"
+        });
+
+        if (result.success && result.data) {
+            return result.data;
+        }
+
+        throw Error("Lỗi khi lấy dữ liệu");
     }
 }
