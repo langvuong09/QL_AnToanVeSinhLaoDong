@@ -93,9 +93,9 @@ const TNLDTheoHDLDPage = () => {
                                     </button>
                                 )}
                             </div>
-                            <div className="flex-3">{i.business.name}</div>
-                            <div className="flex-1">{i.business.taxCode}</div>
-                            <div className="flex-1">{i.period}</div>
+                            <div className="flex-3">{i.doet.name}</div>
+                            <div className="flex-1">{i.doet.taxCode}</div>
+                            <div className="flex-1">{i.reportType.period}</div>
                             <div className="flex-1">
                                 {i.status === "DRAFT" ? (
                                     <div className="text-[#637381] flex items-center gap-1 text-sm font-semibold">
