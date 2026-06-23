@@ -37,6 +37,7 @@ export class Report {
   // =========================================================
   @Column({ type: "int", nullable: true }) totalEmployees?: number;
   @Column({ type: "int", nullable: true }) femaleEmployees?: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) totalPayroll?: number; // Tương ứng với tongQuyLuong
 
   // =========================================================
   // MỤC 1: TÌNH HÌNH TAI NẠN LAO ĐỘNG (Tổng số liệu chung Tab 1)
@@ -59,6 +60,9 @@ export class Report {
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m1PropertyDamage?: number;
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m1TotalCost?: number;
 
+  @Column({ type: "int", nullable: true }) m1TotalLeaveDays?: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m1TotalDamage?: number;
+
   // =========================================================
   // MỤC 2: TNLĐ ĐƯỢC HƯỞNG TRỢ CẤP (Khoản 2 Điều 39)
   // =========================================================
@@ -79,6 +83,9 @@ export class Report {
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2SalaryCompensation?: number;
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2PropertyDamage?: number;
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2TotalCost?: number;
+
+  @Column({ type: "int", nullable: true }) m2TotalLeaveDays?: number;
+ @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2TotalDamage?: number;
 
   // =========================================================
   // QUAN HỆ & FILE ĐÍNH KÈM
