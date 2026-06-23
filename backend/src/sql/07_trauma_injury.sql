@@ -21,58 +21,70 @@ INSERT INTO "traumas" ("id", "code", "name", "isActive", "deletedAt") VALUES
 
 -- --- Nhóm 1: Chấn thương sọ não và hàm mặt ---
 INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(1, 'INJ_01', 'Chấn thương sọ não và hàm mặt', true, NULL, NULL);
-
--- --- Nhóm 2: Chấn thương hệ xương khớp và chi ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(2, 'INJ_02', 'Chấn thương hệ xương khớp và cơ chi', true, NULL, NULL);
-
--- --- Nhóm 3: Chấn thương ngực, bụng và cột sống ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(3, 'INJ_03', 'Chấn thương ngực, bụng và cột sống', true, NULL, NULL);
-
--- --- Nhóm 4: Bỏng và tổn thương bề mặt ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(4, 'INJ_04', 'Bỏng và tổn thương bề mặt da', true, NULL, NULL);
-
--- --- Nhóm 5: Ngộ độc và ngạt khí độc ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(5, 'INJ_05', 'Nhiễm độc và ngạt khí cấp tính', true, NULL, NULL);
-
--- --- Nhóm 6: Tổn thương các giác quan độc lập ---
-INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
-(6, 'INJ_06', 'Tổn thương cơ quan thị giác và thính giác', true, NULL, NULL);
-
--- //////
-INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
-('INJ_01_01', 'Chấn thương sọ não kín (Chấn động não, giập não)', true, 1, NULL),
-('INJ_01_02', 'Vỡ xương sọ / Hàm mặt', true, 1, NULL),
-('INJ_01_03', 'Vết thương phần mềm vùng đầu, mặt', true, 1, NULL);
-
-INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
-('INJ_02_01', 'Gãy xương chi trên (Xương đòn, cánh tay, cẳng tay, bàn tay)', true, 2, NULL),
-('INJ_02_02', 'Gãy xương chi dưới (Xương đùi, cẳng chân, cổ chân, bàn chân)', true, 2, NULL),
-('INJ_02_03', 'Trật khớp / Giập nát chi', true, 2, NULL),
-('INJ_02_04', 'Đứt lìa chi (Ngón tay, bàn tay, ngón chân, bàn chân)', true, 2, NULL);
-
-INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
-('INJ_03_01', 'Chấn thương ngực kín (Gãy xương sườn, giập phổi, tràn máu màng phổi)', true, 3, NULL),
-('INJ_03_02', 'Chấn thương bụng kín (Vỡ gan, vỡ lách, thủng tạng rỗng)', true, 3, NULL),
-('INJ_03_03', 'Chấn thương cột sống, tủy sống', true, 3, NULL);
-
-INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
-('INJ_04_01', 'Bỏng nhiệt độ (Do lửa, chất lỏng sôi, kim loại nóng)', true, 4, NULL),
-('INJ_04_02', 'Bỏng hóa chất (Axit, kiềm công nghiệp)', true, 4, NULL),
-('INJ_04_03', 'Bỏng điện (Hồ quang điện, dòng điện đi qua cơ thể)', true, 4, NULL);
-
-INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
-('INJ_05_01', 'Ngạt khí cấp tính trong không gian kín (Thiếu Oxy, khí CO, H2S)', true, 5, NULL),
-('INJ_05_02', 'Nhiễm độc hóa chất, dung môi công nghiệp qua da/đường hô hấp', true, 5, NULL);
-
-INSERT INTO "injury_types" ("code", "name", "isActive", "parentId", "deletedAt") VALUES
-('INJ_06_01', 'Tổn thương mắt (Dị vật đâm thủng, hóa chất bắn vào mắt, mù lòa)', true, 6, NULL),
-('INJ_06_02', 'Điếc nghề nghiệp / Chấn thương áp lực tai (Thủng màng nhĩ do tiếng nổ)', true, 6, NULL);
+(1, 'INJ_01', 'Nhà lãnh đạo cơ quan Đảng Cộng Sản Việt Nam cấp Trung ương', true, NULL, NULL);
+(2, 'INJ_02', 'Công nhân', true, NULL, NULL);
+(3, 'INJ_03', 'Nhà lãnh đạo cơ quan nhà nước cấp tỉnh, huyện, xã', true, NULL, NULL),
+(4, 'INJ_04', 'Nhà lãnh đạo doanh nghiệp, hợp tác xã', true, NULL, NULL),
+(5, 'INJ_05', 'Kỹ sư cơ khí, chế tạo máy', true, NULL, NULL),
+(6, 'INJ_06', 'Kỹ sư xây dựng', true, NULL, NULL),
+(7, 'INJ_07', 'Kỹ sư điện, điện tử', true, NULL, NULL),
+(8, 'INJ_08', 'Kỹ sư hóa chất', true, NULL, NULL),
+(9, 'INJ_09', 'Kỹ sư khai thác mỏ, luyện kim', true, NULL, NULL),
+(10, 'INJ_10', 'Bác sĩ', true, NULL, NULL),
+(11, 'INJ_11', 'Điều dưỡng viên', true, NULL, NULL),
+(12, 'INJ_12', 'Giáo viên, giảng viên', true, NULL, NULL);
 
 
--- Cập nhật lại chuỗi SEQUENCE của PostgreSQL để tránh lỗi trùng ID khi chèn dữ liệu tự động sau này
-SELECT setval(pg_get_serial_sequence('"injury_types"', 'id'), coalesce(max("id"), 1)) FROM "injury_types";
+-- -- --- Nhóm 2: Chấn thương hệ xương khớp và chi ---
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (2, 'INJ_02', 'Chấn thương hệ xương khớp và cơ chi', true, NULL, NULL);
+
+-- -- --- Nhóm 3: Chấn thương ngực, bụng và cột sống ---
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (3, 'INJ_03', 'Chấn thương ngực, bụng và cột sống', true, NULL, NULL);
+
+-- -- --- Nhóm 4: Bỏng và tổn thương bề mặt ---
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (4, 'INJ_04', 'Bỏng và tổn thương bề mặt da', true, NULL, NULL);
+
+-- -- --- Nhóm 5: Ngộ độc và ngạt khí độc ---
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (5, 'INJ_05', 'Nhiễm độc và ngạt khí cấp tính', true, NULL, NULL);
+
+-- -- --- Nhóm 6: Tổn thương các giác quan độc lập ---
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (6, 'INJ_06', 'Tổn thương cơ quan thị giác và thính giác', true, NULL, NULL);
+
+-- -- 
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (7, 'INJ_01_01', 'Chấn thương sọ não kín (Chấn động não, giập não)', true, 1, NULL),
+-- (8, 'INJ_01_02', 'Vỡ xương sọ / Hàm mặt', true, 1, NULL),
+-- (9, 'INJ_01_03', 'Vết thương phần mềm vùng đầu, mặt', true, 1, NULL);
+
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (10, 'INJ_02_01', 'Gãy xương chi trên (Xương đòn, cánh tay, cẳng tay, bàn tay)', true, 2, NULL),
+-- (11, 'INJ_02_02', 'Gãy xương chi dưới (Xương đùi, cẳng chân, cổ chân, bàn chân)', true, 2, NULL),
+-- (12, 'INJ_02_03', 'Trật khớp / Giập nát chi', true, 2, NULL),
+-- (13, 'INJ_02_04', 'Đứt lìa chi (Ngón tay, bàn tay, ngón chân, bàn chân)', true, 2, NULL);
+
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (14, 'INJ_03_01', 'Chấn thương ngực kín (Gãy xương sườn, giập phổi, tràn máu màng phổi)', true, 3, NULL),
+-- (15, 'INJ_03_02', 'Chấn thương bụng kín (Vỡ gan, vỡ lách, thủng tạng rỗng)', true, 3, NULL),
+-- (16, 'INJ_03_03', 'Chấn thương cột sống, tủy sống', true, 3, NULL);
+
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (17, 'INJ_04_01', 'Bỏng nhiệt độ (Do lửa, chất lỏng sôi, kim loại nóng)', true, 4, NULL),
+-- (18, 'INJ_04_02', 'Bỏng hóa chất (Axit, kiềm công nghiệp)', true, 4, NULL),
+-- (19, 'INJ_04_03', 'Bỏng điện (Hồ quang điện, dòng điện đi qua cơ thể)', true, 4, NULL);
+
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (20, 'INJ_05_01', 'Ngạt khí cấp tính trong không gian kín (Thiếu Oxy, khí CO, H2S)', true, 5, NULL),
+-- (21, 'INJ_05_02', 'Nhiễm độc hóa chất, dung môi công nghiệp qua da/đường hô hấp', true, 5, NULL);
+
+-- INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
+-- (22, 'INJ_06_01', 'Tổn thương mắt (Dị vật đâm thủng, hóa chất bắn vào mắt, mù lòa)', true, 6, NULL),
+-- (23, 'INJ_06_02', 'Điếc nghề nghiệp / Chấn thương áp lực tai (Thủng màng nhĩ do tiếng nổ)', true, 6, NULL);
+
+
+-- -- Cập nhật lại chuỗi SEQUENCE của PostgreSQL để tránh lỗi trùng ID khi chèn dữ liệu tự động sau này
+-- SELECT setval(pg_get_serial_sequence('"injury_types"', 'id'), coalesce(max("id"), 1)) FROM "injury_types";

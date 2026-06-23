@@ -1,107 +1,83 @@
 export type SubmitForm = {
+    title: string;
+    year: number;
+    reportTypeId: number;
+
     totalEmployees: number;
     femaleEmployees: number;
+    totalPayroll: number;
 
+    // Muc 1
+    // Muc 1.1
     m1TotalCases: number;
     m1FatalCases: number;
     m1MultiVictimCases: number;
-    // 
+
     m1TotalVictims: number;
     m1FemaleVictims: number;
     m1FatalVictims: number;
     m1SevereInjuries: number;
-    //
+
     m1NonManagedVictims: number;
     m1NonManagedFemaleVictims: number;
     m1NonManagedFatalVictims: number;
     m1NonManagedSevereInjuries: number;
 
+    // Muc 1.2
     m1MedicalCost: number;
     m1SalaryCompensation: number;
-
     m1PropertyDamage: number;
-}
+    m1TotalCost: number;
 
-type A = {
-    // Thong tin doanh nghiep
-    tongSoLDCoSo: number;
-    tongSoLDNu: number;
-    tongQuyLuong: number;
+    m1TotalLeaveDays: number;
+    m1TotalDamage: number;
 
-    // 1. Khai bao tai nan lao dong
-    m1tongSoVu: number;
-    m1tongSoNguoiChet: number;
-    m1tongSopVuCo2NguoiTroLen: number;
+    details: {
+        "cause": string;
+        "traumaId": number;
+        "injuryTypeId": number;
 
-    m1tongSoNguoiBiNan: number;
-    m1tongSoLDNuBiNan: number;
-    m1tongSoNguoiChet: number;
-    m1tongSoNguoiBiThuongNang: number;
+        "totalCases": number;
+        "fatalCases": number;
+        "multiVictimCases": number;
+        "totalVictims": number;
+        "femaleVictims": number;
+        "fatalVictims": number;
+        "severeInjuries": number;
+        "nonManagedVictims": number;
+        "nonManagedFemaleVictims": number;
+        "nonManagedFatalVictims": number;
+        "nonManagedSevereInjuries": number;
+        "medicalCost": number;
+        "salaryCompensation": number;
+        "propertyDamage": number;
+        "totalCost": number;
+        "totalLeaveDays": number;
+        "totalDamage": number;
+    }[],
 
-    m1tongSoNguoiBiNanKhongQL: number;
-    m1tongLDNuBiNanKhongQL: number;
-    m1tongSoNguoiChetKhongQL: number;
-    m1tongSoNguoiBiThuongNangKhongQL: number;
+    // Muc 2
+    // Muc 2.1
+    m2TotalCases: number;
+    m2FatalCases: number;
+    m2MultiVictimCases: number;
 
-    m1chiPhiYTe: number;
-    m1chiPhiTraLuongTrongTGDieuTri: number;
-    m1chiPhiBoiThuongTroCap: number;
-    m1tongChiPhi: number;
+    m2TotalVictims: number;
+    m2FemaleVictims: number;
+    m2FatalVictims: number;
+    m2SevereInjuries: number;
 
-    m1tongSoNgayNghiViTNLD: number;
-    m1tongThietHai: number;
+    m2NonManagedVictims: number;
+    m2NonManagedFemaleVictims: number;
+    m2NonManagedFatalVictims: number;
+    m2NonManagedSevereInjuries: number;
 
-    // Chi tiet tai nan lao dong
-    detail: {
-        tongSoVu: number // Disable vi chac chan no la 1
-        tongSoVuCoNguoiChet: number // Disable vi chac chan no la 1 hoac 0
-        tongSopVuCo2NguoiTroLen: number; // Disable vi chac chan no la 1 hoac 0
+    // Muc 2.2
+    m2MedicalCost: number;
+    m2SalaryCompensation: number;
+    m2PropertyDamage: number;
+    m2TotalCost: number;
 
-        tongSoNguoiBiNan: number;
-        tongSoLDNuBiNan: number;
-        tongSoNguoiChet: number;
-        tongSoNguoiBiThuongNang: number;
-
-        tongSoNguoiBiNanKhongQL: number;
-        tongLDNuBiNanKhongQL: number;
-        tongSoNguoiChetKhongQL: number;
-        tongSoNguoiBiThuongNangKhongQL: number;
-
-        chiPhiYTe: number;
-        chiPhiTraLuongTrongTGDieuTri: number;
-        chiPhiBoiThuongTroCap: number;
-        tongChiPhi: number;
-
-        tongSoNgayNghiViTNLD: number;
-        tongThietHai: number;
-
-    }[];
-
-    // 2. Tai nan lao dong duoc huong tro cap
-    m2tongSoVu: number;
-    m2tongSoNguoiChet: number;
-    m2tongSopVuCo2NguoiTroLen: number;
-
-    m2tongSoNguoiBiNan: number;
-    m2tongSoLDNuBiNan: number;
-    m2tongSoNguoiChet: number;
-    m2tongSoNguoiBiThuongNang: number;
-
-    m2tongSoNguoiBiNanKhongQL: number;
-    m2tongLDNuBiNanKhongQL: number;
-    m2tongSoNguoiChetKhongQL: number;
-    m2tongSoNguoiBiThuongNangKhongQL: number;
-
-    m2chiPhiYTe: number;
-    m2chiPhiTraLuongTrongTGDieuTri: number;
-    m2chiPhiBoiThuongTroCap: number;
-    m2tongChiPhi: number;
-
-    m2chiPhiYTe: number;
-    m2chiPhiTraLuongTrongTGDieuTri: number;
-    m2chiPhiBoiThuongTroCap: number;
-    m2tongChiPhi: number;
-
-    m2tongSoNgayNghiViTNLD: number;
-    m2tongThietHai: number;
+    m2TotalLeaveDays: number;
+    m2TotalDamage: number;
 }

@@ -15,7 +15,7 @@ INSERT INTO views (id, name, url, icon, "parentId", "order") VALUES
 
 -- Children
 (9,  'Danh mục chung',               '/categories',              'fa-solid fa-circle',          2, 1),
-(10, 'TNLĐ theo HĐLĐ',               '/tnld-theo-thdld',         'fa-solid fa-circle',          2, 2),
+(10, 'TNLĐ theo HĐLĐ',               '/tnld-theo-hdld',         'fa-solid fa-circle',          2, 2),
 
 (11, 'Thông tin doanh nghiệp',       '/business-info',           'fa-solid fa-circle',          3, 1)
 

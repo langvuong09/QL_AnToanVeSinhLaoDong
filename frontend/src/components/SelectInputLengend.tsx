@@ -15,9 +15,10 @@ type SelectInputProps = {
   freeInput?: boolean; 
   onChange: (item: Item) => void;
   onSearch?: (search: string) => void;
+  isSmall?: boolean;
 }
 
-const SelectInputLengend = ({ inputLengend, items = [], value, freeInput = false, onChange, onSearch }: SelectInputProps) => {
+const SelectInputLengend = ({ inputLengend, items = [], value, freeInput = false, onChange, onSearch, isSmall }: SelectInputProps) => {
   const [search, setSearch] = useState(value || "");
   const [showDropdown, setShowDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,6 +77,7 @@ const SelectInputLengend = ({ inputLengend, items = [], value, freeInput = false
           onChange: handleChange,
           onFocus: () => setShowDropdown(true),
         }}
+        isSmall={isSmall}
       />
 
       {showDropdown && filteredItems.length > 0 && (
