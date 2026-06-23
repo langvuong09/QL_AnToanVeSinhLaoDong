@@ -1,68 +1,67 @@
 import { IsNotEmpty, IsString, IsInt, IsArray, IsOptional, ValidateNested, IsNumber, Min, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AccidentCauseEnum } from '../../../commons/enums/accident.enum';
-import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ReportDetailDto {
-  @ApiProperty({ description: 'Nguyên nhân tai nạn', enum: AccidentCauseEnum, enumName: 'AccidentCauseEnum' })
+  @ApiPropertyOptional({ description: 'Nguyên nhân tai nạn', enum: AccidentCauseEnum, enumName: 'AccidentCauseEnum' })
   @IsOptional() @IsEnum(AccidentCauseEnum) cause?: AccidentCauseEnum;
 
-  @ApiProperty({ description: 'ID Yếu tố chấn thương', example: 1, required: false })
+  @ApiPropertyOptional({ description: 'ID Yếu tố chấn thương', example: 1 })
   @IsOptional() @IsInt() traumaId?: number;
 
-  @ApiProperty({ description: 'ID Loại thương tích', example: 1, required: false })
+  @ApiPropertyOptional({ description: 'ID Loại thương tích', example: 1 })
   @IsOptional() @IsInt() injuryTypeId?: number;
 
-  @ApiProperty({ description: 'Tổng số vụ', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Tổng số vụ', example: 0 })
   @IsOptional() @IsInt() @Min(0) totalCases?: number;
 
-  @ApiProperty({ description: 'Số vụ chết người', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Số vụ chết người', example: 0 })
   @IsOptional() @IsInt() @Min(0) fatalCases?: number;
 
-  @ApiProperty({ description: 'Số vụ có nhiều nạn nhân', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Số vụ có nhiều nạn nhân', example: 0 })
   @IsOptional() @IsInt() @Min(0) multiVictimCases?: number;
 
-  @ApiProperty({ description: 'Tổng số nạn nhân', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Tổng số nạn nhân', example: 0 })
   @IsOptional() @IsInt() @Min(0) totalVictims?: number;
 
-  @ApiProperty({ description: 'Số nạn nhân nữ', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Số nạn nhân nữ', example: 0 })
   @IsOptional() @IsInt() @Min(0) femaleVictims?: number;
 
-  @ApiProperty({ description: 'Số nạn nhân chết người', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Số nạn nhân chết người', example: 0 })
   @IsOptional() @IsInt() @Min(0) fatalVictims?: number;
 
-  @ApiProperty({ description: 'Số ca thương tích nặng', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Số ca thương tích nặng', example: 0 })
   @IsOptional() @IsInt() @Min(0) severeInjuries?: number;
 
-  @ApiProperty({ description: 'Nạn nhân ngoài quản lý', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Nạn nhân ngoài quản lý', example: 0 })
   @IsOptional() @IsInt() @Min(0) nonManagedVictims?: number;
 
-  @ApiProperty({ description: 'Nạn nhân nữ ngoài quản lý', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Nạn nhân nữ ngoài quản lý', example: 0 })
   @IsOptional() @IsInt() @Min(0) nonManagedFemaleVictims?: number;
 
-  @ApiProperty({ description: 'Nạn nhân tử vong ngoài quản lý', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Nạn nhân tử vong ngoài quản lý', example: 0 })
   @IsOptional() @IsInt() @Min(0) nonManagedFatalVictims?: number;
 
-  @ApiProperty({ description: 'Thương tích nặng ngoài quản lý', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Thương tích nặng ngoài quản lý', example: 0 })
   @IsOptional() @IsInt() @Min(0) nonManagedSevereInjuries?: number;
 
-  @ApiProperty({ description: 'Chi phí y tế', example: 0.0, required: false })
+  @ApiPropertyOptional({ description: 'Chi phí y tế', example: 0.0 })
   @IsOptional() @IsNumber() @Min(0) medicalCost?: number;
 
-  @ApiProperty({ description: 'Bồi thường lương', example: 0.0, required: false })
+  @ApiPropertyOptional({ description: 'Bồi thường lương', example: 0.0 })
   @IsOptional() @IsNumber() @Min(0) salaryCompensation?: number;
 
-  @ApiProperty({ description: 'Thiệt hại tài sản', example: 0.0, required: false })
+  @ApiPropertyOptional({ description: 'Thiệt hại tài sản', example: 0.0 })
   @IsOptional() @IsNumber() @Min(0) propertyDamage?: number;
 
-  @ApiProperty({ description: 'Tổng chi phí', example: 0.0, required: false })
+  @ApiPropertyOptional({ description: 'Tổng chi phí', example: 0.0 })
   @IsOptional() @IsNumber() @Min(0) totalCost?: number;
 
-  @ApiProperty({ description: 'Tổng số ngày nghỉ vì TNLĐ', example: 0, required: false })
+  @ApiPropertyOptional({ description: 'Tổng số ngày nghỉ vì TNLĐ', example: 0 })
   @IsOptional() @IsInt() @Min(0) totalLeaveDays?: number;
 
-  @ApiProperty({ description: 'Tổng thiệt hại', example: 0.0, required: false })
+  @ApiPropertyOptional({ description: 'Tổng thiệt hại', example: 0.0 })
   @IsOptional() @IsNumber() @Min(0) totalDamage?: number;
 }
 
@@ -86,22 +85,57 @@ export class CreateReportDto {
   @ApiPropertyOptional({ example: 1000000000, description: 'Tổng quỹ lương' })
   @IsOptional() @IsNumber() @Min(0) totalPayroll?: number;
 
-  // === MỤC 1 & 2 (Bổ sung thêm các trường thiếu) ===
-  // Lưu ý: Áp dụng logic tương tự cho các trường m1TotalLeaveDays, m1TotalDamage, m2TotalLeaveDays, m2TotalDamage
-  @ApiPropertyOptional({ example: 0, description: 'M1: Tổng số ngày nghỉ vì TNLĐ' })
-  @IsOptional() @IsInt() @Min(0) m1TotalLeaveDays?: number;
+  // =========================================================
+  // MỤC 1: TÌNH HÌNH TAI NẠN LAO ĐỘNG (Tổng số liệu chung Tab 1)
+  // =========================================================
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1TotalCases?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1FatalCases?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1MultiVictimCases?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1TotalVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1FemaleVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1FatalVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1SevereInjuries?: number;
 
-  @ApiPropertyOptional({ example: 0, description: 'M1: Tổng thiệt hại' })
-  @IsOptional() @IsNumber() @Min(0) m1TotalDamage?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1NonManagedVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1NonManagedFemaleVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1NonManagedFatalVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1NonManagedSevereInjuries?: number;
 
-  @ApiPropertyOptional({ example: 0, description: 'M2: Tổng số ngày nghỉ vì TNLĐ' })
-  @IsOptional() @IsInt() @Min(0) m2TotalLeaveDays?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m1MedicalCost?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m1SalaryCompensation?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m1PropertyDamage?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m1TotalCost?: number;
 
-  @ApiPropertyOptional({ example: 0, description: 'M2: Tổng thiệt hại' })
-  @IsOptional() @IsNumber() @Min(0) m2TotalDamage?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m1TotalLeaveDays?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m1TotalDamage?: number;
 
-  // ... (giữ nguyên các field cũ m1TotalCases, m1FatalCases, v.v...)
+  // =========================================================
+  // MỤC 2: TNLĐ ĐƯỢC HƯỞNG TRỢ CẤP (Khoản 2 Điều 39)
+  // =========================================================
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2TotalCases?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2FatalCases?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2MultiVictimCases?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2TotalVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2FemaleVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2FatalVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2SevereInjuries?: number;
 
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2NonManagedVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2NonManagedFemaleVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2NonManagedFatalVictims?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2NonManagedSevereInjuries?: number;
+
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m2MedicalCost?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m2SalaryCompensation?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m2PropertyDamage?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m2TotalCost?: number;
+
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsInt() @Min(0) m2TotalLeaveDays?: number;
+  @ApiPropertyOptional({ example: 0 }) @IsOptional() @IsNumber() @Min(0) m2TotalDamage?: number;
+
+  // =========================================================
+  // QUAN HỆ & FILE ĐÍNH KÈM
+  // =========================================================
   @ApiPropertyOptional({ type: [ReportDetailDto], description: 'Danh sách các vụ tai nạn lẻ' })
   @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => ReportDetailDto)
   details?: ReportDetailDto[];
