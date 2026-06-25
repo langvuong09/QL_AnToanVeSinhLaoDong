@@ -13,6 +13,7 @@ import Loading from "@/src/components/Loading";
 import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import Button from "@/src/components/ui/Button";
+import { AuthenticateContext } from "@/src/contexts/authenticate/authenticate";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { OpenAdress, Province, Ward } from "@/src/services/open-address";
 import { useParams } from "next/navigation";
@@ -28,6 +29,7 @@ const AccountIdPage = () => {
     }
 
     const notificate = useContext(NotificateContext);
+    const authenticate = useContext(AuthenticateContext);
 
     const [loading, setLoading] = useState<boolean>(false);
     const [currentUser, setCurrentUser] = useState<UserDetail | null>(null);
@@ -197,6 +199,11 @@ const AccountIdPage = () => {
             hasError = true;
         }
 
+        if (!submitForm?.position?.trim()) {
+            newErrors.position = "Chức danh không được để trống";
+            hasError = true;
+        }
+
         if (!submitForm?.dateOfBirth) {
             newErrors.dateOfBirth = "Ngày sinh không được để trống";
             hasError = true;
@@ -262,6 +269,9 @@ const AccountIdPage = () => {
             const ucls = new User();
             const result = await ucls.UpdateSelfProfile(id as string, submitForm);
             if (result.success) {
+                if (authenticate?.refreshAuth) {
+                    await authenticate.refreshAuth();
+                }
                 notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
             } else {
                 notificate?.showNotification({ type: "error", message: "Dữ liệu đã có trên hệ thống" });
@@ -460,6 +470,7 @@ const AccountIdPage = () => {
                                     label="Ngày tháng năm sinh"
                                     require={true}
                                     value={submitForm.dateOfBirth}
+                                    maxDate="today"
                                     onChange={(val) => {
                                         setSubmitForm((prev) => ({ ...prev, dateOfBirth: val }));
                                         setErrorForm((prev) => ({ ...prev, dateOfBirth: "" }));
@@ -470,14 +481,17 @@ const AccountIdPage = () => {
 
                                 <InputLegend
                                     label="Chức danh"
+                                    require={true}
                                     input={{
                                         type: "text",
                                         placeholder: "Nhập chức danh",
                                         value: submitForm.position,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
+                                            setErrorForm((prev) => ({ ...prev, position: "" }));
                                         },
                                     }}
+                                    errorMess={errorForm.position}
                                 />
 
                             </div>

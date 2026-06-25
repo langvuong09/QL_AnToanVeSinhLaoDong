@@ -106,6 +106,11 @@ const InformationPage = () => {
 
         }
 
+        if (!submitForm?.position?.trim()) {
+            newErrors.position = "Chức danh không được để trống";
+            hasError = true;
+        }
+
         if (!submitForm?.dateOfBirth) {
             newErrors.dateOfBirth = "Ngày sinh không được để trống";
             hasError = true;
@@ -162,6 +167,9 @@ const InformationPage = () => {
 
             const ucls = new User();
             await ucls.UpdateSelfProfile(currentUser?.id!, submitForm);
+            if (authenticate?.refreshAuth) {
+                await authenticate.refreshAuth();
+            }
             setLoading(false);
             notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
 
@@ -301,11 +309,27 @@ const InformationPage = () => {
 
             if (result.avatar) {
                 setImagePreview(result.avatar.url);
+            } else {
+                setImagePreview("");
             }
 
             setLoading(false);
         }
     }
+
+    const handleCancel = () => {
+        setFileAvater(null);
+        setErrorForm({
+            fullName: "",
+            dateOfBirth: "",
+            gender: "",
+            position: "",
+            province: "",
+            ward: "",
+            address: "",
+        });
+        fetchUserDetail();
+    };
 
     useEffect(() => {
         if (!authenticate?.isFetch && authenticate?.state) {
@@ -336,9 +360,12 @@ const InformationPage = () => {
                         notificate?.showNotification({ type: "success", message: "Đã gửi thành công email vui lòng điền OTP" });
                         on
                     }}
-                    onSuccess={(v) => {
+                    onSuccess={async (v) => {
                         setCurrentUser(prev => prev ? { ...prev, email: v } : prev);
                         setIsChangeEmail(false);
+                        if (authenticate?.refreshAuth) {
+                            await authenticate.refreshAuth();
+                        }
                     }}
                 />
             )}
@@ -347,7 +374,7 @@ const InformationPage = () => {
                 lable="Chi tiết người dùng"
                 component={
                     <div className="flex gap-5 rounded">
-                        <Button variant="outline" className="flex gap-3 items-center text-sm font-semibold">
+                        <Button variant="outline" className="flex gap-3 items-center text-sm font-semibold" onClick={handleCancel}>
                             <span>Hủy bỏ</span>
                         </Button>
                         <Button variant="primary" className="flex gap-3 items-center text-sm font-semibold" onClick={onSubmit}>
@@ -408,6 +435,7 @@ const InformationPage = () => {
                                     label="Ngày tháng năm sinh"
                                     require={true}
                                     value={submitForm.dateOfBirth}
+                                    maxDate="today"
                                     onChange={(val) => {
                                         setSubmitForm((prev) => ({ ...prev, dateOfBirth: val }));
                                         setErrorForm((prev) => ({ ...prev, dateOfBirth: "" }));
@@ -418,19 +446,22 @@ const InformationPage = () => {
 
                                 <InputLegend
                                     label="Chức danh"
+                                    require={true}
                                     input={{
                                         type: "text",
                                         placeholder: "Nhập chức danh",
                                         value: submitForm.position,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
+                                            setErrorForm((prev) => ({ ...prev, position: "" }));
                                         },
                                     }}
+                                    errorMess={errorForm.position}
                                 />
                             </div>
                             <div className="flex-1 flex flex-col gap-5">
                                 <InputLegend
-                                    label="Họ và tên (*)"
+                                    label="Họ và tên"
                                     require={true}
                                     input={{
                                         type: "text",
