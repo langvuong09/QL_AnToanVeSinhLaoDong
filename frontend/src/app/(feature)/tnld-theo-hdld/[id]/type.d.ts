@@ -33,7 +33,9 @@ export type SubmitForm = {
     m1TotalDamage: number;
 
     details: {
-        "cause": string;
+        "cause": {
+            
+        }
         "traumaId": number;
         "injuryTypeId": number;
 
