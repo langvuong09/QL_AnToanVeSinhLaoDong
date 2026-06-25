@@ -282,18 +282,17 @@ export class DoetService {
     if (!doet || doet.deletedAt) {
       throw new NotFoundException('Không tìm thấy thông tin doanh nghiệp này');
     }
+    console.log('Current status:', doet.status, 'Requested status:', status);
 
-    if (doet.status === status) {
-      return Response.SUCCESSFULLY;
-    }
+    console.log('Current status:', doet.status);
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      doet.status = status;
-      await queryRunner.manager.save(Doet, doet);
+
+      await queryRunner.manager.update(User, { doetId: id }, { status: status });
 
       const associatedUser = await queryRunner.manager.findOne(User, {
         where: { doetId: id }
