@@ -267,8 +267,91 @@ export default function BusinessInfoPage() {
   }, [authenticate?.isFetch, fetchEnterpriseData])
 
   const handleChange = (field: keyof EnterpriseFormData, value: string | number | ElementAddress) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-    setErrors((prev) => ({ ...prev, [field]: '' }))
+    setForm((prev) => {
+      const newForm = { ...prev, [field]: value }
+      setErrors((prevErrors) => {
+        const nextErrors = { ...prevErrors }
+
+        const checkEmpty = (f: keyof EnterpriseFormData, message: string) => {
+          const val = newForm[f]
+          if (typeof val === 'string' ? !val.trim() : !val) {
+            nextErrors[f] = message
+          } else {
+            nextErrors[f] = ''
+          }
+        }
+
+        if (field === 'companyName') {
+          const valStr = String(value).trim()
+          if (!valStr) {
+            nextErrors.companyName = 'Tên doanh nghiệp là bắt buộc'
+          } else if (valStr.length > 255) {
+            nextErrors.companyName = 'Tên doanh nghiệp không được vượt quá 255 ký tự'
+          } else {
+            nextErrors.companyName = ''
+          }
+        } else if (field === 'businessTypeId' || field === 'businessType') {
+          const hasVal = typeof newForm.businessTypeId === 'number' ? true : !!newForm.businessTypeId
+          if (hasVal) {
+            nextErrors.businessTypeId = ''
+            nextErrors.businessType = ''
+          } else {
+            nextErrors.businessTypeId = 'Loại hình kinh doanh là bắt buộc'
+            nextErrors.businessType = 'Loại hình kinh doanh là bắt buộc'
+          }
+        } else if (field === 'industryId' || field === 'industry') {
+          const hasVal = typeof newForm.industryId === 'number' ? true : !!newForm.industryId
+          if (hasVal) {
+            nextErrors.industryId = ''
+            nextErrors.industry = ''
+          } else {
+            nextErrors.industryId = 'Ngành nghề kinh doanh cấp 4 là bắt buộc'
+            nextErrors.industry = 'Ngành nghề kinh doanh cấp 4 là bắt buộc'
+          }
+        } else if (field === 'gpkdDate') {
+          const valStr = String(value).trim()
+          if (!valStr) {
+            nextErrors.gpkdDate = 'Ngày cấp GPKD là bắt buộc'
+          } else if (isFutureDate(valStr)) {
+            nextErrors.gpkdDate = 'Ngày cấp GPKD không được lớn hơn ngày hiện tại'
+          } else {
+            nextErrors.gpkdDate = ''
+          }
+        } else if (field === 'gpkdProvince') {
+          checkEmpty('gpkdProvince', 'Tỉnh/Thành phố ĐKKD là bắt buộc')
+        } else if (field === 'gpkdWard') {
+          checkEmpty('gpkdWard', 'Phường/Xã ĐKKD là bắt buộc')
+        } else if (field === 'email') {
+          const valStr = String(value).trim()
+          if (!valStr) {
+            nextErrors.email = 'Email là bắt buộc'
+          } else if (!EMAIL_REGEX.test(valStr)) {
+            nextErrors.email = 'Email không đúng định dạng'
+          } else {
+            nextErrors.email = ''
+          }
+        } else if (field === 'phone') {
+          const valStr = String(value).trim()
+          if (valStr && !VN_PHONE_REGEX.test(valStr)) {
+            nextErrors.phone = 'Số điện thoại cơ quan phải có 10 chữ số (hoặc 11 số với máy bàn) và bắt đầu bằng 0, 84 hoặc +84'
+          } else {
+            nextErrors.phone = ''
+          }
+        } else if (field === 'representativePhone') {
+          const valStr = String(value).trim()
+          if (valStr && !VN_PHONE_REGEX.test(valStr)) {
+            nextErrors.representativePhone = 'Số điện thoại người đại diện phải gồm 10 chữ số di động và bắt đầu bằng 0, 84 hoặc +84'
+          } else {
+            nextErrors.representativePhone = ''
+          }
+        } else {
+          nextErrors[field] = ''
+        }
+
+        return nextErrors
+      })
+      return newForm
+    })
   }
 
   const validate = (): boolean => {
