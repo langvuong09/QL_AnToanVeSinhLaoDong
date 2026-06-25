@@ -11,7 +11,7 @@ type BusinessIndustryModalProps = {
   editingItem: IIndustry | null
   allIndustries: IIndustry[]
   form: { code: string; name: string; parentId: string; status: string }
-  errors: { code: string; name: string }
+  errors: { code: string; name: string; parentId?: string }
   isLoading?: boolean
   loadingParents?: boolean
   onClose: () => void
@@ -31,12 +31,44 @@ export default function BusinessIndustryModal({
   onSave,
   onChange,
 }: BusinessIndustryModalProps) {
-  if (!isOpen) return null
+  const codeVal = form.code.trim()
+  const codeLength = codeVal.length
 
-  // Filter options to prevent setting parent as itself
-  const parentOptions = allIndustries.filter((i) =>
-    editingItem ? i.id !== editingItem.id : true
-  )
+  const requiredParentLevel = useMemo(() => {
+    if (codeLength === 2) return 1
+    if (codeLength === 3) return 2
+    if (codeLength === 4) return 3
+    return null
+  }, [codeLength])
+
+  const parentOptions = useMemo(() => {
+    let filtered = allIndustries.filter((i) =>
+      editingItem ? i.id !== editingItem.id : true
+    )
+
+    if (requiredParentLevel !== null) {
+      filtered = filtered.filter(
+        (i) => i.level === requiredParentLevel && (i.isActive || String(i.id) === form.parentId)
+      )
+    } else {
+      filtered = []
+    }
+    return filtered
+  }, [allIndustries, editingItem, requiredParentLevel, form.parentId])
+
+  const isParentSelectDisabled = useMemo(() => {
+    if (isLoading) return true
+    if (codeLength === 1) return true
+    if (codeLength === 0) return true
+    return codeLength < 2 || codeLength > 4
+  }, [isLoading, codeLength])
+
+  const parentSelectPlaceholder = useMemo(() => {
+    if (codeLength === 0) return 'Vui lòng nhập mã ngành để chọn ngành cha'
+    if (codeLength === 1) return 'Cấp 1 không yêu cầu chọn ngành cha'
+    if (codeLength > 4) return 'Mã ngành không hợp lệ'
+    return `Chọn nhóm ngành cha cấp ${codeLength - 1}`
+  }, [codeLength])
 
   const fallbackParent = useMemo(() => {
     if (editingItem && editingItem.parent) {
@@ -49,6 +81,8 @@ export default function BusinessIndustryModal({
     }
     return null
   }, [editingItem])
+
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
@@ -89,10 +123,13 @@ export default function BusinessIndustryModal({
 
             <SearchableSelect
               label="Nhóm ngành cha"
+              require={codeLength >= 2 && codeLength <= 4}
               value={form.parentId}
               options={parentOptions}
-              disabled={isLoading}
+              disabled={isParentSelectDisabled}
               loading={loadingParents}
+              placeholder={parentSelectPlaceholder}
+              errorMess={errors.parentId}
               fallbackSelectedOption={fallbackParent}
               onChange={(val) => onChange('parentId', val)}
             />
