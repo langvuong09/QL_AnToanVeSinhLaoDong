@@ -395,23 +395,30 @@ export default function EnterpriseModal({
   const handleNext = async () => {
     if (!validate()) return
 
-    if (mode === 'create') {
+    if (mode === 'create' || mode === 'edit') {
       setSubmitting(true)
       try {
-        // 1. Check duplicate Tax Code
-        const taxCodeExists = await checkTaxCodeExists(form.taxCode, isRegister)
-        if (taxCodeExists) {
-          setErrors(prev => ({
-            ...prev,
-            taxCode: 'Mã số thuế này đã tồn tại trên hệ thống!'
-          }))
-          showToast('error', 'Mã số thuế này đã tồn tại trên hệ thống!')
-          setSubmitting(false)
-          return
+        // 1. Check duplicate Tax Code (only if creating)
+        if (mode === 'create') {
+          const taxCodeExists = await checkTaxCodeExists(form.taxCode, isRegister)
+          if (taxCodeExists) {
+            setErrors(prev => ({
+              ...prev,
+              taxCode: 'Mã số thuế này đã tồn tại trên hệ thống!'
+            }))
+            showToast('error', 'Mã số thuế này đã tồn tại trên hệ thống!')
+            setSubmitting(false)
+            return
+          }
         }
 
-        // 2. Check duplicate Email (Only for admin creation, public register OTP check does this naturally)
-        if (!isRegister) {
+        // 2. Check duplicate Email
+        let emailChanged = true
+        if (mode === 'edit' && initialData) {
+          emailChanged = form.email.trim().toLowerCase() !== initialData.email?.trim().toLowerCase()
+        }
+
+        if (emailChanged && !isRegister) {
           const emailExists = await checkEmailExists(form.email, isRegister)
           if (emailExists) {
             setErrors(prev => ({
@@ -481,7 +488,11 @@ export default function EnterpriseModal({
     setSubmitting(false)
 
     if (!result.success) {
-      showToast('error', result.message)
+      let friendlyMessage = result.message
+      if (result.message.includes('IDX_78ca3a129ee713cf4082cb89fd') || result.message.includes('unique constraint')) {
+        friendlyMessage = 'Email này đã tồn tại trên hệ thống!'
+      }
+      showToast('error', friendlyMessage)
       
       const newErrors: EnterpriseFormErrors = {}
       let hasFieldError = false
@@ -490,8 +501,13 @@ export default function EnterpriseModal({
         newErrors.taxCode = result.message
         hasFieldError = true
       }
-      if (result.message.includes('Email') || result.message.toLowerCase().includes('email')) {
-        newErrors.email = result.message
+      if (
+        result.message.includes('Email') || 
+        result.message.toLowerCase().includes('email') ||
+        result.message.includes('IDX_78ca3a129ee713cf4082cb89fd') ||
+        result.message.includes('unique constraint')
+      ) {
+        newErrors.email = 'Email này đã tồn tại trên hệ thống!'
         hasFieldError = true
       }
 

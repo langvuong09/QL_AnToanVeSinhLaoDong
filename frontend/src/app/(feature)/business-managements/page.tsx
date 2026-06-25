@@ -386,8 +386,8 @@ export default function BusinessManagementsPage() {
             <div className="px-3">
               <select value={filterStatus} onChange={(event) => resetFilters(setFilterStatus, event.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none focus:border-primary transition-colors bg-white">
                 <option value="">Tất cả</option>
-                <option value="true">Sử dụng</option>
-                <option value="false">Ngừng sử dụng</option>
+                <option value="true">Hoạt động</option>
+                <option value="false">Ngừng hoạt động</option>
               </select>
             </div>
           </div>
