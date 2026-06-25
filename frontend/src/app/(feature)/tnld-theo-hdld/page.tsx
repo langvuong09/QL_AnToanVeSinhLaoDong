@@ -8,6 +8,7 @@ import TopHero from "@/src/components/TopHero";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
+import Pagination from "@/src/components/Pagination";
 
 const TNLDTheoHDLDPage = () => {
     const now = new Date();
@@ -56,20 +57,17 @@ const TNLDTheoHDLDPage = () => {
 
 
     return (
-        <main className="flex flex-col min-h-screen">
+        <main className="h-screen flex flex-col py-2">
             <TopHero
-                lable="Báo cáo định kỳ tai nạn lao động"
-                component={
-                    <div className="flex gap-5 rounded">
-
-                    </div>
-                }
+                title="Báo cáo định kỳ tai nạn lao động"
+                className="shrink-0"
             />
 
-            <div className="mt-5">
-                <div className="bg-[#F4F6F8] px-5 py-2">
-                    <div className="flex font-semibold gap-5 pb-3 text-sm text-[#637381]">
-                        <div className="flex-1">Thao tác</div>
+            <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden mt-2">
+                {/* Header wrapper */}
+                <div className="shrink-0 border-b border-gray-200 px-5 py-3 bg-gray-50/20">
+                    <div className="flex font-semibold gap-5 text-xs text-gray-500">
+                        <div className="flex-1 text-center">Thao tác</div>
                         <div className="flex-3">Tên doanh nghiệp</div>
                         <div className="flex-1">Mã số thuế</div>
                         <div className="flex-1">Kỳ báo cáo</div>
@@ -77,40 +75,52 @@ const TNLDTheoHDLDPage = () => {
                     </div>
                 </div>
 
-                <div className="space-y-2 px-3">
+                {/* Danh sách - Scrollable */}
+                <div className="flex-1 overflow-y-auto min-h-0 px-5">
                     {items.length === 0 && (
-                        <div className="py-10 text-center text-gray-400 text-sm">Không có dữ liệu</div>
+                        <div className="py-12 text-center text-gray-400 text-sm">Không có dữ liệu</div>
                     )}
                     {items.map((i) => (
-                        <div key={i.id} className="flex items-center gap-5 py-2 border-b border-gray-300 text-sm">
-                            <div className="flex-1 flex items-center justify-center gap-5 text-[#637381]">
-                                <button>
-                                    <i className="fa-solid fa-eye"></i>
+                        <div key={i.id} className="flex items-center gap-5 py-2.5 border-b border-gray-100 hover:bg-blue-50/40 transition-colors text-sm text-gray-700">
+                            <div className="flex-1 flex items-center justify-center gap-4 text-gray-400">
+                                <button className="hover:text-primary transition-colors">
+                                    <i className="fa-solid fa-eye text-xs"></i>
                                 </button>
                                 {i.status === "DRAFT" && (
-                                    <button onClick={() => route.push(`/tnld-theo-hdld/${i.id}`)}>
-                                        <i className="fa-solid fa-pencil"></i>
+                                    <button className="hover:text-primary transition-colors" onClick={() => route.push(`/tnld-theo-hdld/${i.id}`)}>
+                                        <i className="fa-solid fa-pencil text-xs"></i>
                                     </button>
                                 )}
                             </div>
-                            <div className="flex-3">{i.doet.name}</div>
-                            <div className="flex-1">{i.doet.taxCode}</div>
+                            <div className="flex-3 truncate">{i.doet.name}</div>
+                            <div className="flex-1 truncate">{i.doet.taxCode}</div>
                             <div className="flex-1">{i.reportType.period}</div>
                             <div className="flex-1">
                                 {i.status === "DRAFT" ? (
-                                    <div className="text-[#637381] flex items-center gap-1 text-sm font-semibold">
-                                        <i className="fa-solid fa-circle"></i>
+                                    <div className="text-gray-500 flex items-center gap-1.5 text-xs font-semibold">
+                                        <i className="fa-solid fa-circle text-[8px]"></i>
                                         <span>Đang báo cáo</span>
                                     </div>
                                 ) : (
-                                    <div className="text-blue-600 flex items-center gap-1 text-sm font-semibold">
-                                        <i className="fa-solid fa-circle"></i>
+                                    <div className="text-blue-600 flex items-center gap-1.5 text-xs font-semibold">
+                                        <i className="fa-solid fa-circle text-[8px]"></i>
                                         <span>Đã tiếp nhận</span>
                                     </div>
                                 )}
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* Footer with Pagination */}
+                <div className="shrink-0 flex items-center justify-end gap-4 px-5 py-3 border-t border-gray-200 bg-white">
+                    <Pagination
+                        totalCount={pagination.total}
+                        pageSize={pagination.pageSize}
+                        currentPage={pagination.page}
+                        setPageSize={(newSize) => fetchDetails(1, newSize)}
+                        setCurrentPage={(newPage) => fetchDetails(newPage, pagination.pageSize)}
+                    />
                 </div>
             </div>
         </main>

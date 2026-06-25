@@ -141,12 +141,12 @@ const TNLDTheoHDLDIdPage = () => {
     const [optionChild, setOptionChild] = useState<"option-1.1" | "option-1.2">("option-1.1");
 
     return (
-        <main className="flex flex-col min-h-screen">
+        <main className="h-screen flex flex-col py-2">
             <TopHero
-                lable="Báo cáo định kỳ tai nạn lao động"
-                component={
-                    <div className="flex items-center gap-10 rounded">
-                        <div className="w-15 text-sm font-semibold">
+                title="Báo cáo định kỳ tai nạn lao động"
+                actions={
+                    <div className="flex gap-2 items-center">
+                        <div className="w-16">
                             <InputLegend
                                 input={{
                                     disabled: true,
@@ -156,22 +156,36 @@ const TNLDTheoHDLDIdPage = () => {
                             />
                         </div>
 
-                        <div className="flex gap-5 items-center text-sm font-semibold" onClick={() => router.push("/tnld-theo-hdld")}>
-                            <button className="text-gray-400">Hủy bỏ</button>
-                            <button className="bg-white px-3 py-2 flex items-center gap-1 border-2 border-blue-600 text-blue-600 hover:bg-gray-100 rounded-lg">
-                                <i className="fa-solid fa-angle-right"></i>
-                                <span>Tiếp tục</span>
-                            </button>
-                            <button className="bg-blue-600 px-4 py-2 flex items-center gap-1 border-2 border-blue-600 text-white hover:bg-blue-700 hover:bg-border-700 rounded-lg">
-                                <i className="fa-solid fa-floppy-disk"></i>
-                                <span>Lưu</span>
-                            </button>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={() => router.push("/tnld-theo-hdld")}
+                            className="px-4 py-2 text-sm font-semibold border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
+                        >
+                            Hủy bỏ
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => router.push("/tnld-theo-hdld")}
+                            className="px-4 py-2 text-sm font-semibold border border-primary text-primary bg-white rounded hover:bg-blue-50/30 transition-colors flex items-center gap-2"
+                        >
+                            <span>Tiếp tục</span>
+                            <i className="fa-solid fa-chevron-right text-xs" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => router.push("/tnld-theo-hdld")}
+                            className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2"
+                        >
+                            <i className="fa-solid fa-floppy-disk text-xs" />
+                            <span>Lưu</span>
+                        </button>
                     </div>
                 }
+                className="shrink-0"
             />
 
-            <div className="pt-8 px-5 space-y-5">
+            <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden mt-2">
+                <div className="flex-1 overflow-y-auto px-8 py-6 min-h-0 space-y-5">
                 <div className="flex border-b pb-5 border-gray-300">
                     <div className="flex-2">
                         <SelectLegend
@@ -1001,8 +1015,8 @@ const TNLDTheoHDLDIdPage = () => {
                     </div>
                 )}
             </div>
-
-        </main>
+        </div>
+</main>
     )
 }
 

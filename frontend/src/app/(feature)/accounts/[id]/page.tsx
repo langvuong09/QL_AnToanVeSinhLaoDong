@@ -13,6 +13,7 @@ import Loading from "@/src/components/Loading";
 import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import Button from "@/src/components/ui/Button";
+import { AuthenticateContext } from "@/src/contexts/authenticate/authenticate";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { OpenAdress, Province, Ward } from "@/src/services/open-address";
 import { useParams } from "next/navigation";
@@ -28,11 +29,11 @@ const AccountIdPage = () => {
     }
 
     const notificate = useContext(NotificateContext);
+    const authenticate = useContext(AuthenticateContext);
 
     const [loading, setLoading] = useState<boolean>(false);
     const [currentUser, setCurrentUser] = useState<UserDetail | null>(null);
     const [roles, setRoles] = useState<IRole[]>([]);
-    const [errorMessage, setErrorMessage] = useState<string>("");
 
     // ---------- Handle fetch current state ----------
     const fetchUserDetail = async (id: string) => {
@@ -89,7 +90,10 @@ const AccountIdPage = () => {
         } catch (error: any) {
             setLoading(false);
             setCurrentUser(null);
-            setErrorMessage(error.message || "Lỗi không xác định. Vui lòng thử lại sau ít phút." as string);
+            notificate?.showNotification({
+                type: "error",
+                message: error.message || "Lỗi không xác định. Vui lòng thử lại sau ít phút."
+            });
         }
     }
 
@@ -166,6 +170,7 @@ const AccountIdPage = () => {
     });
 
     const onSubmit = async () => {
+        if (loading) return;
         const newErrors = {
             fullName: "",
             gender: "",
@@ -194,6 +199,11 @@ const AccountIdPage = () => {
 
         if (!submitForm?.roleId) {
             newErrors.roleId = "Quyền không được để trống";
+            hasError = true;
+        }
+
+        if (!submitForm?.position?.trim()) {
+            newErrors.position = "Chức danh không được để trống";
             hasError = true;
         }
 
@@ -262,13 +272,12 @@ const AccountIdPage = () => {
             const ucls = new User();
             const result = await ucls.UpdateSelfProfile(id as string, submitForm);
             if (result.success) {
+                if (authenticate?.refreshAuth) {
+                    await authenticate.refreshAuth();
+                }
                 notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
             } else {
-                notificate?.showNotification({ type: "error", message: "Dữ liệu đã có trên hệ thống" });
-                setErrorMessage(result.message || "");
-                setTimeout(() => {
-                    setErrorMessage("");
-                }, 2000);
+                notificate?.showNotification({ type: "error", message: result.message || "Thay đổi thông tin thất bại" });
             }
             setLoading(false);
 
@@ -372,36 +381,41 @@ const AccountIdPage = () => {
     }
 
     return (
-        <main className="space-y-10 px-3">
-            {/* {loading && (
+        <main className="h-screen flex flex-col py-2">
+            {loading && (
                 <Loading />
-            )} */}
-
-            <TopHero
-                lable="Chi tiết người dùng"
-                component={
-                    <div className="flex gap-5 rounded">
-                        <Button variant="outline" className="flex gap-3 items-center text-sm font-semibold" onClick={() => router.push("/accounts")}>
-                            <span>Hủy bỏ</span>
-                        </Button>
-                        <Button variant="primary" className="flex gap-3 items-center text-sm font-semibold" onClick={onSubmit}>
-                            <i className="fa-solid fa-floppy-disk"></i>
-                            <span>Lưu</span>
-                        </Button>
-                    </div>
-                }
-            />
-
-            {errorMessage && (
-                <div className="bg-red-100 px-3 py-2 rounded text-red-500 flex items-center gap-5 font-semibold text-sm">
-                    <i className="fa-solid fa-triangle-exclamation"></i>
-                    <span>{errorMessage}</span>
-                </div>
             )}
 
-            <div className="grid grid-cols-12 gap-5">
-                {/* Left card */}
-                <div className="col-span-4 bg-white shadow-3drops rounded-lg px-10 py-10 space-y-10 h-fit">
+            <TopHero
+                title="Chi tiết người dùng"
+                actions={
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => router.push("/accounts")}
+                            className="px-4 py-2 text-sm font-semibold border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
+                        >
+                            Hủy bỏ
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onSubmit}
+                            disabled={loading}
+                            className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded hover:opacity-90 disabled:opacity-60 transition-opacity flex items-center gap-2"
+                        >
+                            <i className="fa-solid fa-floppy-disk text-xs"></i>
+                            <span>Lưu</span>
+                        </button>
+                    </div>
+                }
+                className="shrink-0"
+            />
+
+            <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden mt-2">
+                <div className="flex-1 overflow-y-auto px-8 py-6 min-h-0">
+                    <div className="grid grid-cols-12 gap-5">
+                        {/* Left card */}
+                        <div className="col-span-4 border border-gray-100 rounded-lg px-8 py-8 space-y-8 bg-gray-50/20 h-fit">
                     <div className="space-y-5">
                         <div className="flex justify-center">
                             <div className="rounded-full p-3 border border-gray-500 border-dashed">
@@ -439,7 +453,7 @@ const AccountIdPage = () => {
                 </div>
 
                 {/* Right card */}
-                <div className="col-span-8 bg-white shadow-3drops rounded-lg">
+                <div className="col-span-8 border border-gray-100 rounded-lg">
                     {/* Personal info */}
                     <div className="px-4 py-4 space-y-5">
                         <h1 className="text-[16px] font-semibold">Thông tin cá nhân</h1>
@@ -460,6 +474,7 @@ const AccountIdPage = () => {
                                     label="Ngày tháng năm sinh"
                                     require={true}
                                     value={submitForm.dateOfBirth}
+                                    maxDate="today"
                                     onChange={(val) => {
                                         setSubmitForm((prev) => ({ ...prev, dateOfBirth: val }));
                                         setErrorForm((prev) => ({ ...prev, dateOfBirth: "" }));
@@ -470,14 +485,17 @@ const AccountIdPage = () => {
 
                                 <InputLegend
                                     label="Chức danh"
+                                    require={true}
                                     input={{
                                         type: "text",
                                         placeholder: "Nhập chức danh",
                                         value: submitForm.position,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
+                                            setErrorForm((prev) => ({ ...prev, position: "" }));
                                         },
                                     }}
+                                    errorMess={errorForm.position}
                                 />
 
                             </div>
@@ -683,7 +701,9 @@ const AccountIdPage = () => {
                     </div>
                 </div>
             </div >
-        </main >
+        </div>
+    </div>
+</main>
     );
 };
 

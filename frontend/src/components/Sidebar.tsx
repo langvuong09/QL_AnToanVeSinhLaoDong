@@ -53,8 +53,11 @@ export default function Sidebar() {
     if (!sidebarMenus) return '';
     const active = sidebarMenus
       .flatMap((menu) => menu.children || [])
-      .find((item) => pathname?.startsWith(item.url))
-    return active?.id.toString() || ''
+      .find((item) => {
+        const itemUrl = item.url.startsWith('/') ? item.url : `/${item.url}`;
+        return pathname?.startsWith(itemUrl);
+      });
+    return active?.id.toString() || '';
   }, [pathname, sidebarMenus])
 
   const filteredMenus = useMemo(() => {
@@ -127,20 +130,23 @@ export default function Sidebar() {
 
             {menu.isOpen && (
               <ul>
-                {menu.children?.map((item) => (
-                  <li key={item.id}>
-                    <Link
-                      href={item.url}
-                      className={`flex items-center gap-2 px-5 py-2.5 text-xs transition-colors ${activeMenu === item.id.toString()
-                        ? 'bg-white/20 text-white font-semibold'
-                        : 'text-white/80 hover:bg-white/10'
-                        }`}
-                    >
-                      <i className="fa-solid fa-circle text-[5px]" />
-                      <span>{item.name}</span>
-                    </Link>
-                  </li>
-                ))}
+                {menu.children?.map((item) => {
+                  const normalizedUrl = item.url.startsWith('/') ? item.url : `/${item.url}`;
+                  return (
+                    <li key={item.id}>
+                      <Link
+                        href={normalizedUrl}
+                        className={`flex items-center gap-2 px-5 py-2.5 text-xs transition-colors ${activeMenu === item.id.toString()
+                          ? 'bg-white/20 text-white font-semibold'
+                          : 'text-white/80 hover:bg-white/10'
+                          }`}
+                      >
+                        <i className="fa-solid fa-circle text-[5px]" />
+                        <span>{item.name}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
