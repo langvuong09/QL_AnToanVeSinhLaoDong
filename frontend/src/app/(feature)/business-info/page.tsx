@@ -450,6 +450,7 @@ export default function BusinessInfoPage() {
   }
 
   const handleConfirm = async () => {
+    if (submitting) return
     if (!validate() || !enterpriseData) return
     setSubmitting(true)
 
@@ -508,7 +509,9 @@ export default function BusinessInfoPage() {
   }
 
   return (
-    <main className="h-screen flex flex-col py-2">
+    <>
+      {submitting && <Loading />}
+      <main className="h-screen flex flex-col py-2">
       {isChangeEmail && (
         <ChangeEmail
           email={form.email}
@@ -569,7 +572,7 @@ export default function BusinessInfoPage() {
                   className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded hover:opacity-90 disabled:opacity-60 transition-opacity flex items-center gap-2"
                 >
                   <i className="fa-solid fa-check text-xs" />
-                  <span>{submitting ? 'Đang lưu...' : 'Xác nhận'}</span>
+                  <span>Xác nhận</span>
                 </button>
               </>
             )}
@@ -679,5 +682,6 @@ export default function BusinessInfoPage() {
         </div>
       </div>
     </main>
+    </>
   )
 }

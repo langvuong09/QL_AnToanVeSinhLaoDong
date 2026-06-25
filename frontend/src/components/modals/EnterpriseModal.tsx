@@ -8,6 +8,7 @@ import { OpenAdress, type Province } from '@/src/services/open-address'
 import { useFileAttachment } from '@/src/hooks/useFileAttachment'
 import EnterpriseStepOne from './EnterpriseStepOne'
 import EnterpriseStepConfirm from './EnterpriseStepConfirm'
+import Loading from '@/src/components/Loading'
 import AccountInfoPopup from './AccountInfoPopup'
 import OtpVerificationModal from './OtpVerificationModal'
 import { Auth } from '@/src/api/Auth'
@@ -563,6 +564,7 @@ export default function EnterpriseModal({
 
   return (
     <>
+      {submitting && <Loading />}
       <div className="h-screen flex flex-col py-2">
         <div className="shrink-0 bg-white px-5 py-3 rounded-lg border border-gray-100 shadow-sm flex items-center justify-between">
           <h1 className="text-base font-bold text-gray-800">{pageTitle}</h1>
@@ -687,8 +689,8 @@ export default function EnterpriseModal({
                   disabled={submitting}
                   className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity flex items-center gap-2"
                 >
+                  Tiếp tục
                   <i className="fa-solid fa-chevron-right text-xs" />
-                  {submitting ? 'Đang xử lý...' : 'Tiếp tục'}
                 </button>
               </>
             )}
@@ -704,7 +706,7 @@ export default function EnterpriseModal({
                   className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity flex items-center gap-2"
                 >
                   <i className="fa-solid fa-check text-xs" />
-                  {submitting ? 'Đang lưu...' : 'Xác nhận'}
+                  Xác nhận
                 </button>
               </>
             )}

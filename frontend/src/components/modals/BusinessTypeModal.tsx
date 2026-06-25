@@ -3,6 +3,7 @@
 import type { IBusinessType } from '@/src/api/BusinessType'
 import InputLegend from '@/src/components/InputLegend'
 import SelectLegend from '@/src/components/SelectLegend'
+import Loading from '@/src/components/Loading'
 
 type BusinessTypeModalProps = {
   isOpen: boolean
@@ -28,7 +29,9 @@ export default function BusinessTypeModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+    <>
+      {isLoading && <Loading />}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
       <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden">
         <div className="bg-primary px-6 py-4">
           <h2 className="text-white text-base font-semibold">
@@ -93,16 +96,13 @@ export default function BusinessTypeModal({
             disabled={isLoading}
             className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-[#4a22b8] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? (
-              <i className="fa-solid fa-spinner fa-spin text-xs" />
-            ) : (
-              <i className="fa-solid fa-floppy-disk text-xs" />
-            )}
+            <i className="fa-solid fa-floppy-disk text-xs" />
             Lưu
           </button>
         </div>
       </div>
     </div>
+    </>
   )
 }
 
