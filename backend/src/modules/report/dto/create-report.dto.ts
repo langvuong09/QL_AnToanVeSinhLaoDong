@@ -4,8 +4,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AccidentCauseEnum } from '../../../commons/enums/accident.enum';
 
 export class ReportDetailDto {
-  @ApiPropertyOptional({ description: 'Nguyên nhân tai nạn', enum: AccidentCauseEnum, enumName: 'AccidentCauseEnum' })
-  @IsOptional() @IsEnum(AccidentCauseEnum) cause?: AccidentCauseEnum;
+  @ApiPropertyOptional({ description: 'ID Nguyên nhân tai nạn', example: 1 })
+  @IsOptional() @IsInt() causeId?: number;
 
   @ApiPropertyOptional({ description: 'ID Yếu tố chấn thương', example: 1 })
   @IsOptional() @IsInt() traumaId?: number;

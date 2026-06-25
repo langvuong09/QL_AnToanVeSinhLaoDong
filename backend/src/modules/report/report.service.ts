@@ -9,6 +9,7 @@ import { UpdateStatusDto } from './dto/update-status.dto';
 import { ReportDetail } from './report-detail.entity';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { StatusHistory } from '../reportHistory/report-history.entity';
+import { Doet } from '../doet/doet.entity';
 
 @Injectable()
 export class ReportService {
@@ -30,7 +31,7 @@ export class ReportService {
         reportType: true, 
         files: true, 
         doet: { businessType: true, industry: true }, 
-        details: { trauma: true, injuryType: true }, 
+        details: { trauma: true, injuryType: true ,cause: true }, 
         statusHistories: { user: true } 
       }
     });
@@ -194,25 +195,41 @@ export class ReportService {
   }
 
   async getAllForBusiness(query: any, user: any) {
+    const page = Number(query.page) || 1;
+    const pageSize = Number(query.pageSize) || 10;
+
     const qb = this.reportRepository.createQueryBuilder('r')
       .leftJoinAndSelect('r.reportType', 'rt')
-      .leftJoinAndSelect('r.doet', 'd') 
-      .leftJoinAndSelect('d.businessType', 'bt') 
-      .leftJoinAndSelect('d.industry', 'i')      
+      .leftJoinAndSelect('r.doet', 'd')
       .where('r.doetId = :doetId', { doetId: user.doetId });
 
     qb.andWhere('rt.isActive = :isActive', { isActive: true });
-    
     if (query.year) qb.andWhere('r.year = :year', { year: Number(query.year) });
     if (query.status) qb.andWhere('r.status = :status', { status: query.status });
 
-    const page = Number(query.page) || 1;
-    const pageSize = Number(query.pageSize) || 10;
-    
-    qb.orderBy('r.year', 'DESC').addOrderBy('r.id', 'DESC'); // Sắp xếp mới nhất
+    qb.orderBy('r.year', 'DESC').addOrderBy('r.id', 'DESC');
     qb.skip((page - 1) * pageSize).take(pageSize);
-    
+
     const [items, total] = await qb.getManyAndCount();
+
+    const doetIds = [...new Set(items.map(item => item.doet?.id).filter(id => id))];
+    
+    if (doetIds.length > 0) {
+      const doets = await this.dataSource.getRepository(Doet).find({
+        where: { id: In(doetIds) },
+        relations: { businessType: true, industry: true },
+        withDeleted: true
+      });
+
+      items.forEach(item => {
+        if (item.doet) {
+          const fullDoet = doets.find(d => d.id === item.doet.id);
+          if (fullDoet) {
+            item.doet = fullDoet;
+          }
+        }
+      });
+    }
 
     return Response.get({ items, total, page, pageSize });
   }
