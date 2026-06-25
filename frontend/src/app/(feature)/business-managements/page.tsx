@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import TopHero from '@/src/components/TopHero'
 import ToggleSwitch from '@/src/components/ToggleSwitch'
 import EnterpriseModal from '@/src/components/modals/EnterpriseModal'
@@ -109,6 +109,9 @@ function buildDoetPayload(form: EnterpriseFormData, includeTaxCode: boolean): Do
 
 export default function BusinessManagementsPage() {
   const notificate = useContext(NotificateContext)
+  const notificateRef = useRef(notificate)
+  notificateRef.current = notificate
+
   const [data, setData] = useState<Enterprise[]>([])
   const [viewMode, setViewMode] = useState<EnterpriseFormMode | 'list'>('list')
   const [selectedEnterprise, setSelectedEnterprise] = useState<Enterprise | null>(null)
@@ -170,14 +173,14 @@ export default function BusinessManagementsPage() {
     setLoading(false)
 
     if (!result.success) {
-      notificate?.showNotification({ type: 'error', message: result.message })
+      notificateRef.current?.showNotification({ type: 'error', message: result.message })
       return
     }
 
     setData((result.data?.items || []).map(mapDoetUserToEnterprise))
     setTotalItems(result.data?.count || 0)
     setSelectedIds([])
-  }, [currentPage, pageSize, filterName, filterTaxCode, filterBusinessType, filterIndustry, filterWard, filterStatus, notificate])
+  }, [currentPage, pageSize, filterName, filterTaxCode, filterBusinessType, filterIndustry, filterWard, filterStatus])
 
   useEffect(() => {
     fetchData()
@@ -262,12 +265,34 @@ export default function BusinessManagementsPage() {
   }
 
   const handleToggleStatus = async (item: Enterprise) => {
-    const result = await new DoetApi().toggleStatus(item.id, !item.status)
-    if (!result.success) {
-      notificate?.showNotification({ type: 'error', message: result.message })
-      return
+    const nextStatus = !item.status
+    // Optimistic UI update
+    setData((prev) => prev.map((row) => row.id === item.id ? { ...row, status: nextStatus } : row))
+
+    try {
+      const result = await new DoetApi().toggleStatus(item.id, nextStatus)
+      if (!result.success) {
+        // Rollback
+        setData((prev) => prev.map((row) => row.id === item.id ? { ...row, status: !nextStatus } : row))
+        notificate?.showNotification({
+          type: 'error',
+          message: result.message || 'Thay đổi trạng thái thất bại.'
+        })
+      } else {
+        notificate?.showNotification({
+          type: 'success',
+          message: `Thay đổi trạng thái của doanh nghiệp "${item.companyName}" thành công.`
+        })
+      }
+    } catch (error) {
+      console.error(error)
+      // Rollback
+      setData((prev) => prev.map((row) => row.id === item.id ? { ...row, status: !nextStatus } : row))
+      notificate?.showNotification({
+        type: 'error',
+        message: 'Lỗi hệ thống khi thay đổi trạng thái.'
+      })
     }
-    setData((prev) => prev.map((row) => row.id === item.id ? { ...row, status: !row.status } : row))
   }
 
   const handleDelete = async () => {

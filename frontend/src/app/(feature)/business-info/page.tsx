@@ -181,6 +181,9 @@ function buildDoetPayload(form: EnterpriseFormData): Omit<DoetPayload, 'taxCode'
 
 export default function BusinessInfoPage() {
   const notificate = useContext(NotificateContext)
+  const notificateRef = useRef(notificate)
+  notificateRef.current = notificate
+
   const authenticate = useContext(AuthenticateContext)
 
   const [currentStep, setCurrentStep] = useState(1)
@@ -248,14 +251,14 @@ export default function BusinessInfoPage() {
         initFromServer(enterprise.attachments)
         isLoadedRef.current = true
       } else {
-        notificate?.showNotification({ type: 'error', message: doetResult.message })
+        notificateRef.current?.showNotification({ type: 'error', message: doetResult.message })
       }
     } catch (err: any) {
-      notificate?.showNotification({ type: 'error', message: err.message || 'Lỗi khi lấy dữ liệu' })
+      notificateRef.current?.showNotification({ type: 'error', message: err.message || 'Lỗi khi lấy dữ liệu' })
     } finally {
       setLoading(false)
     }
-  }, [authenticate?.state?.doetId, initFromServer, notificate])
+  }, [authenticate?.state?.doetId, initFromServer])
 
   useEffect(() => {
     if (!authenticate?.isFetch) {
