@@ -13,7 +13,7 @@ import Loading from "@/src/components/Loading";
 import Link from "next/link";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import BulkDeleteBar from "@/src/components/common/BulkDeleteBar";
-import { ConfirmContext } from "@/src/contexts/confirm/confirm";
+import DeleteConfirmModal from "@/src/components/common/DeleteConfirmModal";
 import { exportToExcel } from "@/src/utils/excel";
 import PasswordResetModal from "@/src/components/modals/PasswordResetModal";
 
@@ -21,7 +21,9 @@ const DEBOUNCE_MS = 500;
 
 const AccountPage = () => {
     const notificate = useContext(NotificateContext);
-    const confirm = useContext(ConfirmContext);
+
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [users, setUsers] = useState<IUser[]>([]);
     const [roles, setRoles] = useState<IRole[]>([]);
@@ -135,6 +137,22 @@ const AccountPage = () => {
 
     const [stateChangePassword, setStateChangePassword] = useState<{ username: string, id: string }>({ username: "", id: "" });
 
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        const cls = new User();
+        const result = await cls.DeleteUser(selectedList);
+        setIsDeleting(false);
+        setShowDeleteConfirm(false);
+
+        if (result.success) {
+            setUsers(prev => prev.filter(user => !selectedList.includes(user.id)));
+            notificate?.showNotification({ type: "success", message: "Xóa danh sách người dùng thành công " });
+            setSelectedList([]);
+        } else {
+            notificate?.showNotification({ type: "error", message: "Xóa danh sách người dùng thất bại " });
+        }
+    };
+
     return (
         <main className="flex flex-col min-h-screen">
             {/* {loading && (
@@ -147,27 +165,30 @@ const AccountPage = () => {
                     onClearSelection={() => {
                         setSelectedList([]);
                     }}
-                    onDelete={async () => {
-                        const wait = await confirm.waitConfirm();
-                        if (!wait) return;
-
-                        const cls = new User();
-                        const result = await cls.DeleteUser(selectedList);
-                        if (result.success) {
-                            setUsers(prev => prev.filter(user => {
-                                if (!selectedList.includes(user.id)) {
-                                    return user;
-                                }
-                            }))
-                            notificate?.showNotification({ type: "success", message: "Xóa danh sách người dùng thành công " });
-                            setSelectedList([]);
-                        } else {
-                            notificate?.showNotification({ type: "error", message: "Xóa danh sách người dùng thất bại " });
-                        }
+                    onDelete={() => {
+                        setShowDeleteConfirm(true);
                     }}
-
+                    loading={isDeleting}
                 />
             )}
+
+            <DeleteConfirmModal
+                open={showDeleteConfirm}
+                count={selectedList.length}
+                title="Xác nhận xóa người dùng"
+                description={
+                    selectedList.length === 1
+                        ? 'Bạn có chắc chắn muốn xóa người dùng đã chọn?\nDữ liệu sau khi xóa sẽ không thể khôi phục.'
+                        : `Bạn có chắc chắn muốn xóa ${selectedList.length} người dùng đã chọn?\nDữ liệu sau khi xóa sẽ không thể khôi phục.`
+                }
+                onConfirm={handleDelete}
+                onCancel={() => {
+                    if (!isDeleting) {
+                        setShowDeleteConfirm(false);
+                    }
+                }}
+                loading={isDeleting}
+            />
 
             {stateChangePassword.username && stateChangePassword.id && (
                 <PasswordResetModal
