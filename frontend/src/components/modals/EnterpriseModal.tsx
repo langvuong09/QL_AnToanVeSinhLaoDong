@@ -343,8 +343,8 @@ export default function EnterpriseModal({
       if (!taxCodeTrim) {
         next.taxCode = 'Mã số thuế là bắt buộc'
         valid = false
-      } else if (taxCodeTrim.length < 10 || taxCodeTrim.length > 15) {
-        next.taxCode = 'Mã số thuế phải từ 10 đến 15 ký tự'
+      } else if (!TAX_CODE_REGEX.test(taxCodeTrim)) {
+        next.taxCode = 'Mã số thuế không đúng định dạng quy định (phải gồm 10 số hoặc 13 số)'
         valid = false
       }
     }
