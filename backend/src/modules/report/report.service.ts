@@ -201,6 +201,8 @@ export class ReportService {
       .leftJoinAndSelect('d.industry', 'i')      
       .where('r.doetId = :doetId', { doetId: user.doetId });
 
+    qb.andWhere('rt.isActive = :isActive', { isActive: true });
+    
     if (query.year) qb.andWhere('r.year = :year', { year: Number(query.year) });
     if (query.status) qb.andWhere('r.status = :status', { status: query.status });
 

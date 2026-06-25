@@ -146,34 +146,17 @@ export class DoetService {
 
     const queryBuilder = this.userRepository.createQueryBuilder('user')
       .innerJoinAndSelect('user.doet', 'doet')
-      .leftJoinAndSelect('doet.businessType', 'businessType')
-      .leftJoinAndSelect('doet.industry', 'industry')
       .where('user.deletedAt IS NULL')
       .andWhere('doet.deletedAt IS NULL');
 
-    if (name) {
-      queryBuilder.andWhere('doet.name ILike :name', { name: `%${name.trim()}%` });
-    }
-
-    if (taxCode) {
-      queryBuilder.andWhere('doet.taxCode ILike :taxCode', { taxCode: `%${taxCode.trim()}%` });
-    }
-
-    if (businessTypeId) {
-      queryBuilder.andWhere('doet.businessTypeId = :businessTypeId', { businessTypeId: Number(businessTypeId) });
-    }
-
-    if (industryId) {
-      queryBuilder.andWhere('doet.industryId = :industryId', { industryId: Number(industryId) });
-    }
-
+    if (name) queryBuilder.andWhere('doet.name ILike :name', { name: `%${name.trim()}%` });
+    if (taxCode) queryBuilder.andWhere('doet.taxCode ILike :taxCode', { taxCode: `%${taxCode.trim()}%` });
+    if (businessTypeId) queryBuilder.andWhere('doet.businessTypeId = :businessTypeId', { businessTypeId: Number(businessTypeId) });
+    if (industryId) queryBuilder.andWhere('doet.industryId = :industryId', { industryId: Number(industryId) });
+    
     if (ward) {
-      queryBuilder.andWhere(
-        "(doet.ward->>'key' = :wardKey OR doet.ward->>'value' ILike :wardValue)",
-        { 
-          wardKey: ward.trim(), 
-          wardValue: `%${ward.trim()}%` 
-        }
+      queryBuilder.andWhere("(doet.ward->>'key' = :wardKey OR doet.ward->>'value' ILike :wardValue)",
+        { wardKey: ward.trim(), wardValue: `%${ward.trim()}%` }
       );
     } 
 
@@ -188,6 +171,34 @@ export class DoetService {
       .take(pageSize)
       .getManyAndCount();
 
+    if (items.length > 0) {
+      const industryIds = [...new Set(items.map(item => item.doet?.industryId).filter(id => id != null))];
+      const businessTypeIds = [...new Set(items.map(item => item.doet?.businessTypeId).filter(id => id != null))];
+      
+      const [industries, businessTypes] = await Promise.all([
+        industryIds.length > 0 
+          ? this.dataSource.getRepository(Industry).find({ where: { id: In(industryIds) }, withDeleted: true }) 
+          : Promise.resolve([] as Industry[]),
+        businessTypeIds.length > 0 
+          ? this.dataSource.getRepository(BusinessType).find({ where: { id: In(businessTypeIds) }, withDeleted: true }) 
+          : Promise.resolve([] as BusinessType[])
+      ]);
+
+     items.forEach(item => {
+        const doet = item.doet;
+        if (doet) {
+          if (doet.industryId) {
+            const foundIndustry = industries.find(ind => ind.id === doet.industryId);
+            doet.industry = foundIndustry || null;
+          }
+          if (doet.businessTypeId) {
+            const foundBusinessType = businessTypes.find(bt => bt.id === doet.businessTypeId);
+            doet.businessType = foundBusinessType || null;
+          }
+        }
+      });
+    }
+
     return Response.getList({
       items,
       count,
@@ -199,17 +210,33 @@ export class DoetService {
   async getDetail(id: number) {
     const userWithDoet = await this.userRepository.createQueryBuilder('user')
       .innerJoinAndSelect('user.doet', 'doet')
-      .leftJoinAndSelect('doet.businessType', 'businessType')
-      .leftJoinAndSelect('doet.industry', 'industry')
-      .leftJoinAndSelect('doet.files', 'files') 
+      .leftJoinAndSelect('doet.files', 'files')
       .where('doet.id = :id', { id })
       .andWhere('user.deletedAt IS NULL')
       .andWhere('doet.deletedAt IS NULL')
       .getOne();
 
-    if (!userWithDoet) {
-      throw new NotFoundException('Không tìm thấy thông tin doanh nghiệp & tài khoản liên quan hoặc đã bị xóa');
+    // 1. Kiểm tra tồn tại
+    if (!userWithDoet || !userWithDoet.doet) {
+      throw new NotFoundException('Không tìm thấy thông tin doanh nghiệp hoặc tài khoản liên quan');
     }
+
+    // 2. Lấy dữ liệu Industry và BusinessType thủ công để tránh filter soft-delete
+    const { industryId, businessTypeId } = userWithDoet.doet;
+
+    const [industry, businessType] = await Promise.all([
+      industryId 
+        ? this.dataSource.getRepository(Industry).findOne({ where: { id: industryId }, withDeleted: true }) 
+        : null,
+      businessTypeId 
+        ? this.dataSource.getRepository(BusinessType).findOne({ where: { id: businessTypeId }, withDeleted: true }) 
+        : null
+    ]);
+
+    // 3. Gán dữ liệu vào object
+    userWithDoet.doet.industry = industry || null;
+    userWithDoet.doet.businessType = businessType || null;
+
     return Response.get(userWithDoet);
   }
 

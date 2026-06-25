@@ -1,4 +1,4 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Role } from "../role/role.entity";
 import { Doet } from "../doet/doet.entity";
 import * as argon from "argon2";
@@ -7,10 +7,12 @@ import { BaseAddressEntity } from "src/commons/bases/baseAddressEntity";
 import { Exclude } from "class-transformer";
 
 @Entity("users")
+@Index(["username"], { unique: true, where: '"deletedAt" IS NULL' })
+@Index(["email"], { unique: true, where: '"deletedAt" IS NULL' })
 export class User extends BaseAddressEntity {
   @PrimaryGeneratedColumn("uuid") id!: string;
 
-  @Column("varchar", { unique: true }) username!: string;
+  @Column("varchar") username!: string;
 
   @Exclude()
   @Column("varchar") password!: string;
@@ -20,7 +22,7 @@ export class User extends BaseAddressEntity {
   @Column({ nullable: true }) position!: string;
 
 
-  @Column({ nullable: true, unique: true }) email!: string;
+  @Column({ nullable: true}) email!: string;
 
   @Column({ type: "date", nullable: true }) dateOfBirth!: Date;
 

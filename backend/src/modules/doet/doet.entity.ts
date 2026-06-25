@@ -6,7 +6,7 @@ import { Industry } from "../industry/industry.entity";
 import { Report } from "../report/report.entity";
 
 @Entity("doets")
-@Index("UQ_DOET_TAXCODE_ACTIVE", ["taxCode"], { unique: true, where: '"deletedAt" IS NULL' })
+@Index(["taxCode"], { unique: true, where: '"deletedAt" IS NULL' })
 export class Doet extends BaseAddressEntity {
   @PrimaryGeneratedColumn("increment") id!: number;
 
@@ -19,13 +19,13 @@ export class Doet extends BaseAddressEntity {
   
   @ManyToOne(() => BusinessType, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'businessTypeId' })
-  businessType!: BusinessType;
+  businessType!: BusinessType | null;
 
   @Column() industryId!: number;
   
   @ManyToOne(() => Industry, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'industryId' })
-  industry!: Industry;
+  industry!: Industry | null;
 
   @Column({ nullable: true }) foreignName!: string;
   @Column({ nullable: true }) representative!: string; 
