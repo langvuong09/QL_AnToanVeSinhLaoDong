@@ -25,6 +25,9 @@ import { InjuryTypeModule } from './modules/typeInjury/injury.module';
 import { ReportModule } from './modules/report/report.module';
 import { RoleModule } from './modules/role/role.module';
 import { ScheduleModule } from '@nestjs/schedule/dist/schedule.module';
+import { Job } from './modules/job/job.entity';
+import { JobModule } from './modules/job/job.module';
+import { AccidentCauseModule } from './modules/accidentCause/accident-cause.module';
 
 @Module({
   imports: [
@@ -42,6 +45,8 @@ import { ScheduleModule } from '@nestjs/schedule/dist/schedule.module';
     EmailModule,
     UserModule,
     BusinessTypeModule,
+    JobModule,
+    AccidentCauseModule,
     IndustryModule,
     DoetModule,
     TraumaModule,
