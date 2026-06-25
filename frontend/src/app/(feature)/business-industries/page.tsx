@@ -476,7 +476,7 @@ export default function BusinessIndustriesPage() {
                 onChange={(e) => handleFilterChange('level', e.target.value)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none focus:border-primary transition-colors bg-white"
               >
-                <option value="">Tất cả cấp</option>
+                <option value="">Tất cả</option>
                 <option value="1">Cấp 1</option>
                 <option value="2">Cấp 2</option>
                 <option value="3">Cấp 3</option>

@@ -8,7 +8,7 @@ INSERT INTO views (id, name, url, icon, "parentId", "order") VALUES
 (4, 'Quản lý người dùng',           '/accounts',                'fa-solid fa-circle', 1, 1),
 ---
 (5, 'Loại hình doanh nghiệp',       '/business-types',          'fa-solid fa-circle', 1, 2),
-(6, 'Ngành nghề kinh doanh',        'business-industries',      'fa-solid fa-circle', 1, 3),
+(6, 'Ngành nghề kinh doanh',        '/business-industries',      'fa-solid fa-circle', 1, 3),
 (7, 'Quản lý doanh nghiệp',         '/business-managements',    'fa-solid fa-circle', 1, 4),
 ---
 (8, 'Kỳ báo cáo',                   '/report-periods',          'fa-solid fa-circle', 1, 5),

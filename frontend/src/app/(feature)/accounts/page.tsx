@@ -221,7 +221,7 @@ const AccountPage = () => {
                             className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
                         >
                             <i className="fa-solid fa-upload text-xs text-primary"></i>
-                            <span>Import</span>
+                            <span>Thêm từ file</span>
                         </button>
 
                         <Link
@@ -241,7 +241,7 @@ const AccountPage = () => {
                 <div className="shrink-0 border-b border-gray-200 px-5 py-3 bg-gray-50/20">
                     <div className="flex font-semibold gap-5 pb-3 text-xs text-gray-500">
                         <div className="flex-1 text-center">Thao tác</div>
-                        <div className="flex-3">Họ và tên</div>
+                        <div className="flex-2">Họ và tên</div>
                         <div className="flex-2">Tài khoản</div>
                         <div className="flex-2">Email</div>
                         <div className="flex-1">Vai trò</div>
@@ -252,7 +252,7 @@ const AccountPage = () => {
                     {/* Filter */}
                     <div className="flex gap-5">
                         <div className="flex-1"></div>
-                        <div className="flex-3">
+                        <div className="flex-2">
                             <InputLegend
                                 input={{
                                     type: "text",
@@ -322,7 +322,7 @@ const AccountPage = () => {
                                 fillWhite={true}
                                 isSmall={true}
                             >
-                                <option value="">Trạng thái</option>
+                                <option value="">Tất cả</option>
                                 <option value="true">Bật</option>
                                 <option value="false">Tắt</option>
                             </SelectLegend>
@@ -357,7 +357,7 @@ const AccountPage = () => {
                                     <i className="fa-solid fa-key text-xs"></i>
                                 </button>
                             </div>
-                            <div className="flex-3 truncate">{user.fullName}</div>
+                            <div className="flex-2 truncate">{user.fullName}</div>
                             <div className="flex-2 truncate">{user.username}</div>
                             <div className="flex-2 truncate">{user.email}</div>
                             <div className="flex-1 truncate">{user.role?.name || '-'}</div>
@@ -381,7 +381,7 @@ const AccountPage = () => {
                                 { key: "fullName", label: "Họ và tên" },
                                 { key: "username", label: "Tên đăng nhập" },
                                 { key: "email", label: "Email" },
-                                { key: "position", label: "Chức vụ" },
+                                { key: "position", label: "Chức danh" },
                                 { key: "role", label: "Vai trò" },
                                 { key: "status", label: "Trạng thái" },
                                 { key: "createdAt", label: "Ngày tạo" },
