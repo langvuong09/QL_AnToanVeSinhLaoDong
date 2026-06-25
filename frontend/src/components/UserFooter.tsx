@@ -40,19 +40,21 @@ export default function UserFooter() {
       {isClicked && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-[80%] bg-white py-2 rounded-xl mb-2">
           <ul className="space-y-2">
-            <li className="text-[14px] text-black font-semibold">
-              <button className="flex items-center gap-4 hover:bg-gray-200 w-full px-5 py-2" onClick={() => {
-                setIsClicked(false);
-                if (authenticate?.state?.role?.code === 'business') {
-                  router.push("/business-info");
-                } else {
-                  router.push("/information");
-                }
-              }}>
-                <i className="fa-solid fa-user text-gray-500 text-2xl"></i>
-                <span>Thông tin tài khoản</span>
-              </button>
-            </li>
+            {authenticate?.state?.role?.code !== 'business' && (
+              <li className="text-[14px] text-black font-semibold">
+                <button className="flex items-center gap-4 hover:bg-gray-200 w-full px-5 py-2" onClick={() => {
+                  setIsClicked(false);
+                  if (authenticate?.state?.role?.code === 'business') {
+                    router.push("/business-info");
+                  } else {
+                    router.push("/information");
+                  }
+                }}>
+                  <i className="fa-solid fa-user text-gray-500 text-2xl"></i>
+                  <span>Thông tin tài khoản</span>
+                </button>
+              </li>
+            )}
             <li className="text-[14px] text-black font-semibold" onClick={() => {
               setIsClicked(false);
               setIsChangePassword(true);
