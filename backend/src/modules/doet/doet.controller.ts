@@ -29,7 +29,7 @@ export class DoetController {
   @ApiOperation({ summary: 'Sở quản lý trực tiếp thêm mới doanh nghiệp (Không cần OTP)' })
   async createByAdmin(@Body() dto: CreateDoetDto) {
     return await this.doetService.create(dto, true);
-  }
+  } 
 
   @Post('public-register')
   @Public()

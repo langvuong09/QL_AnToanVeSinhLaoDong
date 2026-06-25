@@ -65,14 +65,53 @@ export class ReportTypeService {
       throw new NotFoundException('Không tìm thấy cấu hình báo cáo này!');
     }
 
-    if (dto.startDate && dto.endDate) {
-      if (new Date(dto.startDate) > new Date(dto.endDate)) {
-        throw new BadRequestException('Thời gian bắt đầu không thể lớn hơn thời gian kết thúc!');
-      }
+    const now = new Date();
+    
+    const finalStartDate = dto.startDate ? new Date(dto.startDate) : new Date(config.startDate);
+    const finalEndDate = dto.endDate ? new Date(dto.endDate) : new Date(config.endDate);
+
+    if (dto.endDate && finalEndDate < now) {
+      throw new BadRequestException('Ngày kết thúc mới không thể ở trong quá khứ!');
     }
 
-    Object.assign(config, dto);
-    return await this.reportTypeRepository.save(config);
+    if (finalStartDate > finalEndDate) {
+      throw new BadRequestException('Thời gian bắt đầu không thể lớn hơn thời gian kết thúc!');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      Object.assign(config, dto);
+      const savedConfig = await queryRunner.manager.save(ReportType, config);
+      if (dto.endDate) {
+        const warningThresholdDate = new Date();
+        warningThresholdDate.setDate(warningThresholdDate.getDate() + 5);
+
+        if (finalEndDate <= warningThresholdDate) {
+          await queryRunner.manager.update(
+            Report,
+            { reportTypeId: id, status: ReportStatus.DRAFT },
+            { status: ReportStatus.OVERDUE_WARNING }
+          );
+        } else {
+          await queryRunner.manager.update(
+            Report,
+            { reportTypeId: id, status: ReportStatus.OVERDUE_WARNING },
+            { status: ReportStatus.DRAFT }
+          );
+        }
+      }
+
+      await queryRunner.commitTransaction();
+      return Response.get(savedConfig);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getDetail(id: number) {

@@ -78,6 +78,19 @@ export class ReportTypeController {
   }
 
   @Patch(':id/toggle-active')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        isActive: { 
+          type: 'boolean', 
+          example: true, 
+          description: 'Trạng thái hoạt động (true: Kích hoạt, false: Ngưng hoạt động)' 
+        }
+      },
+      required: ['isActive']
+    }
+  })
   @RequirePermissions(PermissionCode.REPORT_TYPE_UPDATE)
   @ApiOperation({ summary: '🎯 Thay đổi nhanh trạng thái Kích hoạt/Ngưng hoạt động bằng Switch trên UI' })
   async toggleActive(
