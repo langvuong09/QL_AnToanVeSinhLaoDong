@@ -34,7 +34,6 @@ const AccountIdPage = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [currentUser, setCurrentUser] = useState<UserDetail | null>(null);
     const [roles, setRoles] = useState<IRole[]>([]);
-    const [errorMessage, setErrorMessage] = useState<string>("");
 
     // ---------- Handle fetch current state ----------
     const fetchUserDetail = async (id: string) => {
@@ -91,7 +90,10 @@ const AccountIdPage = () => {
         } catch (error: any) {
             setLoading(false);
             setCurrentUser(null);
-            setErrorMessage(error.message || "Lỗi không xác định. Vui lòng thử lại sau ít phút." as string);
+            notificate?.showNotification({
+                type: "error",
+                message: error.message || "Lỗi không xác định. Vui lòng thử lại sau ít phút."
+            });
         }
     }
 
@@ -168,6 +170,7 @@ const AccountIdPage = () => {
     });
 
     const onSubmit = async () => {
+        if (loading) return;
         const newErrors = {
             fullName: "",
             gender: "",
@@ -274,11 +277,7 @@ const AccountIdPage = () => {
                 }
                 notificate?.showNotification({ type: "success", message: "Thay đổi thông tin thành công" });
             } else {
-                notificate?.showNotification({ type: "error", message: "Dữ liệu đã có trên hệ thống" });
-                setErrorMessage(result.message || "");
-                setTimeout(() => {
-                    setErrorMessage("");
-                }, 2000);
+                notificate?.showNotification({ type: "error", message: result.message || "Thay đổi thông tin thất bại" });
             }
             setLoading(false);
 
@@ -383,9 +382,9 @@ const AccountIdPage = () => {
 
     return (
         <main className="space-y-10 px-3">
-            {/* {loading && (
+            {loading && (
                 <Loading />
-            )} */}
+            )}
 
             <TopHero
                 lable="Chi tiết người dùng"
@@ -401,13 +400,6 @@ const AccountIdPage = () => {
                     </div>
                 }
             />
-
-            {errorMessage && (
-                <div className="bg-red-100 px-3 py-2 rounded text-red-500 flex items-center gap-5 font-semibold text-sm">
-                    <i className="fa-solid fa-triangle-exclamation"></i>
-                    <span>{errorMessage}</span>
-                </div>
-            )}
 
             <div className="grid grid-cols-12 gap-5">
                 {/* Left card */}

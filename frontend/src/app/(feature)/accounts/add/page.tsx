@@ -20,7 +20,6 @@ const AccountAddPage = () => {
     const router = useRouter();
     const [roles, setRoles] = useState<IRole[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
-    const [errorMessage, setErrorMessage] = useState<string>("")
 
     const fetchRoles = async () => {
         setLoading(true);
@@ -59,7 +58,7 @@ const AccountAddPage = () => {
         gender: "",
         roleId: 0,
 
-        password: "A12345678",
+        password: "User@123456",
         dateOfBirth: "",
         position: "",
         email: "",
@@ -85,6 +84,7 @@ const AccountAddPage = () => {
 
         password: string;
         dateOfBirth: string;
+        position: string;
         email: string;
 
         province: string;
@@ -98,6 +98,7 @@ const AccountAddPage = () => {
 
         password: "",
         dateOfBirth: "",
+        position: "",
         email: "",
 
         province: "",
@@ -106,6 +107,7 @@ const AccountAddPage = () => {
     });
 
     const onSubmit = async () => {
+        if (loading) return;
         const newErrors = {
             username: "",
             fullName: "",
@@ -114,6 +116,7 @@ const AccountAddPage = () => {
 
             password: "",
             dateOfBirth: "",
+            position: "",
             email: "",
 
             province: "",
@@ -173,6 +176,11 @@ const AccountAddPage = () => {
             hasError = true;
         }
 
+        if (!submitForm.position?.trim()) {
+            newErrors.position = "Chức danh không được để trống";
+            hasError = true;
+        }
+
         if (!submitForm.dateOfBirth) {
             newErrors.dateOfBirth = "Ngày sinh không được để trống";
             hasError = true;
@@ -227,8 +235,7 @@ const AccountAddPage = () => {
                 notificate?.showNotification({ type: "success", message: "Tạo người dùng mới thành công" });
                 setTimeout(() => router.push("/accounts"), 200);
             } else {
-                notificate?.showNotification({ type: "error", message: "Tạo người dùng mới thất bại" });
-                setErrorMessage(result.message || "");
+                notificate?.showNotification({ type: "error", message: result.message || "Tạo người dùng mới thất bại" });
             }
             setLoading(false);
 
@@ -334,12 +341,12 @@ const AccountAddPage = () => {
 
     return (
         <main className="space-y-10 px-3">
-            {/* {loading && (
+            {loading && (
                 <Loading />
-            )} */}
+            )}
 
             <TopHero
-                lable="Chi tiết người dùng"
+                lable="Thêm người dùng mới"
                 component={
                     <div className="flex gap-5 rounded">
                         <Button variant="outline" className="flex gap-3 items-center text-sm font-semibold" onClick={() => router.push("/accounts")}>
@@ -352,13 +359,6 @@ const AccountAddPage = () => {
                     </div>
                 }
             />
-
-            {errorMessage && (
-                <div className="bg-red-100 px-3 py-2 rounded text-red-500 flex items-center gap-5 font-semibold text-sm">
-                    <i className="fa-solid fa-triangle-exclamation"></i>
-                    <span>{errorMessage}</span>
-                </div>
-            )}
 
             <div className="grid grid-cols-12 gap-5">
                 {/* Left card */}
@@ -488,6 +488,7 @@ const AccountAddPage = () => {
                                     label="Ngày tháng năm sinh"
                                     require={true}
                                     value={submitForm.dateOfBirth}
+                                    maxDate="today"
                                     onChange={(val) => {
                                         setSubmitForm((prev) => ({ ...prev, dateOfBirth: val }));
                                         setErrorForm((prev) => ({ ...prev, dateOfBirth: "" }));
@@ -498,13 +499,16 @@ const AccountAddPage = () => {
 
                                 <InputLegend
                                     label="Chức danh"
+                                    require={true}
                                     input={{
                                         type: "text",
                                         value: submitForm.position,
                                         onChange: (event) => {
                                             setSubmitForm((prev) => ({ ...prev, position: event.target.value }));
+                                            setErrorForm((prev) => ({ ...prev, position: "" }));
                                         },
                                     }}
+                                    errorMess={errorForm.position}
                                 />
 
                                 <InputLegend

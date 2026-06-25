@@ -78,6 +78,7 @@ const InformationPage = () => {
     });
 
     const onSubmit = async () => {
+        if (loading) return;
         const newErrors = {
             fullName: "",
             dateOfBirth: "",
