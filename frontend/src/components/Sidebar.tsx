@@ -60,17 +60,15 @@ export default function Sidebar() {
   const filteredMenus = useMemo(() => {
     if (!sidebarMenus) return null;
     const isBusiness = authenticate?.state?.role?.code === 'business';
-    if (!isBusiness) return sidebarMenus;
+    if (!isBusiness) {
+      // Admin / non-business: Remove "Hệ thống" (ID 3)
+      return sidebarMenus.filter(menu => menu.id !== 3);
+    }
 
+    // Business: Show only "Tai nạn lao động" (ID 2) and "Hệ thống" (ID 3)
     const result = sidebarMenus
       .map((menu) => {
-        if (menu.id === 2) {
-          return {
-            ...menu,
-            isOpen: true,
-          }
-        }
-        if (menu.id === 3) {
+        if (menu.id === 2 || menu.id === 3) {
           return {
             ...menu,
             isOpen: true,
@@ -80,9 +78,10 @@ export default function Sidebar() {
       })
       .filter((menu): menu is SidebarMenuItem => menu !== null && menu.children.length > 0);
 
+    // Sort "Hệ thống" (ID 3) (Thông tin doanh nghiệp) to the top
     return result.sort((a, b) => {
-      if (a.id === 8) return -1;
-      if (b.id === 8) return 1;
+      if (a.id === 3) return -1;
+      if (b.id === 3) return 1;
       return 0;
     });
   }, [sidebarMenus, authenticate?.state?.role?.code])

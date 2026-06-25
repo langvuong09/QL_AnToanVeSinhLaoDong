@@ -25,7 +25,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
     const { data } = await this.userService.get({
       where: JSON.stringify(_where),
-      relation: JSON.stringify(["role"])
+      relation: JSON.stringify(["role", "doet"])
     });
 
     const user = get(data, "items[0]");
@@ -34,7 +34,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       throw new NotFoundException({ code: 3033, message: 'Account not found' });
     }
     
-    if (user.status === false) {
+    if (user.status === false || (user.doet && user.doet.status === false)) {
       throw new NotAcceptableException({ code: 3035, message: 'Account is locked' });
     }
 
