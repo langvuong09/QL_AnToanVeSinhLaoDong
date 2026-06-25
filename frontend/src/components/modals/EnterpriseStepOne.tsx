@@ -265,6 +265,14 @@ export default function EnterpriseStepOne({
     if (file.url) window.open(file.url, '_blank')
   }
 
+  const localDateStr = useMemo(() => {
+    const d = new Date()
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }, [])
+
   const sectionTitle = mode === 'create' ? 'Thêm mới doanh nghiệp' : mode === 'edit' ? 'Chỉnh sửa doanh nghiệp' : 'Chi tiết doanh nghiệp'
 
   return (
@@ -310,6 +318,7 @@ export default function EnterpriseStepOne({
               label="Ngày cấp GPKD" require
               value={form.gpkdDate} onChange={(v) => onChange('gpkdDate', v)}
               disabled={isViewMode} errorMess={errors.gpkdDate} errorInput="Ngày cấp GPKD không hợp lệ"
+              maxDate={localDateStr}
             />
             <SearchableSelectLegend
               label="Tỉnh/Thành phố ĐKKD" require
