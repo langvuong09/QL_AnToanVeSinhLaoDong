@@ -3,6 +3,7 @@ import { Trauma } from "../traumaFactor/trauma-factor.entity";
 import { InjuryType } from "../typeInjury/injury.entity";
 import { Report } from "./report.entity";
 import { AccidentCauseEnum } from "../../commons/enums/accident.enum";
+import { AccidentCause } from "../accidentCause/accident-cause.entity";
 
 @Entity("report_details")
 export class ReportDetail {
@@ -13,12 +14,12 @@ export class ReportDetail {
   @JoinColumn({ name: "reportId" })
   report!: Report;
 
-  @Column({ 
-    type: "enum", 
-    enum: AccidentCauseEnum, 
-    nullable: true 
-  })
-  cause?: AccidentCauseEnum;
+  @Column({ nullable: true })
+  causeId?: number;
+
+  @ManyToOne(() => AccidentCause)
+  @JoinColumn({ name: "causeId" })
+  cause?: AccidentCause;
 
   // --- 1. Nhóm định danh của vụ tai nạn ---
   @Column({ nullable: true }) traumaId!: number;
