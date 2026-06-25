@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { IBusinessType } from '@/src/api/BusinessType'
 import type { IIndustry } from '@/src/api/Industry'
-import type { ElementAddress } from '@/src/api/User'
+import { User as UserApi, type ElementAddress } from '@/src/api/User'
 import { OpenAdress, type Province } from '@/src/services/open-address'
 import { useFileAttachment } from '@/src/hooks/useFileAttachment'
 import EnterpriseStepOne from './EnterpriseStepOne'
@@ -13,6 +13,8 @@ import OtpVerificationModal from './OtpVerificationModal'
 import { Auth } from '@/src/api/Auth'
 import type { EnterpriseFormData, EnterpriseFormErrors, EnterpriseFormMode, AttachmentGroup } from './EnterpriseStepOne'
 import type { Enterprise } from '@/src/mocks/enterprises'
+import axios from 'axios'
+import { DoetApi } from '@/src/api/Doet'
 
 type SaveResult = {
   success: boolean
@@ -116,6 +118,88 @@ function isFutureDate(value: string) {
   return !Number.isNaN(date.getTime()) && date > today
 }
 
+async function checkTaxCodeExists(taxCode: string, isRegister: boolean): Promise<boolean> {
+  const cleanTaxCode = taxCode.trim()
+  if (!cleanTaxCode) return false
+
+  // If logged in (not registering), use DoetApi to check
+  if (!isRegister) {
+    try {
+      const doetApi = new DoetApi()
+      const res = await doetApi.getAll({ taxCode: cleanTaxCode })
+      if (res.success && res.data && res.data.items) {
+        const exactMatch = res.data.items.some(item => 
+          item.doet?.taxCode?.trim() === cleanTaxCode
+        )
+        return exactMatch
+      }
+    } catch (e) {
+      console.error('Error checking tax code via DoetApi:', e)
+    }
+  }
+
+  // Fallback for public registration (guest) using the /auth/login strategy
+  try {
+    const endpoint = (process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:3010').replace(/\/$/, '') + '/api/v1/auth/login'
+    await axios.post(endpoint, {
+      username: cleanTaxCode,
+      password: 'checking_tax_code_existence_dummy_pass'
+    })
+    return true
+  } catch (error: any) {
+    if (error.response) {
+      const status = error.response.status
+      const data = error.response.data
+      if (status === 404) {
+        return false
+      }
+      if (status === 401) {
+        return true
+      }
+      const msg = data?.message || ''
+      if (String(msg).toLowerCase().includes('not found') || data?.code === 3033) {
+        return false
+      }
+    }
+    return false
+  }
+}
+
+async function checkEmailExists(email: string, isRegister: boolean): Promise<boolean> {
+  const cleanEmail = email.trim().toLowerCase()
+  if (!cleanEmail) return false
+
+  // If logged in (admin/manager), check both normal users and enterprise users
+  if (!isRegister) {
+    try {
+      // 1. Check normal users (where doetId is null)
+      const userApi = new UserApi()
+      const resUser = await userApi.getAll({ email: cleanEmail })
+      if (resUser.success && resUser.data && resUser.data.items) {
+        const exactMatch = resUser.data.items.some(item => 
+          item.email?.trim().toLowerCase() === cleanEmail
+        )
+        if (exactMatch) return true
+      }
+
+      // 2. Check enterprise users (where doetId is not null)
+      const doetApi = new DoetApi()
+      const resDoet = await doetApi.getAll({ pageSize: 10000 })
+      if (resDoet.success && resDoet.data && resDoet.data.items) {
+        const exactMatch = resDoet.data.items.some(item => 
+          item.email?.trim().toLowerCase() === cleanEmail
+        )
+        if (exactMatch) return true
+      }
+    } catch (e) {
+      console.error('Error checking email existence:', e)
+    }
+  }
+
+  // For public register (guest), the backend SendRegisterOtp handles the check.
+  return false
+}
+
 export default function EnterpriseModal({
   isOpen,
   onClose,
@@ -194,8 +278,46 @@ export default function EnterpriseModal({
   }
 
   const handleChange = (field: keyof EnterpriseFormData, value: string | number | ElementAddress) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-    setErrors((prev) => ({ ...prev, [field]: '' }))
+    setForm((prev) => {
+      const newForm = { ...prev, [field]: value }
+      setErrors((prevErrors) => {
+        const nextErrors = { ...prevErrors }
+        
+        if (field === 'businessTypeId' || field === 'businessType') {
+          const hasVal = typeof newForm.businessTypeId === 'number' ? true : !!newForm.businessTypeId
+          if (hasVal) {
+            nextErrors.businessTypeId = ''
+            nextErrors.businessType = ''
+          } else {
+            nextErrors.businessTypeId = 'Loại hình kinh doanh là bắt buộc'
+            nextErrors.businessType = 'Loại hình kinh doanh là bắt buộc'
+          }
+        } else if (field === 'industryId' || field === 'industry') {
+          const hasVal = typeof newForm.industryId === 'number' ? true : !!newForm.industryId
+          if (hasVal) {
+            nextErrors.industryId = ''
+            nextErrors.industry = ''
+          } else {
+            nextErrors.industryId = 'Ngành nghề kinh doanh cấp 4 là bắt buộc'
+            nextErrors.industry = 'Ngành nghề kinh doanh cấp 4 là bắt buộc'
+          }
+        } else if (field === 'gpkdDate') {
+          const valStr = String(value).trim()
+          if (!valStr) {
+            nextErrors.gpkdDate = 'Ngày cấp GPKD là bắt buộc'
+          } else if (isFutureDate(valStr)) {
+            nextErrors.gpkdDate = 'Ngày cấp GPKD không được lớn hơn ngày hiện tại'
+          } else {
+            nextErrors.gpkdDate = ''
+          }
+        } else {
+          nextErrors[field] = ''
+        }
+        
+        return nextErrors
+      })
+      return newForm
+    })
   }
 
   const validate = (): boolean => {
@@ -228,7 +350,13 @@ export default function EnterpriseModal({
     }
 
     requireField('businessTypeId', 'Loại hình kinh doanh là bắt buộc')
+    if (next.businessTypeId) {
+      next.businessType = 'Loại hình kinh doanh là bắt buộc'
+    }
     requireField('industryId', 'Ngành nghề kinh doanh cấp 4 là bắt buộc')
+    if (next.industryId) {
+      next.industry = 'Ngành nghề kinh doanh cấp 4 là bắt buộc'
+    }
     requireField('gpkdDate', 'Ngày cấp GPKD là bắt buộc')
     if (form.gpkdDate && isFutureDate(form.gpkdDate)) {
       next.gpkdDate = 'Ngày cấp GPKD không được lớn hơn ngày hiện tại'
@@ -267,6 +395,48 @@ export default function EnterpriseModal({
   const handleNext = async () => {
     if (!validate()) return
 
+    if (mode === 'create' || mode === 'edit') {
+      setSubmitting(true)
+      try {
+        // 1. Check duplicate Tax Code (only if creating)
+        if (mode === 'create') {
+          const taxCodeExists = await checkTaxCodeExists(form.taxCode, isRegister)
+          if (taxCodeExists) {
+            setErrors(prev => ({
+              ...prev,
+              taxCode: 'Mã số thuế này đã tồn tại trên hệ thống!'
+            }))
+            showToast('error', 'Mã số thuế này đã tồn tại trên hệ thống!')
+            setSubmitting(false)
+            return
+          }
+        }
+
+        // 2. Check duplicate Email
+        let emailChanged = true
+        if (mode === 'edit' && initialData) {
+          emailChanged = form.email.trim().toLowerCase() !== initialData.email?.trim().toLowerCase()
+        }
+
+        if (emailChanged && !isRegister) {
+          const emailExists = await checkEmailExists(form.email, isRegister)
+          if (emailExists) {
+            setErrors(prev => ({
+              ...prev,
+              email: 'Email này đã tồn tại trên hệ thống!'
+            }))
+            showToast('error', 'Email này đã tồn tại trên hệ thống!')
+            setSubmitting(false)
+            return
+          }
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setSubmitting(false)
+      }
+    }
+
     if (isRegister) {
       if (registerToken && form.email.trim().toLowerCase() === verifiedEmail.trim().toLowerCase()) {
         setCurrentStep(2)
@@ -281,7 +451,15 @@ export default function EnterpriseModal({
           showToast('success', 'Mã OTP đã được gửi đến email của bạn')
           setShowOtpModal(true)
         } else {
-          showToast('error', result.message || 'Không thể gửi mã OTP. Vui lòng thử lại.')
+          if (result.message?.includes('Email này đã tồn tại') || result.message?.toLowerCase().includes('email')) {
+            setErrors(prev => ({
+              ...prev,
+              email: 'Email này đã tồn tại trên hệ thống!'
+            }))
+            showToast('error', 'Email này đã tồn tại trên hệ thống!')
+          } else {
+            showToast('error', result.message || 'Không thể gửi mã OTP. Vui lòng thử lại.')
+          }
         }
       } catch (err: any) {
         showToast('error', err?.message || 'Có lỗi xảy ra khi gửi mã OTP')
@@ -310,7 +488,11 @@ export default function EnterpriseModal({
     setSubmitting(false)
 
     if (!result.success) {
-      showToast('error', result.message)
+      let friendlyMessage = result.message
+      if (result.message.includes('IDX_78ca3a129ee713cf4082cb89fd') || result.message.includes('unique constraint')) {
+        friendlyMessage = 'Email này đã tồn tại trên hệ thống!'
+      }
+      showToast('error', friendlyMessage)
       
       const newErrors: EnterpriseFormErrors = {}
       let hasFieldError = false
@@ -319,8 +501,13 @@ export default function EnterpriseModal({
         newErrors.taxCode = result.message
         hasFieldError = true
       }
-      if (result.message.includes('Email') || result.message.toLowerCase().includes('email')) {
-        newErrors.email = result.message
+      if (
+        result.message.includes('Email') || 
+        result.message.toLowerCase().includes('email') ||
+        result.message.includes('IDX_78ca3a129ee713cf4082cb89fd') ||
+        result.message.includes('unique constraint')
+      ) {
+        newErrors.email = 'Email này đã tồn tại trên hệ thống!'
         hasFieldError = true
       }
 

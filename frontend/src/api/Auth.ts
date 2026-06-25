@@ -21,7 +21,7 @@ export class Auth extends Base {
             return result.data;
         }
         else {
-            throw Error(result.message === "Account is locked" ? "Tài khoản bị khóa" : "Thông tin đăng nhập không chính xác");
+            throw Error(result.message === "Account is locked" ? "Tài khoản đã khóa vui lòng liên hệ admin" : "Thông tin đăng nhập không chính xác");
         }
     }
 

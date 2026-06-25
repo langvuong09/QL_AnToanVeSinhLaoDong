@@ -295,6 +295,14 @@ export class DoetService {
       doet.status = status;
       await queryRunner.manager.save(Doet, doet);
 
+      const associatedUser = await queryRunner.manager.findOne(User, {
+        where: { doetId: id }
+      });
+      if (associatedUser) {
+        associatedUser.status = status;
+        await queryRunner.manager.save(User, associatedUser);
+      }
+
       if (status === true) {
         const currentDate = new Date();
 

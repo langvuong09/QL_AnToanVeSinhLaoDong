@@ -88,7 +88,7 @@ const InputLegend = ({
                         {label}
 
                         {require && (
-                            <span className={`text-red-600 ${isFocused ? "inline" : "hidden"}`}> *</span>
+                            <span className="text-red-600"> *</span>
                         )}
                     </label>
                 )}

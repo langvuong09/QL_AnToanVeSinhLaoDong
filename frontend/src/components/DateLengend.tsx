@@ -30,6 +30,7 @@ type DatePickerProps = {
 
     fillWhite?: boolean;
     isSmall?: boolean;
+    maxDate?: string;
 }
 
 function pad(n: number) { return String(n).padStart(2, '0'); }
@@ -48,7 +49,7 @@ function displayToIso(display: string): string {
     return `${yyyy}-${mm}-${dd}`;
 }
 
-export default function DatePicker({ label, require, errorMess, errorInput, value, onChange, disabled, id, defaultLang = 'vi', fillWhite, isSmall }: DatePickerProps) {
+export default function DatePicker({ label, require, errorMess, errorInput, value, onChange, disabled, id, defaultLang = 'vi', fillWhite, isSmall, maxDate }: DatePickerProps) {
     const today = new Date();
     const [lang, setLang] = useState<Lang>(defaultLang);
 
@@ -61,6 +62,22 @@ export default function DatePicker({ label, require, errorMess, errorInput, valu
     const [isInternalErr, setIsInternalErr] = useState<boolean>(false);
 
     const containerRef = useRef<HTMLDivElement>(null);
+
+    const getMaxDate = (): Date | null => {
+        if (!maxDate) return null;
+        if (maxDate === 'today') {
+            const d = new Date();
+            d.setHours(23, 59, 59, 999);
+            return d;
+        }
+        const d = new Date(maxDate);
+        if (!Number.isNaN(d.getTime())) {
+            d.setHours(23, 59, 59, 999);
+            return d;
+        }
+        return null;
+    };
+    const maxD = getMaxDate();
 
     useEffect(() => {
         setInputVal(isoToDisplay(value ?? ''));
@@ -76,7 +93,25 @@ export default function DatePicker({ label, require, errorMess, errorInput, valu
         return () => document.removeEventListener('click', handler);
     }, []);
 
+    useEffect(() => {
+        const maxDVal = getMaxDate();
+        if (maxDVal) {
+            const maxYear = maxDVal.getFullYear();
+            const maxMonth = maxDVal.getMonth();
+            if (curYear > maxYear) {
+                setCurYear(maxYear);
+                setCurMonth(maxMonth);
+            } else if (curYear === maxYear && curMonth > maxMonth) {
+                setCurMonth(maxMonth);
+            }
+        }
+    }, [curYear, curMonth, maxDate]);
+
     const handleDayClick = (y: number, m: number, d: number) => {
+        const cellDate = new Date(y, m, d);
+        if (maxD && cellDate > maxD) {
+            return;
+        }
         setSelected({ y, m, d });
         const display = `${pad(d)}/${pad(m + 1)}/${y}`;
         const iso = `${y}-${pad(m + 1)}-${pad(d)}`;
@@ -144,8 +179,11 @@ export default function DatePicker({ label, require, errorMess, errorInput, valu
     const rem = cells.length % 7 === 0 ? 0 : 7 - (cells.length % 7);
     for (let i = 1; i <= rem; i++) cells.push({ d: i, isOther: true });
 
-    const yearRange = Array.from({ length: 121 }, (_, i) => today.getFullYear() + 20 - i);
+    const maxYear = maxD ? maxD.getFullYear() : today.getFullYear() + 20;
+    const yearRange = Array.from({ length: 121 }, (_, i) => today.getFullYear() + 20 - i)
+        .filter(y => y <= maxYear);
     const displayError = errorMess;
+    const isNextDisabled = !!(maxD && (curYear > maxD.getFullYear() || (curYear === maxD.getFullYear() && curMonth >= maxD.getMonth())));
 
     return (
         <div className="flex flex-col gap-2 flex-1">
@@ -177,7 +215,14 @@ export default function DatePicker({ label, require, errorMess, errorInput, valu
                         <div className="flex items-center gap-1.5 mb-2.5">
                             <select value={curMonth} onChange={e => setCurMonth(+e.target.value)}
                                 className="border border-gray-200 rounded-md px-1.5 py-1 text-xs font-medium flex-1 outline-none bg-white text-gray-700">
-                                {L.months.map((m, i) => <option key={i} value={i}>{m}</option>)}
+                                {L.months.map((m, i) => {
+                                    const isMonthDisabled = !!(maxD && curYear === maxD.getFullYear() && i > maxD.getMonth());
+                                    return (
+                                        <option key={i} value={i} disabled={isMonthDisabled}>
+                                            {m}
+                                        </option>
+                                    );
+                                })}
                             </select>
                             <select value={curYear} onChange={e => setCurYear(+e.target.value)}
                                 className="border border-gray-200 rounded-md px-1.5 py-1 text-xs font-medium w-17 outline-none bg-white text-gray-700">
@@ -186,8 +231,13 @@ export default function DatePicker({ label, require, errorMess, errorInput, valu
                             <div className="flex gap-0.5 shrink-0">
                                 <button onClick={() => { if (curMonth === 0) { setCurMonth(11); setCurYear(y => y - 1); } else setCurMonth(m => m - 1); }}
                                     className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 text-xs">{"<"}</button>
-                                <button onClick={() => { if (curMonth === 11) { setCurMonth(0); setCurYear(y => y + 1); } else setCurMonth(m => m + 1); }}
-                                    className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 text-xs">{">"}</button>
+                                <button 
+                                    onClick={() => { 
+                                        if (isNextDisabled) return;
+                                        if (curMonth === 11) { setCurMonth(0); setCurYear(y => y + 1); } else setCurMonth(m => m + 1); 
+                                    }}
+                                    disabled={isNextDisabled}
+                                    className={`w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 text-xs ${isNextDisabled ? 'opacity-30 cursor-not-allowed' : ''}`}>{">"}</button>
                             </div>
                         </div>
                         <div className="flex w-fit border border-gray-200 rounded overflow-hidden shrink-0">
@@ -206,10 +256,22 @@ export default function DatePicker({ label, require, errorMess, errorInput, valu
                                 if (cell.isOther) return <div key={i} className="w-full h-8 text-xs text-gray-300 flex items-center justify-center">{cell.d}</div>;
                                 const isSel = selected?.y === curYear && selected?.m === curMonth && selected?.d === cell.d;
                                 const isToday = cell.d === today.getDate() && curMonth === today.getMonth() && curYear === today.getFullYear();
+                                const cellDate = new Date(curYear, curMonth, cell.d);
+                                const isFuture = !!(maxD && cellDate > maxD);
                                 return (
-                                    <button key={i} onClick={() => handleDayClick(curYear, curMonth, cell.d)}
-                                        className={`h-8 text-xs rounded-md flex items-center justify-center transition-colors
-                                            ${isSel ? 'bg-green-500 text-white font-medium' : isToday ? 'text-green-600 font-medium hover:bg-gray-100' : 'text-gray-700 hover:bg-gray-100'}`}>
+                                    <button 
+                                        key={i} 
+                                        onClick={() => !isFuture && handleDayClick(curYear, curMonth, cell.d)}
+                                        disabled={isFuture}
+                                        className={`h-8 text-xs rounded-md flex items-center justify-center transition-colors w-full
+                                            ${isFuture 
+                                                ? 'text-gray-300 cursor-not-allowed bg-transparent' 
+                                                : isSel 
+                                                    ? 'bg-green-500 text-white font-medium' 
+                                                    : isToday 
+                                                        ? 'text-green-600 font-medium hover:bg-gray-100' 
+                                                        : 'text-gray-700 hover:bg-gray-100'
+                                            }`}>
                                         {cell.d}
                                     </button>
                                 );

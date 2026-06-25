@@ -149,7 +149,7 @@ export default function LoginPage() {
       if (parsed?.role?.code === 'business') {
         router.replace("/business-info");
       } else {
-        router.replace("/dashboard");
+        router.replace("/accounts");
       }
     }
   }, [router]);
@@ -229,7 +229,7 @@ export default function LoginPage() {
           if (isBusiness) {
             router.replace("/business-info");
           } else {
-            router.replace("/dashboard");
+            router.replace("/accounts");
           }
         }, 200);
 
@@ -240,7 +240,7 @@ export default function LoginPage() {
 
     } catch (error: any) {
 
-      notificate?.showNotification({ type: "error", message: error });
+      notificate?.showNotification({ type: "error", message: error?.message || String(error) });
 
     } finally {
       setLoading(false);

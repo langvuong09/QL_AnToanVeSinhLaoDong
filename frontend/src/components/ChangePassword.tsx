@@ -71,6 +71,11 @@ const ChangePassword = ({
       return;
     }
 
+    if (result.message?.includes("Mật khẩu cũ không chính xác") || result.message?.toLowerCase().includes("mật khẩu cũ")) {
+      setErrors({ oldPassword: "Mật khẩu cũ không chính xác" });
+      return;
+    }
+
     notificate?.showNotification({ type: "error", message: result.message });
   }
 
@@ -93,7 +98,12 @@ const ChangePassword = ({
             required
             placeholder="Nhập mật khẩu cũ"
             value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
+            onChange={(e) => {
+              setOldPassword(e.target.value);
+              if (errors.oldPassword) {
+                setErrors(prev => ({ ...prev, oldPassword: "" }));
+              }
+            }}
             disabled={isLoading}
             error={errors.oldPassword}
           />
@@ -103,7 +113,12 @@ const ChangePassword = ({
             required
             placeholder="Nhập mật khẩu mới"
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={(e) => {
+              setNewPassword(e.target.value);
+              if (errors.newPassword) {
+                setErrors(prev => ({ ...prev, newPassword: "" }));
+              }
+            }}
             disabled={isLoading}
             error={errors.newPassword}
           />
@@ -113,7 +128,12 @@ const ChangePassword = ({
             required
             placeholder="Nhập lại mật khẩu mới"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              if (errors.confirmPassword) {
+                setErrors(prev => ({ ...prev, confirmPassword: "" }));
+              }
+            }}
             disabled={isLoading}
             error={errors.confirmPassword}
           />
