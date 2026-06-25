@@ -64,7 +64,7 @@ export default function BusinessIndustriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<IIndustry | null>(null)
   const [form, setForm] = useState({ code: '', name: '', parentId: '', status: 'true' })
-  const [errors, setErrors] = useState({ code: '', name: '' })
+  const [errors, setErrors] = useState({ code: '', name: '', parentId: '' })
   const [isSaving, setIsSaving] = useState(false)
 
   // Delete states
@@ -163,7 +163,7 @@ export default function BusinessIndustriesPage() {
   const openNew = () => {
     setEditingItem(null)
     setForm({ code: '', name: '', parentId: '', status: 'true' })
-    setErrors({ code: '', name: '' })
+    setErrors({ code: '', name: '', parentId: '' })
     setIsModalOpen(true)
   }
 
@@ -174,7 +174,7 @@ export default function BusinessIndustriesPage() {
       parentId: item.parentId !== null && item.parentId !== undefined ? String(item.parentId) : '',
       status: item.isActive ? 'true' : 'false',
     })
-    setErrors({ code: '', name: '' })
+    setErrors({ code: '', name: '', parentId: '' })
     setEditingItem(item)
     setIsModalOpen(true)
 
@@ -203,11 +203,47 @@ export default function BusinessIndustriesPage() {
   }
 
   const validate = () => {
-    const nextErrors = { code: '', name: '' }
-    if (!form.code.trim()) nextErrors.code = 'Mã ngành là bắt buộc'
-    if (!form.name.trim()) nextErrors.name = 'Tên ngành là bắt buộc'
+    const nextErrors = { code: '', name: '', parentId: '' }
+    const codeVal = form.code.trim()
+
+    if (!codeVal) {
+      nextErrors.code = 'Mã ngành là bắt buộc'
+    } else {
+      const len = codeVal.length
+      if (len === 1) {
+        if (!/^[A-Z]$/.test(codeVal)) {
+          nextErrors.code = 'Mã ngành cấp 1 phải là một chữ cái in hoa từ A-Z (Ví dụ: A)'
+        }
+      } else if (len === 2) {
+        if (!/^\d{2}$/.test(codeVal)) {
+          nextErrors.code = 'Mã ngành cấp 2 phải gồm 2 chữ số (Ví dụ: 01)'
+        }
+      } else if (len === 3) {
+        if (!/^\d{3}$/.test(codeVal)) {
+          nextErrors.code = 'Mã ngành cấp 3 phải gồm 3 chữ số (Ví dụ: 011)'
+        }
+      } else if (len === 4) {
+        if (!/^\d{4}$/.test(codeVal)) {
+          nextErrors.code = 'Mã ngành cấp 4 phải gồm 4 chữ số (Ví dụ: 0111)'
+        }
+      } else {
+        nextErrors.code = 'Mã ngành phải có độ dài từ 1 đến 4 ký tự (Cấp 1: X, Cấp 2: XX, Cấp 3: XXX, Cấp 4: XXXX)'
+      }
+
+      // Check if parent group is selected for Levels 2, 3, and 4
+      if (len >= 2 && len <= 4 && !nextErrors.code) {
+        if (!form.parentId) {
+          nextErrors.parentId = `Nhóm ngành cha là bắt buộc cho mã ngành cấp ${len}`
+        }
+      }
+    }
+
+    if (!form.name.trim()) {
+      nextErrors.name = 'Tên ngành là bắt buộc'
+    }
+
     setErrors(nextErrors)
-    return !nextErrors.code && !nextErrors.name
+    return !nextErrors.code && !nextErrors.name && !nextErrors.parentId
   }
 
   const handleSave = async () => {
@@ -595,7 +631,32 @@ export default function BusinessIndustriesPage() {
         loadingParents={loadingParents}
         onClose={closeModal}
         onSave={handleSave}
-        onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
+        onChange={(field, value) => {
+          setForm((prev) => {
+            let nextValue = value
+            if (field === 'code' && typeof value === 'string') {
+              nextValue = value.toUpperCase().trim()
+            }
+            const nextForm = { ...prev, [field]: nextValue }
+
+            if (field === 'code') {
+              const codeVal = String(nextValue).trim()
+              const codeLen = codeVal.length
+              let reqParentLevel: number | null = null
+              if (codeLen === 2) reqParentLevel = 1
+              else if (codeLen === 3) reqParentLevel = 2
+              else if (codeLen === 4) reqParentLevel = 3
+
+              if (prev.parentId) {
+                const currentParent = parentIndustries.find((i) => String(i.id) === prev.parentId)
+                if (!currentParent || currentParent.level !== reqParentLevel) {
+                  nextForm.parentId = ''
+                }
+              }
+            }
+            return nextForm
+          })
+        }}
       />
 
       {/* Floating Bulk Action Bar */}
