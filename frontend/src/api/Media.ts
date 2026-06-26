@@ -16,6 +16,10 @@ export class Media extends Base {
             data: data
         });
 
+        if (!result || !result.data) {
+            throw Error("Có lỗi khi tải file");
+        }
+
         return {
             success: result.success,
             message: result.message || "Có lỗi xảy ra khi upload file",

@@ -1,4 +1,4 @@
-export type InjuryDto = {
+export type AccidentDto = {
     id: number;
     code: string;
     name: string;

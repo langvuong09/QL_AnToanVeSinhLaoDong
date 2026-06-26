@@ -3,7 +3,7 @@
 
 import { Agreement } from "@/src/api/Agreement";
 import { AgreementBusiness } from "@/src/api/types/agreement";
-import SelectInputLengend from "@/src/components/SelectInputLengend";
+import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { useRouter } from "next/navigation";
@@ -53,14 +53,30 @@ const TNLDTheoHDLDPage = () => {
 
     useEffect(() => {
         fetchDetails(1);
-    }, []);
-
+    }, [filters]);
 
     return (
         <main className="h-screen flex flex-col py-2">
             <TopHero
-                title="Báo cáo định kỳ tai nạn lao động"
-                className="shrink-0"
+                lable="Báo cáo định kỳ tai nạn lao động"
+                component={
+                    <div className="flex gap-5 rounded">
+                        <SelectLegend
+                            select={{
+                                className: "pe-10",
+                                value: filters.year,
+                                onChange: (e) => {
+                                    setFilters(prev => ({ ...prev, year: Number(e.target.value) }));
+                                }
+                            }}
+                            isSmall={true}
+                        >
+                            {Array.from({ length: 21 }, (_, i) => now.getFullYear() - 20 + i).map((v, idx) => (
+                                <option key={idx} value={v}>{v}</option>
+                            ))}
+                        </SelectLegend>
+                    </div>
+                }
             />
 
             <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden mt-2">
@@ -83,7 +99,7 @@ const TNLDTheoHDLDPage = () => {
                     {items.map((i) => (
                         <div key={i.id} className="flex items-center gap-5 py-2.5 border-b border-gray-100 hover:bg-blue-50/40 transition-colors text-sm text-gray-700">
                             <div className="flex-1 flex items-center justify-center gap-4 text-gray-400">
-                                <button className="hover:text-primary transition-colors">
+                                <button className="hover:text-primary transition-colors" onClick={() => route.push(`/tnld-theo-hdld//view/${i.id}`)}>
                                     <i className="fa-solid fa-eye text-xs"></i>
                                 </button>
                                 {i.status === "DRAFT" && (
@@ -96,15 +112,28 @@ const TNLDTheoHDLDPage = () => {
                             <div className="flex-1 truncate">{i.doet.taxCode}</div>
                             <div className="flex-1">{i.reportType.period}</div>
                             <div className="flex-1">
-                                {i.status === "DRAFT" ? (
+                                {i.status === "DRAFT" && (
                                     <div className="text-gray-500 flex items-center gap-1.5 text-xs font-semibold">
                                         <i className="fa-solid fa-circle text-[8px]"></i>
                                         <span>Đang báo cáo</span>
                                     </div>
-                                ) : (
+                                )}
+                                {i.status === "SUBMITTED" && (
                                     <div className="text-blue-600 flex items-center gap-1.5 text-xs font-semibold">
                                         <i className="fa-solid fa-circle text-[8px]"></i>
                                         <span>Đã tiếp nhận</span>
+                                    </div>
+                                )}
+                                {i.status === "APPROVED" && (
+                                    <div className="text-green-600 flex items-center gap-1.5 text-xs font-semibold">
+                                        <i className="fa-solid fa-circle text-[8px]"></i>
+                                        <span>chấp nhận</span>
+                                    </div>
+                                )}
+                                {i.status === "REJECTED" && (
+                                    <div className="text-red-600 flex items-center gap-1.5 text-xs font-semibold">
+                                        <i className="fa-solid fa-circle text-[8px]"></i>
+                                        <span>chấp nhận</span>
                                     </div>
                                 )}
                             </div>

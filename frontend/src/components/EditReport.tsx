@@ -107,10 +107,10 @@ const EditReport = ({ report, onClose, onSuccess }: EditReportProps) => {
                 hasError = true;
             }
 
-            if (start < today) {
-                newErrors.startDate = "Ngày bắt đầu không được nhỏ hơn ngày hiện tại";
-                hasError = true;
-            }
+            // if (start < today) {
+            //     newErrors.startDate = "Ngày bắt đầu không được nhỏ hơn ngày hiện tại";
+            //     hasError = true;
+            // }
         }
 
         if (hasError) {
