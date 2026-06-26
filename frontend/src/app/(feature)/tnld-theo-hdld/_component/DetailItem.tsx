@@ -10,8 +10,8 @@ import { TraumaDto } from "@/src/api/types/trauma";
 
 type DetailItemProps = {
     detail: Detail;
-    onChangDetail: (idx: number, k: string, v: string | number) => void;
-    handleDeleteDetail: (idx: number) => void;
+    onChangDetail?: (idx: number, k: string, v: string | number) => void;
+    handleDeleteDetail?: (idx: number) => void;
 
     accidents?: AccidentDto[];
     traumas?: TraumaDto[];
@@ -19,10 +19,14 @@ type DetailItemProps = {
 
     errors?: Record<string, string>;
     clearError?: (idx: number, field: string) => void;
+
+    isDisable?: boolean;
 }
 
-const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, traumas, jobs, errors, clearError }: DetailItemProps) => {
+const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, traumas, jobs, errors, clearError, isDisable }: DetailItemProps) => {
     const [isOpen, setIsOpen] = useState(true);
+
+    console.log(onChangDetail === null)
 
     return (
         <div className="space-y-4 px-2 border-b pb-5 border-gray-300">
@@ -44,11 +48,13 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                             <div className="mt-1">
                                 <SelectInputLengend
                                     inputLengend={{
-                                        input: {},
-                                        errorMess: errors?.causeId
+                                        input: {
+                                            disabled: isDisable
+                                        },
+                                        errorMess: errors?.causeId,
                                     }}
                                     onChange={(e) => {
-                                        onChangDetail(detail.idx, "causeId", e.key);
+                                        onChangDetail?.(detail.idx, "causeId", e.key);
                                         clearError?.(detail.idx, "causeId");
                                     }}
                                     value={accidents?.find(v => v.id == detail.causeId)?.name || ""}
@@ -65,11 +71,13 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                             <div className="mt-1">
                                 <SelectInputLengend
                                     inputLengend={{
-                                        input: {},
+                                        input: {
+                                            disabled: isDisable
+                                        },
                                         errorMess: errors?.traumaId
                                     }}
                                     onChange={(e) => {
-                                        onChangDetail(detail.idx, "traumaId", e.key);
+                                        onChangDetail?.(detail.idx, "traumaId", e.key);
                                         clearError?.(detail.idx, "traumaId");
                                     }}
                                     value={traumas?.find(v => v.id == detail.traumaId)?.name || ""}
@@ -89,11 +97,13 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                             <div className="mt-1">
                                 <SelectInputLengend
                                     inputLengend={{
-                                        input: {},
+                                        input: {
+                                            disabled: isDisable
+                                        },
                                         errorMess: errors?.jobId
                                     }}
                                     onChange={(e) => {
-                                        onChangDetail(detail.idx, "jobId", e.key);
+                                        onChangDetail?.(detail.idx, "jobId", e.key);
                                         clearError?.(detail.idx, "jobId");
                                     }}
                                     value={jobs?.find(v => v.id == detail.jobId)?.name || ""}
@@ -161,16 +171,13 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "number",
                                             value: detail.totalVictims,
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
 
-                                                onChangDetail(detail.idx, "totalVictims", n);
-                                                if (n < 2) {
-                                                    onChangDetail(detail.idx, "multiVictimCases", 0);
-                                                } else {
-                                                    onChangDetail(detail.idx, "multiVictimCases", 1);
-                                                }
+                                                onChangDetail?.(detail.idx, "totalVictims", n);
+                                                onChangDetail?.(detail.idx, "multiVictimCases", n > 1 ? 1 : 0);
                                             }
                                         }}
                                         isSmall={true}
@@ -183,10 +190,11 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "number",
                                             value: detail.femaleVictims,
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                onChangDetail(detail.idx, "femaleVictims", n);
+                                                onChangDetail?.(detail.idx, "femaleVictims", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -199,16 +207,13 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "number",
                                             value: detail.fatalVictims,
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                onChangDetail(detail.idx, "fatalVictims", n);
+                                                onChangDetail?.(detail.idx, "fatalVictims", n);
 
-                                                if (n < 2) {
-                                                    onChangDetail(detail.idx, "fatalCases", 0);
-                                                } else {
-                                                    onChangDetail(detail.idx, "fatalCases", 1);
-                                                }
+                                                onChangDetail?.(detail.idx, "fatalCases", n > 0 ? 1 : 0);
                                             }
                                         }}
                                         isSmall={true}
@@ -221,10 +226,11 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "number",
                                             value: detail.severeInjuries,
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                onChangDetail(detail.idx, "severeInjuries", n);
+                                                onChangDetail?.(detail.idx, "severeInjuries", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -240,10 +246,11 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "number",
                                             value: detail.nonManagedVictims,
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                onChangDetail(detail.idx, "nonManagedVictims", n);
+                                                onChangDetail?.(detail.idx, "nonManagedVictims", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -256,10 +263,11 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "number",
                                             value: detail.nonManagedFemaleVictims,
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                onChangDetail(detail.idx, "nonManagedFemaleVictims", n);
+                                                onChangDetail?.(detail.idx, "nonManagedFemaleVictims", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -272,10 +280,11 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "number",
                                             value: detail.nonManagedFatalVictims,
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                onChangDetail(detail.idx, "nonManagedFatalVictims", n);
+                                                onChangDetail?.(detail.idx, "nonManagedFatalVictims", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -288,10 +297,11 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "number",
                                             value: detail.nonManagedSevereInjuries,
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                onChangDetail(detail.idx, "nonManagedSevereInjuries", n);
+                                                onChangDetail?.(detail.idx, "nonManagedSevereInjuries", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -315,13 +325,14 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "text",
                                             value: detail.medicalCost.toLocaleString("vi-VN"),
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const value = e.target.value.replace(/\./g, "");
                                                 const n = Number(value);
 
                                                 if (Number.isNaN(n)) return;
 
-                                                onChangDetail(detail.idx, "medicalCost", n);
+                                                onChangDetail?.(detail.idx, "medicalCost", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -335,13 +346,14 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "text",
                                             value: detail.salaryCompensation.toLocaleString("vi-VN"),
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const value = e.target.value.replace(/\./g, "");
                                                 const n = Number(value);
 
                                                 if (Number.isNaN(n)) return;
 
-                                                onChangDetail(detail.idx, "salaryCompensation", n);
+                                                onChangDetail?.(detail.idx, "salaryCompensation", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -355,13 +367,14 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "text",
                                             value: detail.propertyDamage.toLocaleString("vi-VN"),
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const value = e.target.value.replace(/\./g, "");
                                                 const n = Number(value);
 
                                                 if (Number.isNaN(n)) return;
 
-                                                onChangDetail(detail.idx, "propertyDamage", n);
+                                                onChangDetail?.(detail.idx, "propertyDamage", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -391,10 +404,11 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "number",
                                             value: detail.totalLeaveDays,
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                onChangDetail(detail.idx, "totalLeaveDays", n);
+                                                onChangDetail?.(detail.idx, "totalLeaveDays", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -407,13 +421,14 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                         input={{
                                             type: "text",
                                             value: detail.totalDamage.toLocaleString("vi-VN"),
+                                            disabled: isDisable,
                                             onChange: (e) => {
                                                 const value = e.target.value.replace(/\./g, "");
                                                 const n = Number(value);
 
                                                 if (Number.isNaN(n)) return;
 
-                                                onChangDetail(detail.idx, "totalDamage", n);
+                                                onChangDetail?.(detail.idx, "totalDamage", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -427,12 +442,14 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                     </div>
                 </div>
             )}
-            <div className="flex justify-end pt-10">
-                <button onClick={() => handleDeleteDetail(detail.idx)} className="px-3 py-1 bg-red-50 text-red-600 ring-2 ring-red-600 rounded text-xs font-semibold flex items-center gap-2 hover:bg-red-100">
+            {handleDeleteDetail && (
+                <div className="flex justify-end pt-10">
+                <button onClick={() => handleDeleteDetail?.(detail.idx)} className="px-3 py-1 bg-red-50 text-red-600 ring-2 ring-red-600 rounded text-xs font-semibold flex items-center gap-2 hover:bg-red-100">
                     <i className="fa-solid fa-calendar-minus"></i>
                     <span>Xóa</span>
                 </button>
             </div>
+            )}
         </div>
     );
 };

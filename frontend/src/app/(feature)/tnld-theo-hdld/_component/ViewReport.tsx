@@ -43,11 +43,11 @@ const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
 
                 <div>
                     <p>Đơn vị báo cáo:</p>
-                    <p className="flex items-center gap-10">
-                        <p className="flex flex-1">
+                    <div className="flex items-center gap-10">
+                        <div className="flex flex-1">
                             <p className="flex-1">Địa chỉ:</p>
                             <p className="flex-1 ps-31">Mã huyện, quận:</p>
-                        </p>
+                        </div>
 
                         <div className="flex flex-1">
                             <div className="w-10 h-10 border"></div>
@@ -55,7 +55,7 @@ const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
                             <div className="w-10 h-10 border border-l-0"></div>
                             <div className="w-10 h-10 border border-l-0"></div>
                         </div>
-                    </p>
+                    </div>
                 </div>
 
                 <div className="text-center">

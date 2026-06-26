@@ -158,7 +158,9 @@ export class ReportService {
         );
         report.details = await manager.save(ReportDetail, newDetails);
       }
-      report.status = ReportStatus.SUBMITTED;
+      report.status = dto.status || report.status;
+
+      console.log("..........................", dto.status)
 
       await manager.save(Report, report);
     });

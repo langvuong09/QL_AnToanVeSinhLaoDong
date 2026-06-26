@@ -41,7 +41,7 @@ export type SubmitForm = {
         "totalCases": number;
         "fatalCases": number;
         "multiVictimCases": number;
-        
+
         "totalVictims": number;
         "femaleVictims": number;
         "fatalVictims": number;
@@ -84,6 +84,9 @@ export type SubmitForm = {
     m2TotalDamage: number;
 
     fileIds: string[];
+
+    doet?: Doet;
+    reportType?: ReportConfig;
 }
 
 export type Detail = {
@@ -109,4 +112,54 @@ export type Detail = {
     "totalCost": number;
     "totalLeaveDays": number;
     "totalDamage": number;
+}
+
+type Doet = {
+    "phone": string;
+    "address": string;
+    "ward": {
+        "key": string;
+        "value": string;
+    },
+    "district": {
+        "key": string;
+        "value": string;
+    },
+    "province": {
+        "key": string;
+        "value": string;
+    },
+    "id": number,
+    "name": string;
+    "taxCode": string;
+    "issuedDate": string;
+    "status": true,
+    "businessTypeId": number,
+    "businessType": {
+        "id": number,
+        "code": string;
+        "name": string;
+        "isActive": true,
+    },
+    "industryId": number,
+    "industry": {
+        "id": number,
+        "code": string;
+        "name": string;
+        "isActive": true,
+        "parentId": number,
+    },
+    "foreignName": string;
+    "representative": string;
+    "repPhone": string;
+}
+
+type ReportConfig = {
+    "id": number,
+    "name": string;
+    "year": number,
+    "period": string;
+    "startDate": string;
+    "endDate": string;
+    "isActive": true
 }

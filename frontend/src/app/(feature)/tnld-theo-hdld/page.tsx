@@ -3,7 +3,6 @@
 
 import { Agreement } from "@/src/api/Agreement";
 import { AgreementBusiness } from "@/src/api/types/agreement";
-import SelectInputLengend from "@/src/components/SelectInputLengend";
 import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";

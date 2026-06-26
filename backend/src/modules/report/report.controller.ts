@@ -43,7 +43,7 @@ export class ReportController {
   @ApiOperation({ summary: '🎯 Doanh nghiệp cập nhật sửa đổi nội dung bản nháp/bản bị từ chối (Chỉ sửa được khi trạng thái là DRAFT hoặc REJECTED)' })
   async updateReport(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateReportDto,
+    @Body() dto: UpdateReportDto & { status?: string },
     @GetUser() user: any
   ) {
     return await this.reportService.updateReport(id, dto, user);

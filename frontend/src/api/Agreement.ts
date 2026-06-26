@@ -1,9 +1,9 @@
 import { Base } from "./Base";
-import { AgreementBusiness, AgreementTable, UpdateAgreementData } from "./types/agreement";
+import { AgreementTable, UpdateAgreementData } from "./types/agreement";
 
 type IAgreemnent = {
     count: number;
-    items: AgreementBusiness[];
+    items: AgreementTable[];
     pageNumber: number;
     pageSize: number;
 }

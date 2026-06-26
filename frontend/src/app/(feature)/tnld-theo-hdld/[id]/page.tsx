@@ -19,6 +19,7 @@ import { Trauma } from "@/src/api/Trauma";
 import ViewReport from "../_component/ViewReport";
 import { Media } from "@/src/api/Media";
 import { ConfirmContext } from "@/src/contexts/confirm/confirm";
+import Loading from "@/src/components/Loading";
 
 type OptionReport = "business-info" | "option-1" | "option-2" | "review-report";
 
@@ -27,79 +28,228 @@ const TNLDTheoHDLDIdPage = () => {
     const router = useRouter();
     const notificate = useContext(NotificateContext);
     const confirm = useContext(ConfirmContext);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isPrint, setIsPrint] = useState<boolean>(false);
 
     if (!id) {
         router.push("/tnld-theo-hdld");
     }
 
-
     const [detail, setDetail] = useState<AgreementTable>();
-    const [submitForm, setSubmitForm] = useState<SubmitForm>({
-        title: detail?.overview.title || "Bao cao tai nan lao dong",
-        year: detail?.overview.year || (new Date()).getFullYear(),
-        reportTypeId: detail?.overview.reportConfig.id || 0,
+    const fetchDetail = async () => {
+        if (!id) return;
+        try {
+            const cls = new Agreement();
+            const result = await cls.GetFeTableById(Array.isArray(id) ? id[0] : id);
 
-        totalEmployees: 0,
-        femaleEmployees: 0,
-        totalPayroll: 0,
+            setDetail(result);
+        } catch (error) {
+            alert(error);
+        }
+    }
+
+    const [accidents, setAccidents] = useState<AccidentDto[]>([]);
+    const [traumas, setTraumas] = useState<TraumaDto[]>([]);
+    const [jobs, setJobs] = useState<JobDto[]>([]);
+    const fetchOtherData = async () => {
+        const accidentCls = new Accident();
+        const traumaCls = new Trauma();
+        const jobCls = new Job();
+
+        const result = await Promise.all([jobCls.GetAll(), traumaCls.GetAll(), accidentCls.GetAll()]);
+        setJobs(result[0]);
+        setTraumas(result[1])
+        setAccidents(result[2]);
+    }
+
+    useEffect(() => {
+        if (!id) return;
+        fetchDetail();
+        fetchOtherData();
+    }, [id]);
+
+    const [submitForm, setSubmitForm] = useState<SubmitForm>({
+        title: detail?.title || "",
+        year: detail?.year! || 0,
+        reportTypeId: detail?.reportTypeId || 0,
+
+        totalEmployees: detail?.totalEmployees || 0,
+        femaleEmployees: detail?.femaleEmployees || 0,
+        totalPayroll: detail?.totalPayroll || 0,
 
         // Muc 1
         // Muc 1.1
-        m1TotalCases: 0,
-        m1FatalCases: 0,
-        m1MultiVictimCases: 0,
+        m1TotalCases: detail?.m1TotalCases || 0,
+        m1FatalCases: detail?.m1FatalCases || 0,
+        m1MultiVictimCases: detail?.m1MultiVictimCases || 0,
 
-        m1TotalVictims: 0,
-        m1FemaleVictims: 0,
-        m1FatalVictims: 0,
-        m1SevereInjuries: 0,
+        m1TotalVictims: detail?.m1TotalVictims || 0,
+        m1FemaleVictims: detail?.m1FemaleVictims || 0,
+        m1FatalVictims: detail?.m1FatalVictims || 0,
+        m1SevereInjuries: detail?.m1SevereInjuries || 0,
 
-        m1NonManagedVictims: 0,
-        m1NonManagedFemaleVictims: 0,
-        m1NonManagedFatalVictims: 0,
-        m1NonManagedSevereInjuries: 0,
+        m1NonManagedVictims: detail?.m1NonManagedVictims || 0,
+        m1NonManagedFemaleVictims: detail?.m1NonManagedFemaleVictims || 0,
+        m1NonManagedFatalVictims: detail?.m1NonManagedFatalVictims || 0,
+        m1NonManagedSevereInjuries: detail?.m1NonManagedSevereInjuries || 0,
 
         // Muc 1.2
-        m1MedicalCost: 0,
-        m1SalaryCompensation: 0,
-        m1PropertyDamage: 0,
-        m1TotalCost: 0,
+        m1MedicalCost: detail?.m1MedicalCost || 0,
+        m1SalaryCompensation: detail?.m1SalaryCompensation || 0,
+        m1PropertyDamage: detail?.m1PropertyDamage || 0,
+        m1TotalCost: detail?.m1TotalCost || 0,
 
-        m1TotalLeaveDays: 0,
-        m1TotalDamage: 0,
+        m1TotalLeaveDays: detail?.m1TotalLeaveDays || 0,
+        m1TotalDamage: detail?.m1TotalDamage || 0,
 
-        details: [],
+        details: detail?.details!.map((d, index) => ({
+            idx: index,
+            causeId: d.causeId,
+            traumaId: d.traumaId,
+            jobId: d.jobId,
+
+            totalCases: d.totalCases,
+            fatalCases: d.fatalCases,
+            multiVictimCases: d.multiVictimCases,
+
+            totalVictims: d.totalVictims,
+            femaleVictims: d.femaleVictims,
+            fatalVictims: d.fatalVictims,
+            severeInjuries: d.severeInjuries,
+            nonManagedVictims: d.nonManagedVictims,
+            nonManagedFemaleVictims: d.nonManagedFemaleVictims,
+            nonManagedFatalVictims: d.nonManagedFatalVictims,
+            nonManagedSevereInjuries: d.nonManagedSevereInjuries,
+            medicalCost: d.medicalCost,
+            salaryCompensation: d.salaryCompensation,
+            propertyDamage: d.propertyDamage,
+            totalCost: d.totalCost,
+            totalLeaveDays: d.totalLeaveDays,
+            totalDamage: d.totalDamage,
+        })) ?? [],
 
         // Muc 2
         // Muc 2.1
-        m2TotalCases: 0,
-        m2FatalCases: 0,
-        m2MultiVictimCases: 0,
+        m2TotalCases: detail?.m2TotalCases || 0,
+        m2FatalCases: detail?.m2FatalCases || 0,
+        m2MultiVictimCases: detail?.m2MultiVictimCases || 0,
 
-        m2TotalVictims: 0,
-        m2FemaleVictims: 0,
-        m2FatalVictims: 0,
-        m2SevereInjuries: 0,
+        m2TotalVictims: detail?.m2TotalVictims || 0,
+        m2FemaleVictims: detail?.m2FemaleVictims || 0,
+        m2FatalVictims: detail?.m2FatalVictims || 0,
+        m2SevereInjuries: detail?.m2SevereInjuries || 0,
 
-        m2NonManagedVictims: 0,
-        m2NonManagedFemaleVictims: 0,
-        m2NonManagedFatalVictims: 0,
-        m2NonManagedSevereInjuries: 0,
+        m2NonManagedVictims: detail?.m2NonManagedVictims || 0,
+        m2NonManagedFemaleVictims: detail?.m2NonManagedFemaleVictims || 0,
+        m2NonManagedFatalVictims: detail?.m2NonManagedFatalVictims || 0,
+        m2NonManagedSevereInjuries: detail?.m2NonManagedSevereInjuries || 0,
 
         // Muc 2.2
-        m2MedicalCost: 0,
-        m2SalaryCompensation: 0,
-        m2PropertyDamage: 0,
-        m2TotalCost: 0,
+        m2MedicalCost: detail?.m2MedicalCost || 0,
+        m2SalaryCompensation: detail?.m2SalaryCompensation || 0,
+        m2PropertyDamage: detail?.m2PropertyDamage || 0,
+        m2TotalCost: detail?.m2TotalCost || 0,
 
-        m2TotalLeaveDays: 0,
-        m2TotalDamage: 0,
+        m2TotalLeaveDays: detail?.m2TotalLeaveDays || 0,
+        m2TotalDamage: detail?.m2TotalDamage || 0,
 
-        fileIds: []
+        fileIds: detail?.files!.map(f => f.originalFilename) ?? []
     });
 
+    useEffect(() => {
+        if (!detail) return;
+        if (!(detail.status === "DRAF")) {
+            router.push(`/tnld-theo-hdld/view/${detail.id}`)
+        }
+
+        setSubmitForm({
+            title: detail.title || "",
+            year: Number(detail.year) || 0,
+            reportTypeId: Number(detail.reportTypeId) || 0,
+
+            totalEmployees: Number(detail.totalEmployees) || 0,
+            femaleEmployees: Number(detail.femaleEmployees) || 0,
+            totalPayroll: Number(detail.totalPayroll) || 0,
+
+            m1TotalCases: Number(detail.m1TotalCases) || 0,
+            m1FatalCases: Number(detail.m1FatalCases) || 0,
+            m1MultiVictimCases: Number(detail.m1MultiVictimCases) || 0,
+
+            m1TotalVictims: Number(detail.m1TotalVictims) || 0,
+            m1FemaleVictims: Number(detail.m1FemaleVictims) || 0,
+            m1FatalVictims: Number(detail.m1FatalVictims) || 0,
+            m1SevereInjuries: Number(detail.m1SevereInjuries) || 0,
+
+            m1NonManagedVictims: Number(detail.m1NonManagedVictims) || 0,
+            m1NonManagedFemaleVictims: Number(detail.m1NonManagedFemaleVictims) || 0,
+            m1NonManagedFatalVictims: Number(detail.m1NonManagedFatalVictims) || 0,
+            m1NonManagedSevereInjuries: Number(detail.m1NonManagedSevereInjuries) || 0,
+
+            m1MedicalCost: Number(detail.m1MedicalCost) || 0,
+            m1SalaryCompensation: Number(detail.m1SalaryCompensation) || 0,
+            m1PropertyDamage: Number(detail.m1PropertyDamage) || 0,
+            m1TotalCost: Number(detail.m1TotalCost) || 0,
+
+            m1TotalLeaveDays: Number(detail.m1TotalLeaveDays) || 0,
+            m1TotalDamage: Number(detail.m1TotalDamage) || 0,
+
+            details: detail.details?.map((d, index) => ({
+                idx: index,
+                causeId: Number(d.causeId) || 0,
+                traumaId: Number(d.traumaId) || 0,
+                jobId: Number(d.jobId) || 0,
+
+                totalCases: Number(d.totalCases) || 0,
+                fatalCases: Number(d.fatalCases) || 0,
+                multiVictimCases: Number(d.multiVictimCases) || 0,
+
+                totalVictims: Number(d.totalVictims) || 0,
+                femaleVictims: Number(d.femaleVictims) || 0,
+                fatalVictims: Number(d.fatalVictims) || 0,
+                severeInjuries: Number(d.severeInjuries) || 0,
+
+                nonManagedVictims: Number(d.nonManagedVictims) || 0,
+                nonManagedFemaleVictims: Number(d.nonManagedFemaleVictims) || 0,
+                nonManagedFatalVictims: Number(d.nonManagedFatalVictims) || 0,
+                nonManagedSevereInjuries: Number(d.nonManagedSevereInjuries) || 0,
+
+                medicalCost: Number(d.medicalCost) || 0,
+                salaryCompensation: Number(d.salaryCompensation) || 0,
+                propertyDamage: Number(d.propertyDamage) || 0,
+                totalCost: Number(d.totalCost) || 0,
+
+                totalLeaveDays: Number(d.totalLeaveDays) || 0,
+                totalDamage: Number(d.totalDamage) || 0,
+            })) ?? [],
+
+            m2TotalCases: Number(detail.m2TotalCases) || 0,
+            m2FatalCases: Number(detail.m2FatalCases) || 0,
+            m2MultiVictimCases: Number(detail.m2MultiVictimCases) || 0,
+
+            m2TotalVictims: Number(detail.m2TotalVictims) || 0,
+            m2FemaleVictims: Number(detail.m2FemaleVictims) || 0,
+            m2FatalVictims: Number(detail.m2FatalVictims) || 0,
+            m2SevereInjuries: Number(detail.m2SevereInjuries) || 0,
+
+            m2NonManagedVictims: Number(detail.m2NonManagedVictims) || 0,
+            m2NonManagedFemaleVictims: Number(detail.m2NonManagedFemaleVictims) || 0,
+            m2NonManagedFatalVictims: Number(detail.m2NonManagedFatalVictims) || 0,
+            m2NonManagedSevereInjuries: Number(detail.m2NonManagedSevereInjuries) || 0,
+
+            m2MedicalCost: Number(detail.m2MedicalCost) || 0,
+            m2SalaryCompensation: Number(detail.m2SalaryCompensation) || 0,
+            m2PropertyDamage: Number(detail.m2PropertyDamage) || 0,
+            m2TotalCost: Number(detail.m2TotalCost) || 0,
+
+            m2TotalLeaveDays: Number(detail.m2TotalLeaveDays) || 0,
+            m2TotalDamage: Number(detail.m2TotalDamage) || 0,
+
+            fileIds: detail.files?.map(f => f.originalFilename) ?? []
+        });
+    }, [detail]);
+
     const onChangDetail = (
-        idx: number,  // đây là detail.idx, không phải index trong array
+        idx: number,
         field: string,
         value: string | number
     ) => {
@@ -140,40 +290,6 @@ const TNLDTheoHDLDIdPage = () => {
             };
         });
     };
-
-    const fetchDetail = async () => {
-        if (!id) return;
-        try {
-            const cls = new Agreement();
-            const result = await cls.GetFeTableById(Array.isArray(id) ? id[0] : id);
-
-            console.log(result)
-            setDetail(result);
-
-        } catch (error) {
-
-        }
-    }
-
-    const [isPrint, setIsPrint] = useState<boolean>(false);
-
-    // Nguyen nhan xay ra tai nan
-    const [accidents, setAccidents] = useState<AccidentDto[]>([]);
-    // Yeu to chan thuong
-    const [traumas, setTraumas] = useState<TraumaDto[]>([]);
-    // Nghe nghiep
-    const [jobs, setJobs] = useState<JobDto[]>([]);
-
-    const fetchOtherData = async () => {
-        const accidentCls = new Accident();
-        const traumaCls = new Trauma();
-        const jobCls = new Job();
-
-        const result = await Promise.all([jobCls.GetAll(), traumaCls.GetAll(), accidentCls.GetAll()]);
-        setJobs(result[0]);
-        setTraumas(result[1])
-        setAccidents(result[2]);
-    }
 
     const handleSyncDetail = () => {
         if (!submitForm.m1TotalCases) {
@@ -269,30 +385,7 @@ const TNLDTheoHDLDIdPage = () => {
         }));
     };
 
-    useEffect(() => {
-        if (!id) return;
-        fetchDetail();
-        fetchOtherData();
-    }, [id]);
-
-
-    useEffect(() => {
-        if (!detail) return;
-
-        setSubmitForm(prev => ({
-            ...prev,
-            title: detail.overview.title || "Bao cao tai nan lao dong",
-            year: detail.overview.year || (new Date()).getFullYear(),
-            reportTypeId: detail.overview.reportConfig.id || 0,
-
-            // Nếu detail có sẵn dữ liệu báo cáo thì map vào đây
-            // totalEmployees: detail.overview.totalEmployees || 0,
-            // ...
-        }));
-    }, [detail]);
-
     const [report, setReport] = useState<Record<string, any[]>>()
-
     const inputFileRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -403,22 +496,117 @@ const TNLDTheoHDLDIdPage = () => {
 
     const [error, setError] = useState<Record<string, any>>({});
 
+    const handleSave = async () => {
+        try {
+            setIsLoading(true);
+            const cf = await confirm.waitConfirm();
+            if (!cf) return;
+
+            const mediaCls = new Media();
+            const agreementCls = new Agreement()
+
+            let fileIds: string[] = [];
+            if (selectedFile) {
+                const form = new FormData;
+                form.set("file", selectedFile);
+                form.set("fileType", "REPORT_ATTACHMENT");
+                const resMedia = await mediaCls.UploadImage(form);
+                fileIds = [resMedia.data!.id]
+            }
+
+            await agreementCls.UpdateReportForBussiness(id, {
+                title: submitForm.title,
+                year: submitForm.year,
+                reportTypeId: submitForm.reportTypeId,
+
+                totalEmployees: submitForm.totalEmployees,
+                femaleEmployees: submitForm.femaleEmployees,
+                totalPayroll: submitForm.totalPayroll,
+
+                m1TotalCases: submitForm.m1TotalCases,
+                m1FatalCases: submitForm.m1FatalCases,
+                m1MultiVictimCases: submitForm.m1MultiVictimCases,
+
+                m1TotalVictims: submitForm.m1TotalVictims,
+                m1FemaleVictims: submitForm.m1FemaleVictims,
+                m1FatalVictims: submitForm.m1FatalVictims,
+                m1SevereInjuries: submitForm.m1SevereInjuries,
+
+                m1NonManagedVictims: submitForm.m1NonManagedVictims,
+                m1NonManagedFemaleVictims: submitForm.m1NonManagedFemaleVictims,
+                m1NonManagedFatalVictims: submitForm.m1NonManagedFatalVictims,
+                m1NonManagedSevereInjuries: submitForm.m1NonManagedSevereInjuries,
+
+                m1MedicalCost: submitForm.m1MedicalCost,
+                m1SalaryCompensation: submitForm.m1SalaryCompensation,
+                m1PropertyDamage: submitForm.m1PropertyDamage,
+                m1TotalCost: submitForm.m1TotalCost,
+
+                m1TotalLeaveDays: submitForm.m1TotalLeaveDays,
+                m1TotalDamage: submitForm.m1TotalDamage,
+
+                details: submitForm.details.map(d => ({
+                    "causeId": Number(d.causeId),
+                    "traumaId": Number(d.traumaId),
+                    "jobId": Number(d.jobId),
+                    "totalCases": d.totalCases,
+                    "fatalCases": d.fatalCases,
+                    "multiVictimCases": d.multiVictimCases,
+                    "totalVictims": d.totalVictims,
+                    "femaleVictims": d.femaleVictims,
+                    "fatalVictims": d.fatalVictims,
+                    "severeInjuries": d.severeInjuries,
+                    "nonManagedVictims": d.nonManagedVictims,
+                    "nonManagedFemaleVictims": d.nonManagedFemaleVictims,
+                    "nonManagedFatalVictims": d.nonManagedFatalVictims,
+                    "nonManagedSevereInjuries": d.nonManagedSevereInjuries,
+                    "medicalCost": d.medicalCost,
+                    "salaryCompensation": d.salaryCompensation,
+                    "propertyDamage": d.propertyDamage,
+                    "totalCost": d.totalCost,
+                    "totalLeaveDays": d.totalLeaveDays,
+                    "totalDamage": d.totalDamage
+                })),
+
+                "m2TotalCases": submitForm.m2TotalCases,
+                "m2FatalCases": submitForm.m2FatalCases,
+                "m2MultiVictimCases": submitForm.m2MultiVictimCases,
+                "m2TotalVictims": submitForm.m2TotalVictims,
+                "m2FemaleVictims": submitForm.m2FemaleVictims,
+                "m2FatalVictims": submitForm.m2FatalVictims,
+                "m2SevereInjuries": submitForm.m2SevereInjuries,
+                "m2NonManagedVictims": submitForm.m2NonManagedVictims,
+                "m2NonManagedFemaleVictims": submitForm.m2NonManagedFemaleVictims,
+                "m2NonManagedFatalVictims": submitForm.m2NonManagedFatalVictims,
+                "m2NonManagedSevereInjuries": submitForm.m2NonManagedSevereInjuries,
+                "m2MedicalCost": submitForm.m2MedicalCost,
+                "m2SalaryCompensation": submitForm.m2SalaryCompensation,
+                "m2PropertyDamage": submitForm.m2PropertyDamage,
+                "m2TotalCost": submitForm.m2TotalCost,
+                "m2TotalLeaveDays": submitForm.m2TotalLeaveDays,
+                "m2TotalDamage": submitForm.m2TotalDamage,
+
+                fileIds: fileIds,
+
+                status: "DRAFT",
+            });
+            notificate?.showNotification({ type: "success", message: "Cập nhật báo cáo thành công" });
+
+        } catch (error) {
+            notificate?.showNotification({ type: "error", message: "Cập nhật báo cáo thất bại" });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     const handleSubmit = async () => {
         let hasError = false;
         const errors: Record<string, any> = {};
-        // ==========================================
-        // 1. THÔNG TIN DOANH NGHIỆP
-        // ==========================================
+
         if (!submitForm.totalEmployees || submitForm.totalEmployees <= 0) {
             errors["totalEmployees"] = "Vui lòng nhập tổng số lao động của sở";
             hasError = true;
         }
-
-        // Doanh nghiep co the khong co nhan vien nu 
-        // if (!submitForm.femaleEmployees) {
-        //     errors["femaleEmployees"] = "Vui lòng nhập tổng số lao động nữ";
-        //     hasError = true;
-        // }
 
         if (
             submitForm.totalEmployees > 0 &&
@@ -442,7 +630,6 @@ const TNLDTheoHDLDIdPage = () => {
         }
 
         // 2. BÁO CÁO TAI NẠN LAO ĐỘNG (Mục 1)
-
         let errorSection: "option-1.1" | "option-1.2" | null = null;
 
         // 2.1 Kiểm tra độ dài mảng details khớp tổng số vụ
@@ -504,65 +691,34 @@ const TNLDTheoHDLDIdPage = () => {
             notificate?.showNotification({ type: "error", message: "Vui lòng kiểm tra lại mục 1. Tai nạn lao động" });
             setError(errors);
             setTimeout(() => setError(prev => ({ ...prev, m1Details: "" })), 5000);
-            console.log(errors);
             return;
         }
 
         // 3. BÁO CÁO TAI NẠN LAO ĐỘNG ĐIỀU KHÁC (Mục 2)
         if (submitForm.m2TotalCases > 0) {
             // Thông tin số vụ & nạn nhân
-            if (submitForm.m2FatalCases < 0) {
-                errors["m2FatalCases"] = "Số vụ có người chết không hợp lệ";
-                hasError = true;
-            }
+            // if (submitForm.m2FatalCases < 0) {
+            //     errors["m2FatalCases"] = "Số vụ có người chết không hợp lệ";
+            //     hasError = true;
+            // }
 
-            if (submitForm.m2MultiVictimCases < 0) {
-                errors["m2MultiVictimCases"] = "Số vụ có từ 2 người chết không hợp lệ";
-                hasError = true;
-            }
+            // if (submitForm.m2MultiVictimCases < 0) {
+            //     errors["m2MultiVictimCases"] = "Số vụ có từ 2 người chết không hợp lệ";
+            //     hasError = true;
+            // }
 
-            if (!submitForm.m2TotalVictims || submitForm.m2TotalVictims <= 0) {
-                errors["m2TotalVictims"] = "Vui lòng nhập tổng số người bị nạn";
-                hasError = true;
-            }
+            // if (!submitForm.m2TotalVictims || submitForm.m2TotalVictims <= 0) {
+            //     errors["m2TotalVictims"] = "Vui lòng nhập tổng số người bị nạn";
+            //     hasError = true;
+            // }
 
-            if (!submitForm.m2FemaleVictims || submitForm.m2FemaleVictims <= 0) {
-                errors["m2FemaleVictims"] = "Vui lòng nhập tổng số lao động nữ bị nạn";
-                hasError = true;
-            }
+            // if (!submitForm.m2FemaleVictims || submitForm.m2FemaleVictims <= 0) {
+            //     errors["m2FemaleVictims"] = "Vui lòng nhập tổng số lao động nữ bị nạn";
+            //     hasError = true;
+            // }
 
             if (submitForm.m2FemaleVictims > submitForm.m2TotalVictims) {
                 errors["m2FemaleVictims"] = "Số lao động nữ bị nạn không được lớn hơn tổng số người bị nạn";
-                hasError = true;
-            }
-
-            if (!submitForm.m2FatalVictims || submitForm.m2FatalVictims <= 0) {
-                errors["m2FatalVictims"] = "Vui lòng nhập số người bị chết";
-                hasError = true;
-            }
-
-            if (!submitForm.m2SevereInjuries || submitForm.m2SevereInjuries <= 0) {
-                errors["m2SevereInjuries"] = "Vui lòng nhập số người bị thương nặng";
-                hasError = true;
-            }
-
-            if (!submitForm.m2NonManagedVictims || submitForm.m2NonManagedVictims <= 0) {
-                errors["m2NonManagedVictims"] = "Vui lòng nhập số người bị nạn không QL";
-                hasError = true;
-            }
-
-            if (!submitForm.m2NonManagedFemaleVictims || submitForm.m2NonManagedFemaleVictims <= 0) {
-                errors["m2NonManagedFemaleVictims"] = "Vui lòng nhập số lao động nữ bị nạn không QL";
-                hasError = true;
-            }
-
-            if (!submitForm.m2NonManagedFatalVictims || submitForm.m2NonManagedFatalVictims <= 0) {
-                errors["m2NonManagedFatalVictims"] = "Vui lòng nhập số người chết không quản lý";
-                hasError = true;
-            }
-
-            if (!submitForm.m2NonManagedSevereInjuries || submitForm.m2NonManagedSevereInjuries <= 0) {
-                errors["m2NonManagedSevereInjuries"] = "Vui lòng nhập số người bị thương nặng không quản lý";
                 hasError = true;
             }
 
@@ -594,7 +750,7 @@ const TNLDTheoHDLDIdPage = () => {
         }
 
         if (hasError) {
-            // Hiển thị lỗi đầu tiên qua notification
+            setOptionReport("option-2");
             const firstError = Object.values(errors)[0];
             notificate?.showNotification({ type: "error", message: firstError });
             return;
@@ -607,6 +763,8 @@ const TNLDTheoHDLDIdPage = () => {
         }
 
         try {
+            setIsLoading(true);
+
             const cf = await confirm.waitConfirm();
             if (!cf) return;
 
@@ -691,14 +849,16 @@ const TNLDTheoHDLDIdPage = () => {
                 "m2TotalLeaveDays": submitForm.m2TotalLeaveDays,
                 "m2TotalDamage": submitForm.m2TotalDamage,
 
-                fileIds: [mediaD.id]
-            })
-
-
+                fileIds: [mediaD.id],
+                status: "SUBMITTED",
+            });
             notificate?.showNotification({ type: "success", message: "Cập nhật báo cáo thành công" });
 
         } catch (error) {
             notificate?.showNotification({ type: "error", message: "Cập nhật báo cáo thất bại" });
+        }
+        finally {
+            setIsLoading(true);
         }
     };
 
@@ -709,6 +869,10 @@ const TNLDTheoHDLDIdPage = () => {
 
     return (
         <main className="flex flex-col min-h-screen pb-10">
+            {isLoading && (
+                <Loading />
+            )}
+
             {isPrint && (
                 <div className="fixed top-0 left-0 w-full h-screen bg-gray-800/50 z-100 flex justify-center py-10">
                     <ViewReport submitForm={submitForm} report={report!} onClose={() => setIsPrint(false)} />
@@ -723,7 +887,7 @@ const TNLDTheoHDLDIdPage = () => {
                             <InputLegend
                                 input={{
                                     disabled: true,
-                                    value: detail?.overview.reportConfig.year,
+                                    value: detail?.year,
                                 }}
                                 isSmall={true}
                             />
@@ -759,12 +923,27 @@ const TNLDTheoHDLDIdPage = () => {
                                     <span>Tiếp tục</span>
                                 </button>
                             )}
-                            <button className="bg-blue-600 px-4 py-2 flex items-center gap-1 border-2 border-blue-600 text-white hover:bg-blue-700 hover:bg-border-700 rounded-lg"
-                                onClick={handleSubmit}
-                            >
-                                <i className="fa-solid fa-floppy-disk"></i>
-                                <span>Lưu</span>
-                            </button>
+
+
+
+                            {detail?.status === "DRAFT" && (
+                                <>
+                                    <button className="bg-green-600 px-4 py-2 flex items-center gap-1 border-2 border-green-600 text-white hover:bg-green-700 hover:border-green-700 rounded-lg transition-all"
+                                        onClick={handleSave}
+                                    >
+                                        <i className="fa-regular fa-paste"></i>
+                                        <span>Nháp</span>
+
+                                    </button>
+                                    <button className="bg-blue-600 px-4 py-2 flex items-center gap-1 border-2 border-blue-600 text-white hover:bg-blue-700 hover:border-blue-700 rounded-lg transition-all"
+                                        onClick={handleSubmit}
+                                    >
+                                        <i className="fa-solid fa-floppy-disk"></i>
+                                        <span>Lưu</span>
+                                    </button>
+                                </>
+                            )}
+
                         </div>
                     </div>
                 }
@@ -777,6 +956,7 @@ const TNLDTheoHDLDIdPage = () => {
                         <div className="flex-2">
                             <SelectLegend
                                 select={{
+                                    value: optionReport,
                                     onChange: (e) => {
                                         setOptionReport(e.target.value as OptionReport);
                                     }
@@ -809,7 +989,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             label="Tên công ty"
                                             input={{
                                                 disabled: true,
-                                                value: detail?.overview.company.name
+                                                value: detail?.doet.name
                                             }}
                                             isSmall={true}
                                         />
@@ -819,7 +999,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             label="Loại hình công ty"
                                             input={{
                                                 disabled: true,
-                                                value: detail?.overview.company.businessType.name
+                                                value: detail?.doet.businessType.name
                                             }}
                                             isSmall={true}
                                         />
@@ -829,7 +1009,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             label="Loại hình công ty"
                                             input={{
                                                 disabled: true,
-                                                value: detail?.overview.company.industry.name
+                                                value: detail?.doet.industry.name
                                             }}
                                             isSmall={true}
                                         />
@@ -1531,7 +1711,7 @@ const TNLDTheoHDLDIdPage = () => {
 
                     {optionReport === "review-report" && (
                         <div className="space-y-3">
-                            <h1 className="font-semibold text-sm">Báo cáo tổng hợp tình hình tai nạn lao động - Kỳ báo báo: {detail?.overview.reportConfig.period + " năm " + detail?.overview.reportConfig.year}</h1>
+                            <h1 className="font-semibold text-sm">Báo cáo tổng hợp tình hình tai nạn lao động - Kỳ báo báo: {detail?.reportType.period + " năm " + detail?.reportType.year}</h1>
                             <span className="text-sm flex items-center gap-3">
                                 <div className="flex gap-1">
                                     <span className="text-red-500">***</span>
