@@ -48,5 +48,18 @@ services:
     ports:
       - "3010:3010"
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_ENDPOINT=http://localhost:3010
+    container_name: vna-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
 volumes:
   postgres_data:
