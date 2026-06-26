@@ -31,7 +31,7 @@ export class ReportService {
         reportType: true, 
         files: true, 
         doet: { businessType: true, industry: true }, 
-        details: { trauma: true, injuryType: true ,cause: true }, 
+        details: { trauma: true, job: true ,cause: true }, 
         statusHistories: { user: true } 
       }
     });
@@ -118,6 +118,7 @@ export class ReportService {
 
     await this.dataSource.transaction(async (manager) => {
       report.status = dto.status;
+      report.note = dto.note || report.note;
       await manager.save(Report, report);
       
       const history = manager.create(StatusHistory, {
@@ -129,7 +130,7 @@ export class ReportService {
       await manager.save(StatusHistory, history);
     });
 
-    return Response.get({ id: report.id, status: report.status });
+    return Response.get({ id: report.id, status: report.status, note: report.note });
   }
 
   async getDetailForFE(id: number) {
@@ -163,7 +164,7 @@ export class ReportService {
       details: (report.details || []).map(d => ({ 
         ...d, 
         traumaName: d.trauma?.name, 
-        injuryTypeName: d.injuryType?.name 
+        jobName: d.job?.name
       })),
       timeline: (report.statusHistories || []).map(h => ({
         id: h.id, 

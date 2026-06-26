@@ -10,8 +10,8 @@ export class ReportDetailDto {
   @ApiPropertyOptional({ description: 'ID Yếu tố chấn thương', example: 1 })
   @IsOptional() @IsInt() traumaId?: number;
 
-  @ApiPropertyOptional({ description: 'ID Loại thương tích', example: 1 })
-  @IsOptional() @IsInt() injuryTypeId?: number;
+  @ApiPropertyOptional({ description: 'ID Nghề nghiệp', example: 1 })
+  @IsOptional() @IsInt() jobId?: number;
 
   @ApiPropertyOptional({ description: 'Tổng số vụ', example: 0 })
   @IsOptional() @IsInt() @Min(0) totalCases?: number;
