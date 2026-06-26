@@ -13,80 +13,53 @@ ON CONFLICT (id) DO UPDATE SET
 SELECT setval(pg_get_serial_sequence('business_types', 'id'), coalesce(max(id), 1)) FROM business_types;
 
 
--- =============================================
--- LEVEL 1 — 4 Sectors
--- =============================================
+-- TRUNCATE industries RESTART IDENTITY CASCADE; 
+
 INSERT INTO industries (id, name, code, "parentId", "isActive") VALUES
-(1, 'Sản xuất & Công nghiệp',        'A', NULL, true),
-(2, 'Thương mại & Dịch vụ',          'B', NULL, true),
-(3, 'Công nghệ & Truyền thông',       'C', NULL, true),
-(4, 'Xây dựng & Bất động sản',       'D', NULL, true)
-ON CONFLICT (id) DO UPDATE
-  SET name = EXCLUDED.name, code = EXCLUDED.code,
-      "parentId" = EXCLUDED."parentId", "isActive" = EXCLUDED."isActive";
+-- CẤP 1 (4 Ngành chính)
+(1, 'SẢN XUẤT & CÔNG NGHIỆP', 'A', NULL, true),
+(2, 'THƯƠNG MẠI & DỊCH VỤ', 'B', NULL, true),
+(3, 'CÔNG NGHỆ & TRUYỀN THÔNG', 'C', NULL, true),
+(4, 'XÂY DỰNG & BẤT ĐỘNG SẢN', 'D', NULL, true),
 
+-- CẤP 2 (Con của Cấp 1)
+(10, 'Chế biến thực phẩm & nông sản', 'A1', 1, true),
+(11, 'Cơ khí & Luyện kim', 'A2', 1, true),
+(12, 'Hóa chất & Nhựa', 'A3', 1, true),
+(13, 'Bán buôn & bán lẻ', 'B1', 2, true),
+(14, 'Dịch vụ lưu trú & ăn uống', 'B2', 2, true),
+(15, 'Vận tải & Logistics', 'B3', 2, true),
+(16, 'Công nghệ thông tin', 'C1', 3, true),
+(17, 'Truyền thông & quảng cáo', 'C2', 3, true),
+(18, 'Xây dựng dân dụng', 'D1', 4, true),
+(19, 'Kinh doanh bất động sản', 'D2', 4, true),
 
--- =============================================
--- LEVEL 2 — Divisions
--- A → 4 cấp, B → 3 cấp, C → 2 cấp, D → 4 cấp
--- =============================================
-INSERT INTO industries (id, name, code, "parentId", "isActive") VALUES
--- A (4 cấp)
-(10, 'Chế biến thực phẩm & nông sản', '01', 1, true),
-(11, 'Sản xuất công nghiệp nặng',     '02', 1, true),
--- B (3 cấp)
-(12, 'Bán buôn & bán lẻ',             '03', 2, true),
-(13, 'Dịch vụ lưu trú & ăn uống',    '04', 2, true),
--- C (2 cấp — dừng ở đây)
-(14, 'Lập trình & phần mềm',          '05', 3, true),
-(15, 'Truyền thông & quảng cáo',      '06', 3, true),
--- D (4 cấp)
-(16, 'Xây dựng công trình',           '07', 4, true),
-(17, 'Kinh doanh bất động sản',       '08', 4, true)
-ON CONFLICT (id) DO UPDATE
-  SET name = EXCLUDED.name, code = EXCLUDED.code,
-      "parentId" = EXCLUDED."parentId", "isActive" = EXCLUDED."isActive";
+-- CẤP 3 (Con của Cấp 2)
+(20, 'Chế biến thực phẩm', 'A11', 10, true),
+(21, 'Chế biến nông sản', 'A12', 10, true),
+(22, 'Cơ khí chế tạo', 'A21', 11, true),
+(23, 'Sản xuất sản phẩm nhựa', 'A31', 12, true),
+(24, 'Siêu thị & Cửa hàng tiện lợi', 'B11', 13, true),
+(25, 'Nhà hàng & Café', 'B21', 14, true),
+(26, 'Phát triển phần mềm', 'C11', 16, true),
+(27, 'Xây dựng nhà ở', 'D11', 18, true),
+(28, 'Môi giới bất động sản', 'D21', 19, true),
 
-
--- =============================================
--- LEVEL 3 — Groups
--- A(4 cấp), B(3 cấp — level cuối), D(4 cấp)
--- =============================================
-INSERT INTO industries (id, name, code, "parentId", "isActive") VALUES
--- A (tiếp tục → 4 cấp)
-(20, 'Chế biến thực phẩm',            '011', 10, true),
-(21, 'Chế biến nông sản',             '012', 10, true),
-(22, 'Cơ khí & luyện kim',            '021', 11, true),
--- B (level cuối)
-(23, 'Bán lẻ trực tuyến',             '031', 12, true),
-(24, 'Bán buôn hàng hóa',             '032', 12, true),
-(25, 'Nhà hàng & café',               '041', 13, true),
-(26, 'Khách sạn & lưu trú',           '042', 13, true),
--- D (tiếp tục → 4 cấp)
-(27, 'Thi công dân dụng',             '071', 16, true),
-(28, 'Thi công hạ tầng',              '072', 16, true),
-(29, 'Môi giới bất động sản',         '081', 17, true)
-ON CONFLICT (id) DO UPDATE
-  SET name = EXCLUDED.name, code = EXCLUDED.code,
-      "parentId" = EXCLUDED."parentId", "isActive" = EXCLUDED."isActive";
-
-
--- =============================================
--- LEVEL 4 — Classes (selectable)
--- Chỉ A và D
--- =============================================
-INSERT INTO industries (id, name, code, "parentId", "isActive") VALUES
--- A
-(30, 'Sản xuất thực phẩm đóng gói',   '0111', 20, true),
-(31, 'Chế biến rau củ quả',           '0121', 21, true),
-(32, 'Sản xuất thép & kim loại',      '0211', 22, true),
--- D
-(33, 'Xây dựng nhà ở',                '0711', 27, true),
-(34, 'Xây dựng cầu đường',            '0721', 28, true),
-(35, 'Sàn giao dịch bất động sản',    '0811', 29, true)
-ON CONFLICT (id) DO UPDATE
-  SET name = EXCLUDED.name, code = EXCLUDED.code,
-      "parentId" = EXCLUDED."parentId", "isActive" = EXCLUDED."isActive";
-
+-- CẤP 4 (Con của Cấp 3 - Cấp chọn được)
+(30, 'Sản xuất thực phẩm đóng gói', 'A111', 20, true),
+(31, 'Sản xuất đồ uống', 'A112', 20, true),
+(32, 'Chế biến rau củ quả', 'A121', 21, true),
+(33, 'Sản xuất thép & kim loại', 'A211', 22, true),
+(34, 'Sản xuất bao bì nhựa', 'A311', 23, true),
+(35, 'Bán lẻ trực tuyến', 'B111', 24, true),
+(36, 'Chuỗi nhà hàng thức ăn nhanh', 'B211', 25, true),
+(37, 'Dịch vụ tư vấn phần mềm', 'C111', 26, true),
+(38, 'Xây dựng biệt thự & chung cư', 'D111', 27, true),
+(39, 'Sàn giao dịch bất động sản', 'D211', 28, true)
+ON CONFLICT (id) DO UPDATE SET 
+    name = EXCLUDED.name, 
+    code = EXCLUDED.code, 
+    "parentId" = EXCLUDED."parentId",
+    "isActive" = EXCLUDED."isActive";
 
 SELECT setval(pg_get_serial_sequence('industries', 'id'), coalesce(max(id), 1)) FROM industries;
