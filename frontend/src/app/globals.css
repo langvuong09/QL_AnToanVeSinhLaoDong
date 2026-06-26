@@ -9,6 +9,10 @@ input::-ms-reveal {
   /* Hides the reveal button in Microsoft Edge */
 }
 
+::-webkit-scrollbar {
+    display: none;
+}
+
 button {
   cursor: pointer;
 }

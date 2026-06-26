@@ -2,7 +2,7 @@
 
 import InputLegend from "@/src/components/InputLegend";
 import { useState } from "react";
-import { Detail } from "./type";
+import { Detail } from "../_types/type";
 import { JobDto, } from "@/src/api/types/job";
 import { AccidentDto } from "@/src/api/types/accident";
 import SelectInputLengend from "@/src/components/SelectInputLengend";

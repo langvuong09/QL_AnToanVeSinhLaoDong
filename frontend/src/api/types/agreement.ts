@@ -106,7 +106,7 @@ export type AgreementBusiness = {
 export type AgreementTable = {
     overview: Overview;
 
-    details: any[];
+    details: DetailAgreement[];
     timeline: any[];
 }
 
@@ -121,8 +121,9 @@ export type Overview = {
     reportConfig: ReportType;
 
     companyInfo: {
-        femaleEmployees: number | null;
-        totalEmployees: number | null;
+        femaleEmployees: number;
+        totalEmployees: number;
+        totalPayroll: number;
     };
 
     company: {
@@ -134,21 +135,19 @@ export type Overview = {
     }
 
     summaryM1: {
-        fatalCases: number | null;
-        fatalVictims: number | null;
-        femaleVictims: number | null;
-        medicalCost: number | null;
-        multiVictimCases: number | null;
-        nonManagedFatalVictims: number | null;
-        nonManagedFemaleVictims: number | null;
-        nonManagedSevereInjuries: number | null;
-        nonManagedVictims: number | null;
-        propertyDamage: number | null;
-        salaryCompensation: number | null;
-        severeInjuries: number | null;
-        totalCases: number | null;
-        totalCost: number | null;
-        totalVictims: number | null;
+        "totalCases": number;
+        "fatalCases": number;
+        "multiVictimCases": number;
+        "totalVictims": number;
+        "femaleVictims": number;
+        "fatalVictims": number;
+        "severeInjuries": number;
+        "totalLeaveDays": number;
+        "totalDamage": number;
+        "medicalCost": number;
+        "salaryCompensation": number;
+        "propertyDamage": number;
+        "totalCost": number;
     };
 
     summaryM2: {
@@ -168,4 +167,113 @@ export type Overview = {
         totalCost: number | null;
         totalVictims: number | null;
     };
+}
+
+export type UpdateAgreementData = {
+    "title": string,
+    "year": number,
+    "reportTypeId": number,
+    "totalEmployees": number,
+    "femaleEmployees": number,
+    "totalPayroll": number,
+    "m1TotalCases": number,
+    "m1FatalCases": number,
+    "m1MultiVictimCases": number,
+    "m1TotalVictims": number,
+    "m1FemaleVictims": number,
+    "m1FatalVictims": number,
+    "m1SevereInjuries": number,
+    "m1NonManagedVictims": number,
+    "m1NonManagedFemaleVictims": number,
+    "m1NonManagedFatalVictims": number,
+    "m1NonManagedSevereInjuries": number,
+    "m1MedicalCost": number,
+    "m1SalaryCompensation": number,
+    "m1PropertyDamage": number,
+    "m1TotalCost": number,
+    "m1TotalLeaveDays": number,
+    "m1TotalDamage": number,
+    "m2TotalCases": number,
+    "m2FatalCases": number,
+    "m2MultiVictimCases": number,
+    "m2TotalVictims": number,
+    "m2FemaleVictims": number,
+    "m2FatalVictims": number,
+    "m2SevereInjuries": number,
+    "m2NonManagedVictims": number,
+    "m2NonManagedFemaleVictims": number,
+    "m2NonManagedFatalVictims": number,
+    "m2NonManagedSevereInjuries": number,
+    "m2MedicalCost": number,
+    "m2SalaryCompensation": number,
+    "m2PropertyDamage": number,
+    "m2TotalCost": number,
+    "m2TotalLeaveDays": number,
+    "m2TotalDamage": number,
+    "details": {
+        "causeId": number,
+        "traumaId": number,
+        "jobId": number,
+        "totalCases": number,
+        "fatalCases": number,
+        "multiVictimCases": number,
+        "totalVictims": number,
+        "femaleVictims": number,
+        "fatalVictims": number,
+        "severeInjuries": number,
+        "nonManagedVictims": number,
+        "nonManagedFemaleVictims": number,
+        "nonManagedFatalVictims": number,
+        "nonManagedSevereInjuries": number,
+        "medicalCost": number,
+        "salaryCompensation": number,
+        "propertyDamage": number,
+        "totalCost": number,
+        "totalLeaveDays": number,
+        "totalDamage": number
+    }[],
+    "fileIds": string[]
+}
+
+type DetailAgreement = {
+    "id": number,
+    "reportId": number,
+    "causeId": number,
+    "cause": {
+        "id": number,
+        "code": string,
+        "name": string,
+    },
+    "traumaId": number,
+    "trauma": {
+        "id": number,
+        "code": string,
+        "name": string,
+    },
+    "jobId": number,
+    "job": {
+        "id": number,
+        "code": string,
+        "name": string,
+    },
+    "totalCases": number,
+    "fatalCases": number,
+    "multiVictimCases": number,
+    "totalVictims": number,
+    "femaleVictims": number,
+    "fatalVictims": number,
+    "severeInjuries": number,
+    "nonManagedVictims": number,
+    "nonManagedFemaleVictims": number,
+    "nonManagedFatalVictims": number,
+    "nonManagedSevereInjuries": number,
+    "medicalCost": number,
+    "salaryCompensation": number,
+    "propertyDamage": number,
+    "totalCost": number,
+    "totalLeaveDays": number,
+    "totalDamage": number,
+
+    "traumaName": string,
+    "jobName": string
 }

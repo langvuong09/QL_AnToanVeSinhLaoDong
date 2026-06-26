@@ -53,7 +53,8 @@ export class ReportTypeService {
           queryRunner.manager.create(Report, {
             title: `Báo cáo định kỳ - ${savedConfig.name} (Tự động khởi tạo)`,
             year: savedConfig.year,
-            status: initialStatus,
+            note: "",
+            status: ReportStatus.DRAFT,
             reportTypeId: savedConfig.id,
             doetId: company.id,
             details: [],

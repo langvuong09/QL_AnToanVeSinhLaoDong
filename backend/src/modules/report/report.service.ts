@@ -158,6 +158,7 @@ export class ReportService {
         );
         report.details = await manager.save(ReportDetail, newDetails);
       }
+      report.status = ReportStatus.SUBMITTED;
 
       await manager.save(Report, report);
     });

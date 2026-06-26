@@ -1,5 +1,5 @@
 import { Base } from "./Base";
-import { AgreementBusiness, AgreementTable } from "./types/agreement";
+import { AgreementBusiness, AgreementTable, UpdateAgreementData } from "./types/agreement";
 
 type IAgreemnent = {
     count: number;
@@ -42,5 +42,20 @@ export class Agreement extends Base {
         }
 
         throw Error("Lỗi khi lấy dữ liệu");
+    }
+
+
+    async UpdateReportForBussiness(id: any, data: UpdateAgreementData) {
+        const result = await this.execute<AgreementTable>({
+            url: `${id}`,
+            method: "PUT",
+            data: data
+        });
+
+        if (result.success && result.data) {
+            return result.data;
+        }
+
+        throw Error("Lỗi khi cập nhật dữ liệu");
     }
 }
