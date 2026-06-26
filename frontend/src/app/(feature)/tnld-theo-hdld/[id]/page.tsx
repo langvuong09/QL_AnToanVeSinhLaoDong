@@ -8,18 +8,21 @@ import TopHero from "@/src/components/TopHero";
 import { useParams, useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { SubmitForm } from "./type";
-import { formatVND } from "./utils";
 import DetailItem from "./DetailItem";
-import { TrauMa } from "@/src/api/Trauma";
-import { TrauMaDto } from "@/src/api/types/trauma";
-import { Injury } from "@/src/api/Injury";
-import { InjuryDto } from "@/src/api/types/Injury";
+import { Job } from "@/src/api/Job";
+import { JobDto } from "@/src/api/types/job";
+import { Accident } from "@/src/api/Accident";
+import { AccidentDto } from "@/src/api/types/accident";
+import { NotificateContext } from "@/src/contexts/notificate/notificate";
+import { TraumaDto } from "@/src/api/types/trauma";
+import { Trauma } from "@/src/api/Trauma";
 
 type OptionReport = "business-info" | "option-1" | "option-2" | "review-report";
 
 const TNLDTheoHDLDIdPage = () => {
     const { id } = useParams();
     const router = useRouter();
+    const notificate = useContext(NotificateContext);
 
     if (!id) {
         router.push("/tnld-theo-hdld");
@@ -86,22 +89,50 @@ const TNLDTheoHDLDIdPage = () => {
 
         m2TotalLeaveDays: 0,
         m2TotalDamage: 0,
+
+        fileIds: []
     });
 
-    const handleUpdateDetail = (index: number, field: keyof SubmitForm["details"][number], value: string | number) => {
+    const onChangDetail = (
+        idx: number,  // đây là detail.idx, không phải index trong array
+        field: string,
+        value: string | number
+    ) => {
         setSubmitForm(prev => {
             const newDetails = [...prev.details];
-            const existing = newDetails[index] || {
-                cause: "", traumaId: 0, injuryTypeId: 0,
-                totalCases: 0, fatalCases: 0, multiVictimCases: 0,
-                totalVictims: 0, femaleVictims: 0, fatalVictims: 0, severeInjuries: 0,
-                nonManagedVictims: 0, nonManagedFemaleVictims: 0,
-                nonManagedFatalVictims: 0, nonManagedSevereInjuries: 0,
-                medicalCost: 0, salaryCompensation: 0, propertyDamage: 0,
-                totalCost: 0, totalLeaveDays: 0, totalDamage: 0,
+
+            const existingIndex = newDetails.findIndex(d => d.idx === idx);
+            console.log(field, value)
+
+            if (existingIndex === -1) return prev;
+
+            newDetails[existingIndex] = {
+                ...newDetails[existingIndex],
+                [field]: value,
             };
-            newDetails[index] = { ...existing, [field]: value };
-            return { ...prev, details: newDetails };
+
+            return {
+                ...prev,
+                details: newDetails,
+
+                m1TotalCases: newDetails.reduce((s, d) => s + d.totalCases, 0),
+                m1FatalCases: newDetails.reduce((s, d) => s + d.fatalCases, 0),
+                m1MultiVictimCases: newDetails.reduce((s, d) => s + d.multiVictimCases, 0),
+                m1TotalVictims: newDetails.reduce((s, d) => s + d.totalVictims, 0),
+                m1FemaleVictims: newDetails.reduce((s, d) => s + d.femaleVictims, 0),
+                m1FatalVictims: newDetails.reduce((s, d) => s + d.fatalVictims, 0),
+                m1SevereInjuries: newDetails.reduce((s, d) => s + d.severeInjuries, 0),
+                m1NonManagedVictims: newDetails.reduce((s, d) => s + d.nonManagedVictims, 0),
+                m1NonManagedFemaleVictims: newDetails.reduce((s, d) => s + d.nonManagedFemaleVictims, 0),
+                m1NonManagedFatalVictims: newDetails.reduce((s, d) => s + d.nonManagedFatalVictims, 0),
+                m1NonManagedSevereInjuries: newDetails.reduce((s, d) => s + d.nonManagedSevereInjuries, 0),
+                m1MedicalCost: newDetails.reduce((s, d) => s + d.medicalCost, 0),
+                m1SalaryCompensation: newDetails.reduce((s, d) => s + d.salaryCompensation, 0),
+                m1PropertyDamage: newDetails.reduce((s, d) => s + d.propertyDamage, 0),
+                m1TotalLeaveDays: newDetails.reduce((s, d) => s + d.totalLeaveDays, 0),
+                m1TotalDamage: newDetails.reduce((s, d) => s + d.totalDamage, 0),
+                m1TotalCost: newDetails.reduce((s, d) => s + d.medicalCost + d.salaryCompensation + d.propertyDamage, 0),
+            };
         });
     };
 
@@ -119,17 +150,117 @@ const TNLDTheoHDLDIdPage = () => {
         }
     }
 
-    const [traumas, setTraumas] = useState<TrauMaDto[]>([]);
-    const [injuries, setInjuries] = useState<InjuryDto[]>([]);
+    // Nguyen nhan xay ra tai nan
+    const [accidents, setAccidents] = useState<AccidentDto[]>([]);
+    // Yeu to chan thuong
+    const [traumas, setTraumas] = useState<TraumaDto[]>([]);
+    // Nghe nghiep
+    const [jobs, setJobs] = useState<JobDto[]>([]);
 
     const fetchOtherData = async () => {
-        const traumaCls = new TrauMa();
-        const injuryCls = new Injury();
+        const accidentCls = new Accident();
+        const traumaCls = new Trauma();
+        const jobCls = new Job();
 
-        const result = await Promise.all([traumaCls.GetAll(), injuryCls.GetAll()]);
-        setTraumas(result[0]);
-        setInjuries(result[1]);
+        const result = await Promise.all([jobCls.GetAll(), traumaCls.GetAll(), accidentCls.GetAll()]);
+        setJobs(result[0]);
+        setTraumas(result[1])
+        setAccidents(result[2]);
     }
+
+    const handleSyncDetail = () => {
+        if (!submitForm.m1TotalCases) {
+            notificate?.showNotification({ type: "error", message: "Tổng số vụ phải lớn hơn 0 mới được đồng bộ " });
+            return;
+        }
+
+        const newDetails = Array.from({ length: submitForm.m1TotalCases }, (_, v) => ({
+            idx: v,
+            "causeId": 0,
+            "traumaId": 0,
+            "jobId": 0,
+
+            "totalCases": 1,
+            "fatalCases": 0,
+            "multiVictimCases": 0,
+            "totalVictims": 0,
+            "femaleVictims": 0,
+            "fatalVictims": 0,
+            "severeInjuries": 0,
+            "nonManagedVictims": 0,
+            "nonManagedFemaleVictims": 0,
+            "nonManagedFatalVictims": 0,
+            "nonManagedSevereInjuries": 0,
+            "medicalCost": 0,
+            "salaryCompensation": 0,
+            "propertyDamage": 0,
+            "totalCost": 0,
+            "totalLeaveDays": 0,
+            "totalDamage": 0,
+        }));
+
+        setSubmitForm(prev => ({ ...prev, details: newDetails }));
+    }
+
+    const handleAddDetail = () => {
+        setSubmitForm(prev => {
+            const nextId =
+                prev.details.length === 0
+                    ? 0
+                    : Math.max(...prev.details.map(v => v.idx)) + 1;
+
+            return {
+                ...prev,
+                m1TotalCases: prev.m1TotalCases + 1,
+                details: [
+                    ...prev.details,
+                    {
+                        idx: nextId,
+
+                        causeId: 0,
+                        traumaId: 0,
+                        jobId: 0,
+
+                        totalCases: 1,
+                        fatalCases: 0,
+                        multiVictimCases: 0,
+
+                        totalVictims: 0,
+                        femaleVictims: 0,
+                        fatalVictims: 0,
+                        severeInjuries: 0,
+
+                        nonManagedVictims: 0,
+                        nonManagedFemaleVictims: 0,
+                        nonManagedFatalVictims: 0,
+                        nonManagedSevereInjuries: 0,
+
+                        medicalCost: 0,
+                        salaryCompensation: 0,
+                        propertyDamage: 0,
+                        totalCost: 0,
+
+                        totalLeaveDays: 0,
+                        totalDamage: 0,
+                    }
+                ]
+            };
+        });
+    };
+
+    const handleDeleteDetail = (idx: number) => {
+        setSubmitForm(prev => ({
+            ...prev,
+            m1TotalCases: Math.max(0, prev.m1TotalCases - 1),
+            details: prev.details.filter(v => v.idx !== idx),
+        }));
+
+        setError(prev => ({
+            ...prev,
+            details: (prev.details as Array<{ idx: number } & Record<string, string>> ?? [])
+                .filter(e => e.idx !== idx)
+        }));
+    };
 
     useEffect(() => {
         if (!id) return;
@@ -137,11 +268,329 @@ const TNLDTheoHDLDIdPage = () => {
         fetchOtherData();
     }, [id]);
 
+    const [report, setReport] = useState<Record<string, any[]>>()
+
+    useEffect(() => {
+        // Muc 1
+        // Nguyen nhan xay ra tai nan lao dong
+        const nguyennhan = accidents.map(acc => {
+            // Lọc các detail có cùng causeId
+            const matchedDetails = submitForm.details.filter(d => Number(d.causeId) == acc.id);
+
+            return {
+                label: acc.name,
+                id: acc.id,
+
+                // Số vụ
+                totalCases: matchedDetails.reduce((s, d) => s + d.totalCases, 0),
+                fatalCases: matchedDetails.reduce((s, d) => s + d.fatalCases, 0),
+                multiVictimCases: matchedDetails.reduce((s, d) => s + d.multiVictimCases, 0),
+
+                // Tổng số người bị nạn
+                totalVictims: matchedDetails.reduce((s, d) => s + d.totalVictims, 0),
+                nonManagedVictims: matchedDetails.reduce((s, d) => s + d.nonManagedVictims, 0),
+
+                // Số LĐ nữ
+                femaleVictims: matchedDetails.reduce((s, d) => s + d.femaleVictims, 0),
+                nonManagedFemaleVictims: matchedDetails.reduce((s, d) => s + d.nonManagedFemaleVictims, 0),
+
+                // Số người bị chết
+                fatalVictims: matchedDetails.reduce((s, d) => s + d.fatalVictims, 0),
+                nonManagedFatalVictims: matchedDetails.reduce((s, d) => s + d.nonManagedFatalVictims, 0),
+
+                // Số người bị thương nặng
+                severeInjuries: matchedDetails.reduce((s, d) => s + d.severeInjuries, 0),
+                nonManagedSevereInjuries: matchedDetails.reduce((s, d) => s + d.nonManagedSevereInjuries, 0),
+            };
+        });
+
+        const yeutochanthuong = traumas.map(acc => {
+            const matchedDetails = submitForm.details.filter(d => Number(d.traumaId) == acc.id);
+
+            return {
+                label: acc.name,
+                id: acc.id,
+
+                // Số vụ
+                totalCases: matchedDetails.reduce((s, d) => s + d.totalCases, 0),
+                fatalCases: matchedDetails.reduce((s, d) => s + d.fatalCases, 0),
+                multiVictimCases: matchedDetails.reduce((s, d) => s + d.multiVictimCases, 0),
+
+                // Tổng số người bị nạn
+                totalVictims: matchedDetails.reduce((s, d) => s + d.totalVictims, 0),
+                nonManagedVictims: matchedDetails.reduce((s, d) => s + d.nonManagedVictims, 0),
+
+                // Số LĐ nữ
+                femaleVictims: matchedDetails.reduce((s, d) => s + d.femaleVictims, 0),
+                nonManagedFemaleVictims: matchedDetails.reduce((s, d) => s + d.nonManagedFemaleVictims, 0),
+
+                // Số người bị chết
+                fatalVictims: matchedDetails.reduce((s, d) => s + d.fatalVictims, 0),
+                nonManagedFatalVictims: matchedDetails.reduce((s, d) => s + d.nonManagedFatalVictims, 0),
+
+                // Số người bị thương nặng
+                severeInjuries: matchedDetails.reduce((s, d) => s + d.severeInjuries, 0),
+                nonManagedSevereInjuries: matchedDetails.reduce((s, d) => s + d.nonManagedSevereInjuries, 0),
+            };
+        });
+
+        const phantheonghenghiep = jobs.map(acc => {
+            const matchedDetails = submitForm.details.filter(d => Number(d.jobId) == acc.id);
+
+            return {
+                label: acc.name,
+                id: acc.id,
+
+                // Số vụ
+                totalCases: matchedDetails.reduce((s, d) => s + d.totalCases, 0),
+                fatalCases: matchedDetails.reduce((s, d) => s + d.fatalCases, 0),
+                multiVictimCases: matchedDetails.reduce((s, d) => s + d.multiVictimCases, 0),
+
+                // Tổng số người bị nạn
+                totalVictims: matchedDetails.reduce((s, d) => s + d.totalVictims, 0),
+                nonManagedVictims: matchedDetails.reduce((s, d) => s + d.nonManagedVictims, 0),
+
+                // Số LĐ nữ
+                femaleVictims: matchedDetails.reduce((s, d) => s + d.femaleVictims, 0),
+                nonManagedFemaleVictims: matchedDetails.reduce((s, d) => s + d.nonManagedFemaleVictims, 0),
+
+                // Số người bị chết
+                fatalVictims: matchedDetails.reduce((s, d) => s + d.fatalVictims, 0),
+                nonManagedFatalVictims: matchedDetails.reduce((s, d) => s + d.nonManagedFatalVictims, 0),
+
+                // Số người bị thương nặng
+                severeInjuries: matchedDetails.reduce((s, d) => s + d.severeInjuries, 0),
+                nonManagedSevereInjuries: matchedDetails.reduce((s, d) => s + d.nonManagedSevereInjuries, 0),
+            };
+        });
+
+        // Muc 2
+        const record: Record<string, any[]> = {};
+        record["nguyennhan"] = nguyennhan;
+        record["yeutochanthuong"] = yeutochanthuong;
+        record["phantheonghenghiep"] = phantheonghenghiep;
+
+        console.log(record)
+
+        setReport(record);
+
+    }, [submitForm]);
+
+    const [error, setError] = useState<Record<string, any>>({});
+
+    const handleSubmit = () => {
+        let hasError = false;
+        const errors: Record<string, any> = {};
+        // ==========================================
+        // 1. THÔNG TIN DOANH NGHIỆP
+        // ==========================================
+        if (!submitForm.totalEmployees || submitForm.totalEmployees <= 0) {
+            errors["totalEmployees"] = "Vui lòng nhập tổng số lao động của sở";
+            hasError = true;
+        }
+
+        // Doanh nghiep co the khong co nhan vien nu 
+        // if (!submitForm.femaleEmployees) {
+        //     errors["femaleEmployees"] = "Vui lòng nhập tổng số lao động nữ";
+        //     hasError = true;
+        // }
+
+        if (
+            submitForm.totalEmployees > 0 &&
+            submitForm.femaleEmployees > 0 &&
+            submitForm.femaleEmployees > submitForm.totalEmployees
+        ) {
+            errors["femaleEmployees"] = "Tổng số lao động nữ không được lớn hơn tổng số lao động";
+            hasError = true;
+        }
+
+        if (!submitForm.totalPayroll || submitForm.totalPayroll <= 0) {
+            errors["totalPayroll"] = "Vui lòng nhập tổng quỹ lương";
+            hasError = true;
+        }
+
+        if (hasError) {
+            setOptionReport("business-info");
+            notificate?.showNotification({ type: "error", message: "Vui lòng điền đầy đủ thông tin doanh nghiệp" });
+            setError(errors);
+            return;
+        }
+
+        // 2. BÁO CÁO TAI NẠN LAO ĐỘNG (Mục 1)
+
+        let errorSection: "option-1.1" | "option-1.2" | null = null;
+
+        // 2.1 Kiểm tra độ dài mảng details khớp tổng số vụ
+        if (submitForm.m1TotalCases > 0) {
+            if (submitForm.details.length !== submitForm.m1TotalCases) {
+                errors["m1Details"] =
+                    `Số chi tiết (${submitForm.details.length} vụ) không khớp với tổng số vụ (${submitForm.m1TotalCases} vụ). Vui lòng đồng bộ lại.`;
+                hasError = true;
+                errorSection = "option-1.1";
+            }
+
+            // 2.2 Kiểm tra từng chi tiết vụ tai nạn
+            submitForm.details.forEach((detail) => {
+                const label = `Vụ ${detail.idx + 1}`;
+                const detailErrors: Record<string, string> = {};
+                if (!detail.causeId || detail.causeId <= 0) {
+                    detailErrors["causeId"] = `${label}: Chưa chọn nguyên nhân tai nạn`;
+                }
+
+                if (!detail.traumaId || detail.traumaId <= 0) {
+                    detailErrors["traumaId"] = `${label}: Chưa chọn yếu tố chấn thương`;
+                }
+
+                if (!detail.jobId || detail.jobId <= 0) {
+                    detailErrors["jobId"] = `${label}: Chưa chọn nghề nghiệp`;
+                }
+
+                if (detail.medicalCost > 0 && detail.medicalCost < 1000) {
+                    detailErrors["medicalCost"] = `${label}: Chi phí y tế phải từ 1.000đ trở lên`;
+                }
+
+                if (detail.salaryCompensation > 0 && detail.salaryCompensation < 1000) {
+                    detailErrors["salaryCompensation"] = `${label}: Chi phí trả lương phải từ 1.000đ trở lên`;
+                }
+
+                if (detail.propertyDamage > 0 && detail.propertyDamage < 1000) {
+                    detailErrors["propertyDamage"] = `${label}: Chi phí bồi thường phải từ 1.000đ trở lên`;
+                }
+
+                if (detail.totalDamage > 0 && detail.totalDamage < 1000) {
+                    detailErrors["totalDamage"] = `${label}: Thiệt hại tài sản phải từ 1.000đ trở lên`;
+                }
+
+                if (Object.keys(detailErrors).length > 0) {
+                    errors.details = [
+                        ...(errors.details ?? []),
+                        { idx: detail.idx, ...detailErrors }
+                    ];
+                    hasError = true;
+                    errorSection ??= "option-1.2";
+                }
+            });
+        }
+
+        if (hasError) {
+            setOptionReport("option-1");
+            if (errorSection) setOptionChild(errorSection);
+
+            notificate?.showNotification({ type: "error", message: "Vui lòng kiểm tra lại mục 1. Tai nạn lao động" });
+            setError(errors);
+            setTimeout(() => setError(prev => ({ ...prev, m1Details: "" })), 5000);
+            console.log(errors);
+            return;
+        }
+
+        // 3. BÁO CÁO TAI NẠN LAO ĐỘNG ĐIỀU KHÁC (Mục 2)
+        if (submitForm.m2TotalCases > 0) {
+            // Thông tin số vụ & nạn nhân
+            if (submitForm.m2FatalCases < 0) {
+                errors["m2FatalCases"] = "Số vụ có người chết không hợp lệ";
+                hasError = true;
+            }
+
+            if (submitForm.m2MultiVictimCases < 0) {
+                errors["m2MultiVictimCases"] = "Số vụ có từ 2 người chết không hợp lệ";
+                hasError = true;
+            }
+
+            if (!submitForm.m2TotalVictims || submitForm.m2TotalVictims <= 0) {
+                errors["m2TotalVictims"] = "Vui lòng nhập tổng số người bị nạn";
+                hasError = true;
+            }
+
+            if (!submitForm.m2FemaleVictims || submitForm.m2FemaleVictims <= 0) {
+                errors["m2FemaleVictims"] = "Vui lòng nhập tổng số lao động nữ bị nạn";
+                hasError = true;
+            }
+
+            if (submitForm.m2FemaleVictims > submitForm.m2TotalVictims) {
+                errors["m2FemaleVictims"] = "Số lao động nữ bị nạn không được lớn hơn tổng số người bị nạn";
+                hasError = true;
+            }
+
+            if (!submitForm.m2FatalVictims || submitForm.m2FatalVictims <= 0) {
+                errors["m2FatalVictims"] = "Vui lòng nhập số người bị chết";
+                hasError = true;
+            }
+
+            if (!submitForm.m2SevereInjuries || submitForm.m2SevereInjuries <= 0) {
+                errors["m2SevereInjuries"] = "Vui lòng nhập số người bị thương nặng";
+                hasError = true;
+            }
+
+            if (!submitForm.m2NonManagedVictims || submitForm.m2NonManagedVictims <= 0) {
+                errors["m2NonManagedVictims"] = "Vui lòng nhập số người bị nạn không QL";
+                hasError = true;
+            }
+
+            if (!submitForm.m2NonManagedFemaleVictims || submitForm.m2NonManagedFemaleVictims <= 0) {
+                errors["m2NonManagedFemaleVictims"] = "Vui lòng nhập số lao động nữ bị nạn không QL";
+                hasError = true;
+            }
+
+            if (!submitForm.m2NonManagedFatalVictims || submitForm.m2NonManagedFatalVictims <= 0) {
+                errors["m2NonManagedFatalVictims"] = "Vui lòng nhập số người chết không quản lý";
+                hasError = true;
+            }
+
+            if (!submitForm.m2NonManagedSevereInjuries || submitForm.m2NonManagedSevereInjuries <= 0) {
+                errors["m2NonManagedSevereInjuries"] = "Vui lòng nhập số người bị thương nặng không quản lý";
+                hasError = true;
+            }
+
+            if (submitForm.m2MedicalCost > 0 && submitForm.m2MedicalCost < 1000) {
+                errors["m2MedicalCost"] = "Chi phí y tế phải từ 1.000đ trở lên";
+                hasError = true;
+            }
+
+            if (submitForm.m2SalaryCompensation > 0 && submitForm.m2SalaryCompensation < 1000) {
+                errors["m2SalaryCompensation"] = "Chi phí trả lương phải từ 1.000đ trở lên";
+                hasError = true;
+            }
+
+            if (submitForm.m2PropertyDamage > 0 && submitForm.m2PropertyDamage < 1000) {
+                errors["m2PropertyDamage"] = "Chi phí bồi thường phải từ 1.000đ trở lên";
+                hasError = true;
+            }
+
+            // Tong so ngay nghi co the la 0 neu nguoi bi nan sieng di lam
+            // if (!submitForm.m2TotalLeaveDays) {
+            //     errors["m2TotalLeaveDays"] = "Vui lòng nhập tổng số ngày nghỉ vì TNLĐ";
+            //     hasError = true;
+            // }
+
+            if (submitForm.m2TotalDamage > 0 && submitForm.m2TotalDamage < 1000) {
+                errors["m2TotalDamage"] = "Thiệt hại tài sản phải từ 1.000đ trở lên";
+                hasError = true;
+            }
+        }
+
+        // ==========================================
+        // LOG & RETURN
+        // ==========================================
+        console.log("=== VALIDATION ERRORS ===");
+        console.log(errors);
+        console.log("Has error:", hasError);
+
+        if (hasError) {
+            // Hiển thị lỗi đầu tiên qua notification
+            const firstError = Object.values(errors)[0];
+            notificate?.showNotification({ type: "error", message: firstError });
+            return;
+        }
+
+        // TODO: Gọi API submit ở đây
+        console.log("=== SUBMIT FORM ===", submitForm);
+    };
+
     const [optionReport, setOptionReport] = useState<OptionReport>("business-info");
     const [optionChild, setOptionChild] = useState<"option-1.1" | "option-1.2">("option-1.1");
 
     return (
-        <main className="h-screen flex flex-col py-2">
+        <main className="flex flex-col min-h-screen pb-10">
             <TopHero
                 title="Báo cáo định kỳ tai nạn lao động"
                 actions={
@@ -156,29 +605,39 @@ const TNLDTheoHDLDIdPage = () => {
                             />
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() => router.push("/tnld-theo-hdld")}
-                            className="px-4 py-2 text-sm font-semibold border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
-                        >
-                            Hủy bỏ
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => router.push("/tnld-theo-hdld")}
-                            className="px-4 py-2 text-sm font-semibold border border-primary text-primary bg-white rounded hover:bg-blue-50/30 transition-colors flex items-center gap-2"
-                        >
-                            <span>Tiếp tục</span>
-                            <i className="fa-solid fa-chevron-right text-xs" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => router.push("/tnld-theo-hdld")}
-                            className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded hover:opacity-90 transition-opacity flex items-center gap-2"
-                        >
-                            <i className="fa-solid fa-floppy-disk text-xs" />
-                            <span>Lưu</span>
-                        </button>
+                        <div className="flex gap-5 items-center text-sm font-semibold">
+                            <button className="text-gray-400" onClick={() => router.push("/tnld-theo-hdld")}>Hủy bỏ</button>
+                            <button className="bg-white px-2 py-2 flex items-center gap-1 border-2 border-blue-600 text-blue-600 hover:bg-gray-100 rounded-lg"
+                                onClick={() => {
+                                    if (optionReport === "business-info") {
+                                        setOptionReport("option-1");
+                                        setOptionChild("option-1.1");
+                                    }
+                                    else if (optionReport === "option-1" && optionChild === "option-1.1") {
+                                        setOptionReport("option-1");
+                                        setOptionChild("option-1.2");
+                                    }
+                                    else if (optionReport === "option-1" && optionChild === "option-1.2") {
+                                        setOptionReport("option-2");
+                                    }
+                                    else if (optionReport === "option-2") {
+                                        setOptionReport("review-report");
+                                    }
+                                    else if (optionReport === "review-report") {
+                                        setOptionReport("business-info");
+                                    }
+                                }}
+                            >
+                                <i className="fa-solid fa-angle-right"></i>
+                                <span>Tiếp tục</span>
+                            </button>
+                            <button className="bg-blue-600 px-4 py-2 flex items-center gap-1 border-2 border-blue-600 text-white hover:bg-blue-700 hover:bg-border-700 rounded-lg"
+                                onClick={handleSubmit}
+                            >
+                                <i className="fa-solid fa-floppy-disk"></i>
+                                <span>Lưu</span>
+                            </button>
+                        </div>
                     </div>
                 }
                 className="shrink-0"
@@ -258,11 +717,13 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.totalEmployees,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, totalEmployees: num }));
+                                                setError(prev => ({ ...prev, totalEmployees: "" }))
                                             }
                                         }}
                                         isSmall={true}
+                                        errorMess={error["totalEmployees"]}
                                     />
                                 </div>
                                 <div className="flex-1">
@@ -274,11 +735,14 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.femaleEmployees,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, femaleEmployees: num }));
+                                                setError(prev => ({ ...prev, femaleEmployees: "" }))
+
                                             }
                                         }}
                                         isSmall={true}
+                                        errorMess={error["femaleEmployees"]}
                                     />
                                 </div>
                                 <div className="flex-1 relative">
@@ -286,17 +750,22 @@ const TNLDTheoHDLDIdPage = () => {
                                         label="Tổng quỹ lương"
                                         require={true}
                                         input={{
-                                            type: "number",
-                                            value: submitForm.totalPayroll,
+                                            type: "text",
+                                            value: submitForm.totalPayroll.toLocaleString("vi-VN"),
                                             onChange: (e) => {
-                                                const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
-                                                setSubmitForm(prev => ({ ...prev, totalPayroll: num }));
+                                                const value = e.target.value.replace(/\./g, "");
+                                                const n = Number(value);
+
+                                                if (Number.isNaN(n)) return;
+
+                                                setSubmitForm(prev => ({ ...prev, totalPayroll: n }));
+                                                setError(prev => ({ ...prev, totalPayroll: "" }))
                                             }
                                         }}
                                         isSmall={true}
+                                        errorMess={error["totalPayroll"]}
                                     />
-                                    <span className="absolute text-xs font-semibold text-gray-500 right-0 top-1/2 -translate-y-1/2 me-3">1.000 đ</span>
+                                    <span className="absolute text-xs font-semibold text-gray-50 right-0 top-1/2 -translate-y-1/2 me-3">1.000 đ</span>
                                 </div>
                             </div>
                         </div>
@@ -309,10 +778,20 @@ const TNLDTheoHDLDIdPage = () => {
                             <button className="pb-2 border-b-2 border-blue-600 text-blue-600">{"(1) Tổng số vụ tai nạn lao động"}</button>
                             <button className="pb-2 border-b-2 border-white" onClick={() => setOptionChild("option-1.2")}>{"(2) Chi tiết các vụ lao động"}</button>
                         </div>
-                        <div className="text-sm">
+                        <div className="text-sm space-y-3">
                             <p>
                                 **** Doanh nghiệp xảy ra tai nạn lao động vui lòng nhập theo từng bước
                             </p>
+                            {error["m1Details"] && (
+                                <p className="flex justify-between items-center bg-red-50 text-red-600 px-5 py-2 ring-2 ring-red-600 font-semibold rounded">
+                                    <span>{error["m1Details"]}</span>
+                                    <button className="text-lg font-semibold" onClick={() => {
+                                        setError(prev => ({ ...prev, m1Details: "" }));
+                                    }}>
+                                        <i className="fa-regular fa-calendar-xmark"></i>
+                                    </button>
+                                </p>
+                            )}
                         </div>
                         <div className="space-y-3">
                             <h1 className="font-semibold text-sm">1. Tổng số vụ tai nạn lao động & số nạn nhân lao động</h1>
@@ -328,7 +807,7 @@ const TNLDTheoHDLDIdPage = () => {
                                                 value: submitForm.m1TotalCases,
                                                 onChange: (e) => {
                                                     const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
+                                                    if (num < 0) return;
                                                     setSubmitForm(prev => ({ ...prev, m1TotalCases: num }));
                                                 }
                                             }}
@@ -342,11 +821,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1FatalCases,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1FatalCases: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -358,11 +833,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1MultiVictimCases,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1MultiVictimCases: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -378,11 +849,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1TotalVictims,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1TotalVictims: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -394,11 +861,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1FemaleVictims,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1FemaleVictims: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -410,11 +873,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1FatalVictims,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1FatalVictims: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -426,11 +885,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1SevereInjuries,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1SevereInjuries: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -445,11 +900,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1NonManagedVictims,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1NonManagedVictims: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -461,11 +912,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1NonManagedFemaleVictims,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1NonManagedFemaleVictims: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -477,11 +924,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1NonManagedFatalVictims,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1NonManagedFatalVictims: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -493,11 +936,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1NonManagedSevereInjuries,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1NonManagedSevereInjuries: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -514,13 +953,9 @@ const TNLDTheoHDLDIdPage = () => {
                                             label="Chi phí y tế"
                                             require={true}
                                             input={{
-                                                type: "number",
-                                                value: submitForm.m1MedicalCost,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1MedicalCost: num }));
-                                                }
+                                                type: "text",
+                                                value: submitForm.m1MedicalCost.toLocaleString("vi-VN"),
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -530,13 +965,9 @@ const TNLDTheoHDLDIdPage = () => {
                                             label="Chi phí trả lương trong thời gian điều trị"
                                             require={true}
                                             input={{
-                                                type: "number",
-                                                value: submitForm.m1SalaryCompensation,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1SalaryCompensation: num }));
-                                                }
+                                                type: "text",
+                                                value: submitForm.m1SalaryCompensation.toLocaleString("vi-VN"),
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -546,13 +977,9 @@ const TNLDTheoHDLDIdPage = () => {
                                             label="Chi phí bồi thường trợ cấp"
                                             require={true}
                                             input={{
-                                                type: "number",
-                                                value: submitForm.m1PropertyDamage,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1PropertyDamage: num }));
-                                                }
+                                                type: "text",
+                                                value: submitForm.m1PropertyDamage.toLocaleString("vi-VN"),
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -562,13 +989,9 @@ const TNLDTheoHDLDIdPage = () => {
                                             label="Tổng số tiền chi phí"
                                             require={true}
                                             input={{
-                                                type: "number",
-                                                value: submitForm.m1TotalCost,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1TotalCost: num }));
-                                                }
+                                                type: "text",
+                                                value: submitForm.m1TotalCost.toLocaleString("vi-VN"),
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -584,11 +1007,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             input={{
                                                 type: "number",
                                                 value: submitForm.m1TotalLeaveDays,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1TotalLeaveDays: num }));
-                                                }
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -598,13 +1017,9 @@ const TNLDTheoHDLDIdPage = () => {
                                             label="Thiệt hại tài sản"
                                             require={true}
                                             input={{
-                                                type: "number",
-                                                value: submitForm.m1TotalDamage,
-                                                onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (!num || num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m1TotalDamage: num }));
-                                                }
+                                                type: "text",
+                                                value: submitForm.m1TotalDamage.toLocaleString("vi-VN"),
+                                                disabled: true
                                             }}
                                             isSmall={true}
                                         />
@@ -619,36 +1034,51 @@ const TNLDTheoHDLDIdPage = () => {
                 )}
 
                 {optionReport === "option-1" && optionChild === "option-1.2" && (
-                    <div className="space-y-3">
+                    <div className="space-y-3 overflow-auto">
                         <div className="flex items-center gap-5 text-sm text-[#637381] font-semibold">
                             <button className="pb-2 border-b-2 border-white" onClick={() => setOptionChild("option-1.1")}>{"(1) Tổng số vụ tai nạn lao động"}</button>
                             <button className="pb-2 border-b-2 border-blue-600 text-blue-600">{"(2) Chi tiết các vụ lao động"}</button>
                         </div>
-                        <div className="text-sm">
+                        <div className="text-sm flex gap-5">
                             <p>**** Doanh nghiệp xảy ra tai nạn lao động vui lòng nhập theo từng bước</p>
+
+                            <button className="flex items-center gap-2 bg-blue-50 ring-2 ring-blue-600 text-blue-600 text-xs px-2 py-1 rounded hover:bg-blue-100 font-semibold" onClick={handleSyncDetail}>
+                                <i className="fa-solid fa-arrow-rotate-right"></i>
+                                <span>Đồng bộ</span>
+                            </button>
+
+                            <button className="flex items-center gap-2 bg-green-50 ring-2 ring-green-600 text-green-600 text-xs px-2 py-1 rounded hover:bg-green-100 font-semibold" onClick={handleAddDetail}>
+                                <i className="fa-regular fa-calendar-plus"></i>
+                                <span>Thêm chi tiết</span>
+                            </button>
                         </div>
                         <div className="space-y-3">
-                            {submitForm.m1TotalCases === 0 ? (
+                            {submitForm.details.length === 0 ? (
                                 <div className="text-sm text-gray-400 italic">
-                                    Vui lòng nhập "Tổng số vụ tai nạn lao động" ở mục (1) để hiển thị chi tiết.
+                                    Vui lòng nhập "Tổng số vụ tai nạn lao động" ở mục (1) và ấn đồng bộ để hiển thị chi tiết.
                                 </div>
                             ) : (
-                                Array.from({ length: submitForm.m1TotalCases }).map((_, index) => (
+                                submitForm.details.map((detail, index) => (
                                     <DetailItem
                                         key={index}
-                                        index={index}
-                                        detail={submitForm.details[index] || {
-                                            cause: "", traumaId: 0, injuryTypeId: 0,
-                                            totalCases: 0, fatalCases: 0, multiVictimCases: 0,
-                                            totalVictims: 0, femaleVictims: 0, fatalVictims: 0, severeInjuries: 0,
-                                            nonManagedVictims: 0, nonManagedFemaleVictims: 0,
-                                            nonManagedFatalVictims: 0, nonManagedSevereInjuries: 0,
-                                            medicalCost: 0, salaryCompensation: 0, propertyDamage: 0,
-                                            totalCost: 0, totalLeaveDays: 0, totalDamage: 0,
-                                        }}
+                                        detail={detail}
+                                        accidents={accidents}
                                         traumas={traumas}
-                                        injuries={injuries}
-                                        onUpdate={handleUpdateDetail}
+                                        jobs={jobs}
+                                        onChangDetail={onChangDetail}
+                                        handleDeleteDetail={handleDeleteDetail}
+                                        errors={(error.details as unknown as Array<{ idx: number } & Record<string, string>>)?.find(e => e.idx === detail.idx)}
+                                        clearError={(idx, field) => {
+                                            setError(prev => {
+                                                const currentDetails = (prev.details as unknown as Array<{ idx: number } & Record<string, string>>) ?? [];
+                                                return {
+                                                    ...prev,
+                                                    details: currentDetails.map(e =>
+                                                        e.idx === idx ? { ...e, [field]: "" } : e
+                                                    )
+                                                };
+                                            });
+                                        }}
                                     />
                                 ))
                             )}
@@ -670,7 +1100,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2TotalCases,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2TotalCases: num }));
                                             }
                                         }}
@@ -684,11 +1114,7 @@ const TNLDTheoHDLDIdPage = () => {
                                         input={{
                                             type: "number",
                                             value: submitForm.m2FatalCases,
-                                            onChange: (e) => {
-                                                const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
-                                                setSubmitForm(prev => ({ ...prev, m2FatalCases: num }));
-                                            }
+                                            disabled: true
                                         }}
                                         isSmall={true}
                                     />
@@ -700,11 +1126,7 @@ const TNLDTheoHDLDIdPage = () => {
                                         input={{
                                             type: "number",
                                             value: submitForm.m2MultiVictimCases,
-                                            onChange: (e) => {
-                                                const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
-                                                setSubmitForm(prev => ({ ...prev, m2MultiVictimCases: num }));
-                                            }
+                                            disabled: true
                                         }}
                                         isSmall={true}
                                     />
@@ -722,7 +1144,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2TotalVictims,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2TotalVictims: num }));
                                             }
                                         }}
@@ -738,7 +1160,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2FemaleVictims,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2FemaleVictims: num }));
                                             }
                                         }}
@@ -754,8 +1176,18 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2FatalVictims,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2FatalVictims: num }));
+                                                if (num > 0) {
+                                                    setSubmitForm(prev => ({ ...prev, m2FatalCases: 1 }));
+                                                }
+                                                if (num <= 0) {
+                                                    setSubmitForm(prev => ({ ...prev, m2FatalCases: 0 }));
+                                                    setSubmitForm(prev => ({ ...prev, m2MultiVictimCases: 0 }));
+                                                }
+                                                if (num >= 2) {
+                                                    setSubmitForm(prev => ({ ...prev, m2MultiVictimCases: 1 }));
+                                                }
                                             }
                                         }}
                                         isSmall={true}
@@ -770,7 +1202,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2SevereInjuries,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2SevereInjuries: num }));
                                             }
                                         }}
@@ -789,7 +1221,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2NonManagedVictims,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2NonManagedVictims: num }));
                                             }
                                         }}
@@ -805,7 +1237,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2NonManagedFemaleVictims,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2NonManagedFemaleVictims: num }));
                                             }
                                         }}
@@ -821,7 +1253,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2NonManagedFatalVictims,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2NonManagedFatalVictims: num }));
                                             }
                                         }}
@@ -837,7 +1269,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2NonManagedSevereInjuries,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2NonManagedSevereInjuries: num }));
                                             }
                                         }}
@@ -855,13 +1287,16 @@ const TNLDTheoHDLDIdPage = () => {
                                         label="Chi phí y tế"
                                         require={true}
                                         input={{
-                                            type: "number",
-                                            value: submitForm.m2MedicalCost,
+                                            type: "text",
+                                            value: submitForm.m2MedicalCost.toLocaleString("vi-VN"),
                                             onChange: (e) => {
-                                                const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
-                                                setSubmitForm(prev => ({ ...prev, m2MedicalCost: num }));
-                                                setSubmitForm(prev => ({ ...prev, m2TotalCost: num + submitForm.m2PropertyDamage + submitForm.m2SalaryCompensation }));
+                                                const value = e.target.value.replace(/\./g, "");
+                                                const n = Number(value);
+
+                                                if (Number.isNaN(n)) return;
+
+                                                setSubmitForm(prev => ({ ...prev, m2MedicalCost: n }));
+                                                setSubmitForm(prev => ({ ...prev, m2TotalCost: n + submitForm.m2PropertyDamage + submitForm.m2SalaryCompensation }));
                                             }
                                         }}
                                         isSmall={true}
@@ -873,13 +1308,16 @@ const TNLDTheoHDLDIdPage = () => {
                                         label="Chi phí trả lương trong thời gian điều trị"
                                         require={true}
                                         input={{
-                                            type: "number",
-                                            value: submitForm.m2SalaryCompensation,
+                                            type: "text",
+                                            value: submitForm.m2SalaryCompensation.toLocaleString("vi-VN"),
                                             onChange: (e) => {
-                                                const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
-                                                setSubmitForm(prev => ({ ...prev, m2SalaryCompensation: num }));
-                                                setSubmitForm(prev => ({ ...prev, m2TotalCost: num + submitForm.m2PropertyDamage + submitForm.m2MedicalCost }))
+                                                const value = e.target.value.replace(/\./g, "");
+                                                const n = Number(value);
+
+                                                if (Number.isNaN(n)) return;
+
+                                                setSubmitForm(prev => ({ ...prev, m2SalaryCompensation: n }));
+                                                setSubmitForm(prev => ({ ...prev, m2TotalCost: n + submitForm.m2PropertyDamage + submitForm.m2MedicalCost }));
                                             }
                                         }}
                                         isSmall={true}
@@ -891,13 +1329,16 @@ const TNLDTheoHDLDIdPage = () => {
                                         label="Chi phí bồi thường trợ cấp"
                                         require={true}
                                         input={{
-                                            type: "number",
-                                            value: submitForm.m2PropertyDamage,
+                                            type: "text",
+                                            value: submitForm.m2PropertyDamage.toLocaleString("vi-VN"),
                                             onChange: (e) => {
-                                                const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
-                                                setSubmitForm(prev => ({ ...prev, m2PropertyDamage: num }));
-                                                setSubmitForm(prev => ({ ...prev, m2TotalCost: num + submitForm.m2SalaryCompensation + submitForm.m2MedicalCost }))
+                                                const value = e.target.value.replace(/\./g, "");
+                                                const n = Number(value);
+
+                                                if (Number.isNaN(n)) return;
+
+                                                setSubmitForm(prev => ({ ...prev, m2PropertyDamage: n }));
+                                                setSubmitForm(prev => ({ ...prev, m2TotalCost: n + submitForm.m2SalaryCompensation + submitForm.m2MedicalCost }));
                                             }
                                         }}
                                         isSmall={true}
@@ -911,7 +1352,7 @@ const TNLDTheoHDLDIdPage = () => {
                                         input={{
                                             type: "text",
                                             disabled: true,
-                                            value: formatVND(submitForm.m2TotalCost),
+                                            value: submitForm.m2TotalCost.toLocaleString("vi-VN"),
                                         }}
                                         isSmall={true}
                                     />
@@ -929,7 +1370,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2TotalLeaveDays,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2TotalLeaveDays: num }));
                                             }
                                         }}
@@ -945,7 +1386,7 @@ const TNLDTheoHDLDIdPage = () => {
                                             value: submitForm.m2FemaleVictims,
                                             onChange: (e) => {
                                                 const num = Number(e.target.value);
-                                                if (!num || num < 0) return;
+                                                if (num < 0) return;
                                                 setSubmitForm(prev => ({ ...prev, m2FemaleVictims: num }));
                                             }
                                         }}
@@ -1009,6 +1450,210 @@ const TNLDTheoHDLDIdPage = () => {
                                 </thead>
                                 <tbody>
                                     {/* rows ở đây — mỗi <tr> có 13 <td> */}
+                                    <tr>
+                                        <td className="font-semibold text-black py-1 ps-3" colSpan={13}>1. Tai nạn lao động</td>
+                                    </tr>
+                                    <tr className={"bg-white"}>
+                                        <td className="border border-gray-400 p-2 ps-5">Tai nạn lao động</td>
+                                        <td className="border border-gray-400 p-2 text-center"></td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1TotalCases}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1FatalVictims}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1MultiVictimCases}</td>
+
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1TotalVictims}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1NonManagedVictims}</td>
+
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1FemaleVictims}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1NonManagedFemaleVictims}</td>
+
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1FatalVictims}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1NonManagedFatalVictims}</td>
+
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1SevereInjuries}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m1NonManagedSevereInjuries}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="font-semibold text-black py-1 ps-3 bg-white" colSpan={13}>
+                                            1.1 Phân theo nguyên nhân xảy ra TNLĐ
+                                        </td>
+                                    </tr>
+                                    {(report?.["nguyennhan"] ?? []).map((row: any, i: number) => (
+                                        <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-gray-5"}>
+                                            <td className="border border-gray-400 p-2 ps-5">{row.label}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{i + 1}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalCases}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.fatalCases}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.multiVictimCases}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.femaleVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedFemaleVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.fatalVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedFatalVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.severeInjuries}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedSevereInjuries}</td>
+                                        </tr>
+                                    ))}
+
+                                    <tr>
+                                        <td className="font-semibold text-black py-1 ps-3 bg-gray-5" colSpan={13}>
+                                            1.2 Phân theo yếu tố gây chấn thương
+                                        </td>
+                                    </tr>
+                                    {(report?.["yeutochanthuong"] ?? []).map((row: any, i: number) => (
+                                        <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-gray-5"}>
+                                            <td className="border border-gray-400 p-2 ps-5">{row.label}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{i + 1}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalCases}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.fatalCases}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.multiVictimCases}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.femaleVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedFemaleVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.fatalVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedFatalVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.severeInjuries}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedSevereInjuries}</td>
+                                        </tr>
+                                    ))}
+
+                                    <tr>
+                                        <td className="font-semibold text-black py-1 ps-3 bg-gray-5" colSpan={13}>
+                                            1.3 Phân theo nghề nghiệp
+                                        </td>
+                                    </tr>
+                                    {(report?.["phantheonghenghiep"] ?? []).map((row: any, i: number) => (
+                                        <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-white"}>
+                                            <td className="border border-gray-400 p-2 ps-5">{row.label}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{i + 1}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalCases}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.fatalCases}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.multiVictimCases}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.femaleVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedFemaleVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.fatalVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedFatalVictims}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.severeInjuries}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.nonManagedSevereInjuries}</td>
+                                        </tr>
+                                    ))}
+                                    <tr>
+                                        <td className="font-semibold text-black py-1 ps-3 bg-white" colSpan={13}>
+                                            2. Tai nạn được hưởng trợ cấp theo quy định Khoản 2 Điều 39 Luật ATVSLĐ
+                                        </td>
+                                    </tr>
+                                    <tr className={"bg-white"}>
+                                        <td className="border border-gray-400 p-2 ps-5">Tai nạn được hưởng trợ cấp theo quy định Khoản 2 Điều 39 Luật ATVSLĐ</td>
+                                        <td className="border border-gray-400 p-2 text-center"></td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2TotalCases}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2FatalCases}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2MultiVictimCases}</td>
+
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2TotalVictims}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2NonManagedVictims}</td>
+
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2FemaleVictims}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2NonManagedFemaleVictims}</td>
+
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2FatalVictims}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2NonManagedFatalVictims}</td>
+
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2SevereInjuries}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{submitForm.m2NonManagedSevereInjuries}</td>
+                                    </tr>
+
+                                    <tr>
+                                        <td className="font-semibold text-black py-1 ps-3 bg-white" colSpan={13}>
+                                            3. Tổng số
+                                        </td>
+                                    </tr>
+
+                                    <tr className={"bg-white"}>
+                                        <td className="border border-gray-400 p-2 ps-5">Tổng số 3 = 1 + 2</td>
+                                        <td className="border border-gray-400 p-2 text-center"></td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1TotalCases + submitForm.m2TotalCases}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1FatalCases + submitForm.m2FatalCases}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1MultiVictimCases + submitForm.m2MultiVictimCases}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1TotalVictims + submitForm.m2TotalVictims}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1NonManagedVictims + submitForm.m2NonManagedVictims}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1FemaleVictims + submitForm.m2FemaleVictims}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1NonManagedFemaleVictims + submitForm.m2NonManagedFemaleVictims}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1FatalVictims + submitForm.m2FatalVictims}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1NonManagedFatalVictims + submitForm.m2NonManagedFatalVictims}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1SevereInjuries + submitForm.m2SevereInjuries}
+                                        </td>
+
+                                        <td className="border border-gray-400 p-2 text-center">
+                                            {submitForm.m1NonManagedSevereInjuries + submitForm.m2NonManagedSevereInjuries}
+                                        </td>
+                                    </tr>
+                                    {/* Bruh */}
+                                    <tr>
+                                        <td className="font-semibold text-black py-1 ps-3 bg-white" colSpan={13}>
+                                            Thiệt hại do tai nạn lao động
+                                        </td>
+                                    </tr>
+
+                                    <tr className="bg-gray-100 font-semibold">
+                                        <td className="border border-gray-400 p-2 text-center" rowSpan={3}>Tổng số ngày nghỉ vì tai nạn lao động (kể cả chế độ)</td>
+                                        <td className="border border-gray-400 p-2 text-center" colSpan={11}>Tổng số ngày nghỉ vì TNLĐ (1.000đ)</td>
+                                        <td className="border border-gray-400 p-2 text-center" rowSpan={3}>
+                                            Thiệt hại tài sản
+                                            (1.000đ)
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-gray-100 font-semibold">
+                                        <td className="border border-gray-400 p-2 text-center" rowSpan={2} colSpan={2}>Tổng số</td>
+                                        <td className="border border-gray-400 p-2 text-center" rowSpan={1} colSpan={9}>Khoản chi cụ thể của cơ sở</td>
+                                    </tr>
+                                    <tr className="bg-gray-100 font-semibold">
+                                        <td className="border border-gray-400 p-2 text-center" colSpan={3}>Y tế</td>
+                                        <td className="border border-gray-400 p-2 text-center" colSpan={3}>Trả lương trong thời gian điều trị</td>
+                                        <td className="border border-gray-400 p-2 text-center" colSpan={3}>Bồi thường trợ cấp</td>
+                                    </tr>
+
+                                    <tr>
+                                        <td className="border border-gray-400 p-2 text-center" >{submitForm.m1TotalLeaveDays + submitForm.m2TotalLeaveDays}</td>
+                                        <td className="border border-gray-400 p-2 text-center" colSpan={2}>{(submitForm.m1TotalDamage + submitForm.m2TotalDamage).toLocaleString("vi-VN")}</td>
+                                        <td className="border border-gray-400 p-2 text-center" colSpan={3}>{(submitForm.m1MedicalCost + submitForm.m2MedicalCost).toLocaleString("vi-VN")}</td>
+                                        <td className="border border-gray-400 p-2 text-center" colSpan={3}>{(submitForm.m1SalaryCompensation + submitForm.m2SalaryCompensation).toLocaleString("vi-VN")}</td>
+                                        <td className="border border-gray-400 p-2 text-center" colSpan={3}>{(submitForm.m1PropertyDamage + submitForm.m2PropertyDamage).toLocaleString("vi-VN")}</td>
+                                        <td className="border border-gray-400 p-2 text-center" >{(submitForm.m1PropertyDamage + submitForm.m2PropertyDamage).toLocaleString("vi-VN")}</td>
+                                        {/* <td className="border border-gray-400 p-2 text-center">{(submitForm.m1TotalCost + submitForm.m2TotalCost).toLocaleString("vi-VN")}</td> */}
+                                    </tr>
+
                                 </tbody>
                             </table>
                         </div>

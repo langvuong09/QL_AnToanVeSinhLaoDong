@@ -2,47 +2,36 @@
 
 import InputLegend from "@/src/components/InputLegend";
 import { useState } from "react";
-import { SubmitForm } from "./type";
-import { formatVND } from "./utils";
-import { TrauMaDto } from "@/src/api/types/trauma";
-import { InjuryDto } from "@/src/api/types/Injury";
+import { Detail } from "./type";
+import { JobDto, } from "@/src/api/types/job";
+import { AccidentDto } from "@/src/api/types/accident";
 import SelectInputLengend from "@/src/components/SelectInputLengend";
+import { TraumaDto } from "@/src/api/types/trauma";
 
-type Detail = SubmitForm["details"][number];
-
-const Causes = [
-    { key: '1', value: 'Kỹ thuật'},
-    { key: '2', value: 'Thiết bị không đảm bảo ATVSLĐ'},
-    { key: '3', value: 'Thiếu thiết bị ATVSLĐ'},
-    { key: '4', value: 'Thiết bị ATVSLĐ hỏng'},
-    { key: '5', value: 'Không sử dụng thiết bị ATVSLĐ'},
-    { key: '6', value: 'Vi phạm nội quy ATVSLĐ'},
-]
-
-type Props = {
-    index: number;
+type DetailItemProps = {
     detail: Detail;
-    onUpdate: (index: number, field: keyof Detail, value: string | number) => void;
+    onChangDetail: (idx: number, k: string, v: string | number) => void;
+    handleDeleteDetail: (idx: number) => void;
 
-    traumas?: TrauMaDto[];
-    injuries?: InjuryDto[];
-};
+    accidents?: AccidentDto[];
+    traumas?: TraumaDto[];
+    jobs?: JobDto[];
 
-const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
+    errors?: Record<string, string>;
+    clearError?: (idx: number, field: string) => void;
+}
+
+const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, traumas, jobs, errors, clearError }: DetailItemProps) => {
     const [isOpen, setIsOpen] = useState(true);
 
-    const update = (field: keyof Detail, value: string | number) => {
-        onUpdate(index, field, value);
-    };
-
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 px-2 border-b pb-5 border-gray-300">
             <button
                 className="flex items-center gap-2 w-full text-left text-sm font-semibold"
                 onClick={() => setIsOpen(prev => !prev)}
             >
                 <span>{isOpen ? "▲" : "▼"}</span>
-                <span>Chi tiết vụ tai nạn số {index + 1}</span>
+                <span>Chi tiết vụ tai nạn số {detail.idx + 1}</span>
             </button>
 
             {isOpen && (
@@ -55,12 +44,15 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                             <div className="mt-1">
                                 <SelectInputLengend
                                     inputLengend={{
-                                        input: {}
+                                        input: {},
+                                        errorMess: errors?.causeId
                                     }}
-                                    onChange={() => {
-
+                                    onChange={(e) => {
+                                        onChangDetail(detail.idx, "causeId", e.key);
+                                        clearError?.(detail.idx, "causeId");
                                     }}
-                                     items={Causes.map(c => ({ key: c.key, value: c.value }))}
+                                    value={accidents?.find(v => v.id == detail.causeId)?.name || ""}
+                                    items={accidents?.map(t => ({ key: t.id.toString(), value: t.name })) || []}
                                     isSmall={true}
                                 />
                             </div>
@@ -73,11 +65,14 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                             <div className="mt-1">
                                 <SelectInputLengend
                                     inputLengend={{
-                                        input: {}
+                                        input: {},
+                                        errorMess: errors?.traumaId
                                     }}
-                                    onChange={() => {
-
+                                    onChange={(e) => {
+                                        onChangDetail(detail.idx, "traumaId", e.key);
+                                        clearError?.(detail.idx, "traumaId");
                                     }}
+                                    value={traumas?.find(v => v.id == detail.traumaId)?.name || ""}
                                     items={traumas?.map(t => ({ key: t.id.toString(), value: t.name })) || []}
                                     isSmall={true}
                                 />
@@ -94,12 +89,15 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                             <div className="mt-1">
                                 <SelectInputLengend
                                     inputLengend={{
-                                        input: {}
+                                        input: {},
+                                        errorMess: errors?.jobId
                                     }}
-                                    onChange={() => {
-
+                                    onChange={(e) => {
+                                        onChangDetail(detail.idx, "jobId", e.key);
+                                        clearError?.(detail.idx, "jobId");
                                     }}
-                                    items={injuries?.map(t => ({ key: t.id.toString(), value: t.name })) || []}
+                                    value={jobs?.find(v => v.id == detail.jobId)?.name || ""}
+                                    items={jobs?.map(t => ({ key: t.id.toString(), value: t.name })) || []}
                                     isSmall={true}
                                 />
                             </div>
@@ -111,7 +109,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                     {/* 4. Chi tiết vụ */}
                     <div>
                         <h2 className="text-sm font-semibold mb-3">
-                            4. Chi tiết vụ tai nạn số {index + 1}
+                            4. Chi tiết vụ tai nạn số {detail.idx + 1}
                         </h2>
                         <div className="space-y-4">
                             <div className="flex gap-6">
@@ -122,11 +120,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                         input={{
                                             type: "number",
                                             value: detail.totalCases,
-                                            onChange: (e) => {
-                                                const n = Number(e.target.value);
-                                                if (n < 0) return;
-                                                update("totalCases", n);
-                                            }
+                                            disabled: true,
                                         }}
                                         isSmall={true}
                                     />
@@ -138,11 +132,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                         input={{
                                             type: "number",
                                             value: detail.fatalCases,
-                                            onChange: (e) => {
-                                                const n = Number(e.target.value);
-                                                if (n < 0) return;
-                                                update("fatalCases", n);
-                                            }
+                                            disabled: true,
                                         }}
                                         isSmall={true}
                                     />
@@ -154,11 +144,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                         input={{
                                             type: "number",
                                             value: detail.multiVictimCases,
-                                            onChange: (e) => {
-                                                const n = Number(e.target.value);
-                                                if (n < 0) return;
-                                                update("multiVictimCases", n);
-                                            }
+                                            disabled: true,
                                         }}
                                         isSmall={true}
                                     />
@@ -166,6 +152,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                 <div className="flex-1" />
                             </div>
 
+                            {/* Vung co the nhap thong tin */}
                             <div className="flex gap-6">
                                 <div className="flex-1">
                                     <InputLegend
@@ -177,7 +164,13 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                update("totalVictims", n);
+
+                                                onChangDetail(detail.idx, "totalVictims", n);
+                                                if (n < 2) {
+                                                    onChangDetail(detail.idx, "multiVictimCases", 0);
+                                                } else {
+                                                    onChangDetail(detail.idx, "multiVictimCases", 1);
+                                                }
                                             }
                                         }}
                                         isSmall={true}
@@ -193,7 +186,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                update("femaleVictims", n);
+                                                onChangDetail(detail.idx, "femaleVictims", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -209,7 +202,13 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                update("fatalVictims", n);
+                                                onChangDetail(detail.idx, "fatalVictims", n);
+
+                                                if (n < 2) {
+                                                    onChangDetail(detail.idx, "fatalCases", 0);
+                                                } else {
+                                                    onChangDetail(detail.idx, "fatalCases", 1);
+                                                }
                                             }
                                         }}
                                         isSmall={true}
@@ -225,7 +224,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                update("severeInjuries", n);
+                                                onChangDetail(detail.idx, "severeInjuries", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -244,7 +243,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                update("nonManagedVictims", n);
+                                                onChangDetail(detail.idx, "nonManagedVictims", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -260,7 +259,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                update("nonManagedFemaleVictims", n);
+                                                onChangDetail(detail.idx, "nonManagedFemaleVictims", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -276,7 +275,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                update("nonManagedFatalVictims", n);
+                                                onChangDetail(detail.idx, "nonManagedFatalVictims", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -292,7 +291,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                update("nonManagedSevereInjuries", n);
+                                                onChangDetail(detail.idx, "nonManagedSevereInjuries", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -305,7 +304,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                     {/* 5. Thiệt hại */}
                     <div>
                         <h2 className="text-sm font-semibold mb-3">
-                            5. Thiệt hại do tai nạn lao động số {index + 1}
+                            5. Thiệt hại do tai nạn lao động số {detail.idx + 1}
                         </h2>
                         <div className="space-y-4">
                             <div className="flex gap-6">
@@ -314,12 +313,15 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                         label="Chi phí y tế"
                                         require
                                         input={{
-                                            type: "number",
-                                            value: detail.medicalCost,
+                                            type: "text",
+                                            value: detail.medicalCost.toLocaleString("vi-VN"),
                                             onChange: (e) => {
-                                                const n = Number(e.target.value);
-                                                if (n < 0) return;
-                                                update("medicalCost", n);
+                                                const value = e.target.value.replace(/\./g, "");
+                                                const n = Number(value);
+
+                                                if (Number.isNaN(n)) return;
+
+                                                onChangDetail(detail.idx, "medicalCost", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -331,12 +333,15 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                         label="Chi phí trả lương trong thời gian điều trị"
                                         require
                                         input={{
-                                            type: "number",
-                                            value: detail.salaryCompensation,
+                                            type: "text",
+                                            value: detail.salaryCompensation.toLocaleString("vi-VN"),
                                             onChange: (e) => {
-                                                const n = Number(e.target.value);
-                                                if (n < 0) return;
-                                                update("salaryCompensation", n);
+                                                const value = e.target.value.replace(/\./g, "");
+                                                const n = Number(value);
+
+                                                if (Number.isNaN(n)) return;
+
+                                                onChangDetail(detail.idx, "salaryCompensation", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -348,12 +353,15 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                         label="Chi phí bồi thường trợ cấp"
                                         require
                                         input={{
-                                            type: "number",
-                                            value: detail.propertyDamage,
+                                            type: "text",
+                                            value: detail.propertyDamage.toLocaleString("vi-VN"),
                                             onChange: (e) => {
-                                                const n = Number(e.target.value);
-                                                if (n < 0) return;
-                                                update("propertyDamage", n);
+                                                const value = e.target.value.replace(/\./g, "");
+                                                const n = Number(value);
+
+                                                if (Number.isNaN(n)) return;
+
+                                                onChangDetail(detail.idx, "propertyDamage", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -367,7 +375,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                         input={{
                                             type: "text",
                                             disabled: true,
-                                            value: formatVND(detail.medicalCost + detail.salaryCompensation + detail.propertyDamage),
+                                            value: (detail.medicalCost + detail.salaryCompensation + detail.propertyDamage).toLocaleString("vi-VN"),
                                         }}
                                         isSmall={true}
                                     />
@@ -386,7 +394,7 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                             onChange: (e) => {
                                                 const n = Number(e.target.value);
                                                 if (n < 0) return;
-                                                update("totalLeaveDays", n);
+                                                onChangDetail(detail.idx, "totalLeaveDays", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -397,12 +405,15 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                                         label="Thiệt hại tài sản"
                                         require
                                         input={{
-                                            type: "number",
-                                            value: detail.totalDamage,
+                                            type: "text",
+                                            value: detail.totalDamage.toLocaleString("vi-VN"),
                                             onChange: (e) => {
-                                                const n = Number(e.target.value);
-                                                if (n < 0) return;
-                                                update("totalDamage", n);
+                                                const value = e.target.value.replace(/\./g, "");
+                                                const n = Number(value);
+
+                                                if (Number.isNaN(n)) return;
+
+                                                onChangDetail(detail.idx, "totalDamage", n);
                                             }
                                         }}
                                         isSmall={true}
@@ -416,6 +427,12 @@ const DetailItem = ({ index, detail, onUpdate, traumas, injuries }: Props) => {
                     </div>
                 </div>
             )}
+            <div className="flex justify-end pt-10">
+                <button onClick={() => handleDeleteDetail(detail.idx)} className="px-3 py-1 bg-red-50 text-red-600 ring-2 ring-red-600 rounded text-xs font-semibold flex items-center gap-2 hover:bg-red-100">
+                    <i className="fa-solid fa-calendar-minus"></i>
+                    <span>Xóa</span>
+                </button>
+            </div>
         </div>
     );
 };

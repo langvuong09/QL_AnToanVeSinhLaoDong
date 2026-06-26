@@ -33,15 +33,15 @@ export type SubmitForm = {
     m1TotalDamage: number;
 
     details: {
-        "cause": {
-            
-        }
+        idx: number;
+        "causeId": number;
         "traumaId": number;
-        "injuryTypeId": number;
+        "jobId": number;
 
         "totalCases": number;
         "fatalCases": number;
         "multiVictimCases": number;
+        
         "totalVictims": number;
         "femaleVictims": number;
         "fatalVictims": number;
@@ -82,4 +82,31 @@ export type SubmitForm = {
 
     m2TotalLeaveDays: number;
     m2TotalDamage: number;
+
+    fileIds: string[];
+}
+
+export type Detail = {
+    idx: number;
+    "causeId": number;
+    "traumaId": number;
+    "jobId": number;
+
+    "totalCases": number;
+    "fatalCases": number;
+    "multiVictimCases": number;
+    "totalVictims": number;
+    "femaleVictims": number;
+    "fatalVictims": number;
+    "severeInjuries": number;
+    "nonManagedVictims": number;
+    "nonManagedFemaleVictims": number;
+    "nonManagedFatalVictims": number;
+    "nonManagedSevereInjuries": number;
+    "medicalCost": number;
+    "salaryCompensation": number;
+    "propertyDamage": number;
+    "totalCost": number;
+    "totalLeaveDays": number;
+    "totalDamage": number;
 }

@@ -1,21 +1,21 @@
 import { Base } from "./Base";
-import { TraumaDto } from "./types/trauma";
+import { AccidentDto } from "./types/accident";
 
-type ITrauma = {
-    items: TraumaDto[];
+type IAccident = {
+    items: AccidentDto[];
 }
 
-export class Trauma extends Base {
+export class Accident extends Base {
     constructor() {
         const END_POINT = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3010";
         console.log("API Endpoint:", END_POINT);
         super({
-            baseURL: END_POINT + "/api/v1/trauma-factors",
+            baseURL: END_POINT + "/api/v1/accident-causes",
         });
     }
 
-    async GetAll(): Promise<TraumaDto[]> {
-        const result = await this.execute<ITrauma>({
+    async GetAll(): Promise<AccidentDto[]> {
+        const result = await this.execute<IAccident>({
             url: "/admin",
             method: "GET"
         });

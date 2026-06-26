@@ -1,7 +1,5 @@
-export type TrauMaDto = {
+export type TraumaDto = {
     id: number;
-    name: string;
-    isActive: boolean;
     code: string;
-    deleteAt: string;
+    name: string;
 }

@@ -4,6 +4,7 @@
 import { Agreement } from "@/src/api/Agreement";
 import { AgreementBusiness } from "@/src/api/types/agreement";
 import SelectInputLengend from "@/src/components/SelectInputLengend";
+import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { useRouter } from "next/navigation";
@@ -55,12 +56,37 @@ const TNLDTheoHDLDPage = () => {
         fetchDetails(1);
     }, []);
 
+    useEffect(() => {
+        fetchDetails(1);
+    }, [filters]);
 
     return (
         <main className="h-screen flex flex-col py-2">
             <TopHero
+<<<<<<< HEAD
                 title="Báo cáo định kỳ tai nạn lao động"
                 className="shrink-0"
+=======
+                lable="Báo cáo định kỳ tai nạn lao động"
+                component={
+                    <div className="flex gap-5 rounded">
+                        <SelectLegend
+                            select={{
+                                className: "pe-10",
+                                value: filters.year,
+                                onChange: (e) => {
+                                    setFilters(prev => ({ ...prev, year: Number(e.target.value) }));
+                                }
+                            }}
+                            isSmall={true}
+                        >
+                            {Array.from({ length: 21 }, (_, i) => now.getFullYear() - 20 + i).map((v, idx) => (
+                                <option key={idx} value={v}>{v}</option>
+                            ))}
+                        </SelectLegend>
+                    </div>
+                }
+>>>>>>> b0dd345a (add: temp commit)
             />
 
             <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden mt-2">
