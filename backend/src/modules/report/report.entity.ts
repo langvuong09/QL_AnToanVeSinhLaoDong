@@ -18,7 +18,7 @@ export class Report {
   @PrimaryGeneratedColumn("increment") id!: number;
   @Column() title!: string;
   @Column() year!: number;
-  @Column() note!: string;
+  @Column({nullable: true}) note!: string;
   
   @Column({ type: "varchar", default: ReportStatus.DRAFT }) 
   status!: ReportStatus;
