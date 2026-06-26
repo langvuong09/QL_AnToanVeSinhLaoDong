@@ -1,10 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { ReportType } from './report-type.entity';
 import { CreateReportTypeDto } from './dto/create-report-type.dto';
 import { UpdateReportTypeDto } from './dto/update-report-type.dto';
-import Response from '../../commons/response'; 
+import Response from '../../commons/response';
 import { Report, ReportStatus } from '../report/report.entity';
 import { Doet } from '../doet/doet.entity';
 
@@ -18,7 +22,9 @@ export class ReportTypeService {
 
   async create(dto: CreateReportTypeDto, adminUser?: any) {
     if (new Date(dto.startDate) > new Date(dto.endDate)) {
-      throw new BadRequestException('Thời gian bắt đầu không thể lớn hơn thời gian kết thúc!');
+      throw new BadRequestException(
+        'Thời gian bắt đầu không thể lớn hơn thời gian kết thúc!',
+      );
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -31,19 +37,27 @@ export class ReportTypeService {
 
       const activeCompanies = await queryRunner.manager.find(Doet, {
         where: { status: true, deletedAt: IsNull() },
-        select: { id: true } 
+        select: { id: true },
       });
 
       if (activeCompanies.length > 0) {
-        const autoReports = activeCompanies.map(company => 
+        const warningThresholdDate = new Date();
+        warningThresholdDate.setDate(warningThresholdDate.getDate() + 5);
+
+        const initialStatus =
+          new Date(savedConfig.endDate) <= warningThresholdDate
+            ? ReportStatus.OVERDUE_WARNING
+            : ReportStatus.DRAFT;
+
+        const autoReports = activeCompanies.map((company) =>
           queryRunner.manager.create(Report, {
             title: `Báo cáo định kỳ - ${savedConfig.name} (Tự động khởi tạo)`,
             year: savedConfig.year,
-            status: ReportStatus.DRAFT,
+            status: initialStatus,
             reportTypeId: savedConfig.id,
             doetId: company.id,
-            details: []
-          })
+            details: [],
+          }),
         );
 
         await queryRunner.manager.insert(Report, autoReports);
@@ -66,16 +80,24 @@ export class ReportTypeService {
     }
 
     const now = new Date();
-    
-    const finalStartDate = dto.startDate ? new Date(dto.startDate) : new Date(config.startDate);
-    const finalEndDate = dto.endDate ? new Date(dto.endDate) : new Date(config.endDate);
+
+    const finalStartDate = dto.startDate
+      ? new Date(dto.startDate)
+      : new Date(config.startDate);
+    const finalEndDate = dto.endDate
+      ? new Date(dto.endDate)
+      : new Date(config.endDate);
 
     if (dto.endDate && finalEndDate < now) {
-      throw new BadRequestException('Ngày kết thúc mới không thể ở trong quá khứ!');
+      throw new BadRequestException(
+        'Ngày kết thúc mới không thể ở trong quá khứ!',
+      );
     }
 
     if (finalStartDate > finalEndDate) {
-      throw new BadRequestException('Thời gian bắt đầu không thể lớn hơn thời gian kết thúc!');
+      throw new BadRequestException(
+        'Thời gian bắt đầu không thể lớn hơn thời gian kết thúc!',
+      );
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -93,13 +115,13 @@ export class ReportTypeService {
           await queryRunner.manager.update(
             Report,
             { reportTypeId: id, status: ReportStatus.DRAFT },
-            { status: ReportStatus.OVERDUE_WARNING }
+            { status: ReportStatus.OVERDUE_WARNING },
           );
         } else {
           await queryRunner.manager.update(
             Report,
             { reportTypeId: id, status: ReportStatus.OVERDUE_WARNING },
-            { status: ReportStatus.DRAFT }
+            { status: ReportStatus.DRAFT },
           );
         }
       }
@@ -145,7 +167,9 @@ export class ReportTypeService {
     const queryBuilder = this.reportTypeRepository.createQueryBuilder('rt');
 
     if (onlyActive) {
-      queryBuilder.andWhere('rt.isActive = :onlyActiveStatus', { onlyActiveStatus: true });
+      queryBuilder.andWhere('rt.isActive = :onlyActiveStatus', {
+        onlyActiveStatus: true,
+      });
     } else if (isActive !== undefined && isActive !== '') {
       const activeBool = isActive === 'true' || isActive === true;
       queryBuilder.andWhere('rt.isActive = :activeBool', { activeBool });
@@ -156,7 +180,9 @@ export class ReportTypeService {
     }
 
     if (name) {
-      queryBuilder.andWhere('rt.name ILike :name', { name: `%${name.trim()}%` });
+      queryBuilder.andWhere('rt.name ILike :name', {
+        name: `%${name.trim()}%`,
+      });
     }
 
     if (period) {
@@ -171,8 +197,7 @@ export class ReportTypeService {
       queryBuilder.andWhere('rt.endDate <= :endDate', { endDate });
     }
 
-    queryBuilder.orderBy('rt.year', 'DESC')
-                .addOrderBy('rt.startDate', 'ASC');
+    queryBuilder.orderBy('rt.year', 'DESC').addOrderBy('rt.startDate', 'ASC');
 
     const [items, totalCount] = await queryBuilder
       .skip((page - 1) * pageSize)
