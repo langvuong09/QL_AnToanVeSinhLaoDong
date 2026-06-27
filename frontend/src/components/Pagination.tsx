@@ -19,6 +19,8 @@ const Pagination = ({
 }: PaginationProps) => {
     const totalPages = Math.ceil(totalCount / pageSize);
 
+    console.log('Pagination render', { totalCount, pageSize, currentPage, totalPages });
+
     const handlePageSize = (newSize: number) => {
         setPageSize(newSize);
         setCurrentPage(1);

@@ -6,6 +6,7 @@ type IAgreemnent = {
     items: AgreementTable[];
     pageNumber: number;
     pageSize: number;
+    total: number;
 }
 
 export class Agreement extends Base {

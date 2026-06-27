@@ -158,7 +158,10 @@ const TNLDTheoHDLDIdPage = () => {
 
     useEffect(() => {
         if (!detail) return;
-        if (!(detail.status === "DRAF")) {
+        if (detail.status === "DRAFT" || detail.status === "REJECTED") {
+            return;
+        }
+        if (!(detail.status === "DRAFT") && !(detail.status === "REJECTED")) {
             router.push(`/tnld-theo-hdld/view/${detail.id}`)
         }
 
@@ -499,9 +502,6 @@ const TNLDTheoHDLDIdPage = () => {
     const handleSave = async () => {
         try {
             setIsLoading(true);
-            const cf = await confirm.waitConfirm();
-            if (!cf) return;
-
             const mediaCls = new Media();
             const agreementCls = new Agreement()
 
@@ -763,10 +763,10 @@ const TNLDTheoHDLDIdPage = () => {
         }
 
         try {
-            setIsLoading(true);
-
             const cf = await confirm.waitConfirm();
             if (!cf) return;
+
+            setIsLoading(true);
 
             const mediaCls = new Media();
             const agreementCls = new Agreement()

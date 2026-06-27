@@ -43,7 +43,7 @@ const TNLDTheoHDLDPage = () => {
                 ...prev,
                 page,
                 pageSize,
-                total: result!.count,
+                total: result.total
             }));
 
         } catch {
@@ -99,7 +99,7 @@ const TNLDTheoHDLDPage = () => {
                     {items.map((i) => (
                         <div key={i.id} className="flex items-center gap-5 py-2.5 border-b border-gray-100 hover:bg-blue-50/40 transition-colors text-sm text-gray-700">
                             <div className="flex-1 flex items-center justify-center gap-4 text-gray-400">
-                                <button className="hover:text-primary transition-colors" onClick={() => route.push(`/tnld-theo-hdld//view/${i.id}`)}>
+                                <button className="hover:text-primary transition-colors" onClick={() => route.push(`/tnld-theo-hdld/view/${i.id}`)}>
                                     <i className="fa-solid fa-eye text-xs"></i>
                                 </button>
                                 {i.status === "DRAFT" && (
