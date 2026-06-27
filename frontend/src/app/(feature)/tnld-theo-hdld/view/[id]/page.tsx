@@ -5,7 +5,6 @@ import { Agreement } from "@/src/api/Agreement";
 import { Job } from "@/src/api/Job";
 import { Trauma } from "@/src/api/Trauma";
 import { AccidentDto } from "@/src/api/types/accident";
-import { AgreementTable } from "@/src/api/types/agreement";
 import { JobDto } from "@/src/api/types/job";
 import { TraumaDto } from "@/src/api/types/trauma";
 import InputLegend from "@/src/components/InputLegend";
