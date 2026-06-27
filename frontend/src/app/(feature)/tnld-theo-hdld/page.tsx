@@ -2,19 +2,19 @@
 'use client'
 
 import { Agreement } from "@/src/api/Agreement";
-import { AgreementBusiness } from "@/src/api/types/agreement";
 import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import Pagination from "@/src/components/Pagination";
+import { AgreementTable } from "@/src/api/types/agreement";
 
 const TNLDTheoHDLDPage = () => {
     const now = new Date();
     const notificate = useContext(NotificateContext);
     const route = useRouter();
-    const [items, setItems] = useState<AgreementBusiness[]>([]);
+    const [items, setItems] = useState<AgreementTable[]>([]);
 
     const [pagination, setPagination] = useState({
         page: 1,

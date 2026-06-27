@@ -28,7 +28,7 @@ const InputLegend = ({
     const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
     const [isFocused, setIsFocused] = useState(false);
 
-    const inputRef = useRef(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const togglePasswordVisibility = () => {
         if (input.disabled) return;
