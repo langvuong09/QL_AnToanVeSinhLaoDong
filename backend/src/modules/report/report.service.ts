@@ -205,16 +205,52 @@ export class ReportService {
       .leftJoinAndSelect('r.doet', 'd')
       .leftJoinAndSelect('r.reportType', 'rt');
 
-    if (query.year) qb.andWhere('r.year = :year', { year: Number(query.year) });
-    if (query.status)
+    if (query.year) {
+      qb.andWhere('r.year = :year', { year: Number(query.year) });
+    }
+    if (query.status) {
       qb.andWhere('r.status = :status', { status: query.status });
-    if (query.businessName)
-      qb.andWhere('d.name LIKE :bName', { bName: `%${query.businessName}%` });
+    }
+
+    if (query.period) {
+      qb.andWhere('rt.period ILike :period', { period: `%${query.period.trim()}%` });
+    }
+
+    if (query.businessName) {
+      qb.andWhere('d.name ILike :bName', { bName: `%${query.businessName.trim()}%` });
+    }
+    if (query.taxCode) {
+      qb.andWhere('d.taxCode ILike :taxCode', { taxCode: `%${query.taxCode.trim()}%` });
+    }
+
+    if (query.province) {
+      const pText = query.province.trim();
+      qb.andWhere("(d.province->>'key' = :pKey OR d.province->>'value' ILike :pValue)", {
+        pKey: pText,
+        pValue: `%${pText}%`,
+      });
+    }
+
+    if (query.district) {
+      const dText = query.district.trim();
+      qb.andWhere("(d.district->>'key' = :dKey OR d.district->>'value' ILike :dValue)", {
+        dKey: dText,
+        dValue: `%${dText}%`,
+      });
+    }
+
+    if (query.ward) {
+      const wText = query.ward.trim();
+      qb.andWhere("(d.ward->>'key' = :wKey OR d.ward->>'value' ILike :wValue)", {
+        wKey: wText,
+        wValue: `%${wText}%`,
+      });
+    }
 
     const page = Number(query.page) || 1;
     const pageSize = Number(query.pageSize) || 10;
 
-    qb.orderBy('r.year', 'DESC').addOrderBy('r.id', 'DESC'); // Sắp xếp mới nhất
+    qb.orderBy('r.year', 'DESC').addOrderBy('r.id', 'DESC');
     qb.skip((page - 1) * pageSize).take(pageSize);
 
     const [items, total] = await qb.getManyAndCount();
