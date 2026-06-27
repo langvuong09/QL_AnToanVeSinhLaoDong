@@ -54,7 +54,7 @@ export class ReportTypeService {
             title: `Báo cáo định kỳ - ${savedConfig.name} (Tự động khởi tạo)`,
             year: savedConfig.year,
             note: "",
-            status: ReportStatus.DRAFT,
+            status: initialStatus,
             reportTypeId: savedConfig.id,
             doetId: company.id,
             details: [],

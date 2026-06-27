@@ -8,6 +8,7 @@ import { FileEntity } from "../media/media.entity";
 export enum ReportStatus {
   DRAFT = 'DRAFT',                     
   OVERDUE_WARNING = 'OVERDUE_WARNING', 
+  OVERDUE = 'OVERDUE',
   SUBMITTED = 'SUBMITTED',             
   APPROVED = 'APPROVED',               
   REJECTED = 'REJECTED'                
