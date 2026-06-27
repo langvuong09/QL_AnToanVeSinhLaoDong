@@ -72,8 +72,12 @@ export default function Sidebar() {
     const result = sidebarMenus
       .map((menu) => {
         if (menu.id === 2 || menu.id === 3) {
+          const filteredChildren = menu.children.filter(
+            (child) => child.id !== 9 && child.url !== '/categories'
+          );
           return {
             ...menu,
+            children: filteredChildren,
             isOpen: true,
           }
         }
