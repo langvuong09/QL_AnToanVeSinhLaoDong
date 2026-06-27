@@ -2,7 +2,6 @@ import { Base } from "./Base";
 import { AgreementTable, UpdateAgreementData } from "./types/agreement";
 
 type IAgreemnent = {
-    count: number;
     items: AgreementTable[];
     pageNumber: number;
     pageSize: number;

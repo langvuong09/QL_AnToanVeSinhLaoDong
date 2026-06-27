@@ -127,13 +127,25 @@ const TNLDTheoHDLDPage = () => {
                                 {i.status === "APPROVED" && (
                                     <div className="text-green-600 flex items-center gap-1.5 text-xs font-semibold">
                                         <i className="fa-solid fa-circle text-[8px]"></i>
-                                        <span>chấp nhận</span>
+                                        <span>Chấp nhận</span>
                                     </div>
                                 )}
                                 {i.status === "REJECTED" && (
                                     <div className="text-red-600 flex items-center gap-1.5 text-xs font-semibold">
                                         <i className="fa-solid fa-circle text-[8px]"></i>
-                                        <span>chấp nhận</span>
+                                        <span>Bị từ chối</span>
+                                    </div>
+                                )}
+                                {i.status === "OVERDUE_WARNING" && (
+                                    <div className="text-yellow-600 flex items-center gap-1.5 text-xs font-semibold">
+                                        <i className="fa-solid fa-circle text-[8px]"></i>
+                                        <span>Cảnh báo hết hạn</span>
+                                    </div>
+                                )}
+                                {i.status === "OVERDUE" && (
+                                    <div className="text-black flex items-center gap-1.5 text-xs font-semibold">
+                                        <i className="fa-solid fa-circle text-[8px]"></i>
+                                        <span>Đã hết hạn nộp</span>
                                     </div>
                                 )}
                             </div>
