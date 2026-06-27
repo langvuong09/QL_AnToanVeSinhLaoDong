@@ -88,10 +88,10 @@ const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
                     </div>
                 </div>
 
-                <p>
+                <div>
                     <p>Tổng số lao động của cơ sở: ................. người, trong đó nữ: ................. người</p>
                     <p>Tổng quỹ lương: .................... triệu đồng</p>
-                </p>
+                </div>
 
                 <div className="space-y-5">
                     <h1 className="font-semibold">I. Tình hình chung tai nạn lao động</h1>

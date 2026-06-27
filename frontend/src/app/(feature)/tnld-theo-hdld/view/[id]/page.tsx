@@ -116,7 +116,7 @@ const TNLDTheoHDLDViewIdPage = () => {
                 m2TotalLeaveDays: Number(result.m2TotalLeaveDays) || 0,
                 m2TotalDamage: Number(result.m2TotalDamage) || 0,
 
-                fileIds: result.files?.map(f => f.originalFilename) ?? [],
+                fileIds: result.files?.map(f => ({ name: f.originalFilename, url: f.url })) ?? [],
 
                 doet: result.doet,
                 reportType: result.reportType
@@ -146,7 +146,6 @@ const TNLDTheoHDLDViewIdPage = () => {
         fetchDetail();
         fetchOtherData();
     }, [id]);
-
 
     const [optionReport, setOptionReport] = useState<OptionReport>("business-info");
     const [optionChild, setOptionChild] = useState<"option-1.1" | "option-1.2">("option-1.1");
@@ -262,7 +261,7 @@ const TNLDTheoHDLDViewIdPage = () => {
         <main className="flex flex-col min-h-screen pb-10">
             {isPrint && (
                 <div className="fixed top-0 left-0 w-full h-screen bg-gray-800/50 z-100 flex justify-center py-10">
-                    <ViewReport submitForm={detail! } report={report!} onClose={() => setIsPrint(false)} />
+                    <ViewReport submitForm={detail!} report={report!} onClose={() => setIsPrint(false)} />
                 </div>
             )}
 
@@ -297,6 +296,9 @@ const TNLDTheoHDLDViewIdPage = () => {
                                     }
                                     else if (optionReport === "option-2") {
                                         setOptionReport("review-report");
+                                    }
+                                    else if (optionReport === "review-report") {
+                                        setOptionReport("business-info");
                                     }
                                 }}
                             >
@@ -407,8 +409,8 @@ const TNLDTheoHDLDViewIdPage = () => {
                                             label="Tổng quỹ lương"
                                             require={true}
                                             input={{
-                                                type: "number",
-                                                value: detail?.totalPayroll,
+                                                type: "text",
+                                                value: detail?.totalPayroll.toLocaleString("vi-VN"),
                                                 disabled: true,
                                             }}
                                             isSmall={true}
@@ -943,7 +945,13 @@ const TNLDTheoHDLDViewIdPage = () => {
                                     <span>Vui lòng đính kèm báo cáo TNLĐ có dấu mộc công ty:</span>
                                 </div>
                                 <div className="space-x-2">
-
+                                    <button className="text-blue-600" onClick={() => {
+                                        if (detail?.fileIds[0]) {
+                                            window.open(detail.fileIds[0].url, "_blank");
+                                        }
+                                    }}>
+                                        {detail?.fileIds[0].name}
+                                    </button>
                                 </div>
                             </span>
 

@@ -83,7 +83,10 @@ export type SubmitForm = {
     m2TotalLeaveDays: number;
     m2TotalDamage: number;
 
-    fileIds: string[];
+    fileIds: {
+        name: string;
+        url: string;
+    }[];
 
     doet?: Doet;
     reportType?: ReportConfig;

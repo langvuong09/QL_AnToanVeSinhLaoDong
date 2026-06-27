@@ -43,6 +43,90 @@ const TNLDTheoHDLDIdPage = () => {
             const result = await cls.GetFeTableById(Array.isArray(id) ? id[0] : id);
 
             setDetail(result);
+            setSubmitForm({
+                title: result.title || "",
+                year: Number(result.year) || 0,
+                reportTypeId: Number(result.reportTypeId) || 0,
+
+                totalEmployees: Number(result.totalEmployees) || 0,
+                femaleEmployees: Number(result.femaleEmployees) || 0,
+                totalPayroll: Number(result.totalPayroll) || 0,
+
+                m1TotalCases: Number(result.m1TotalCases) || 0,
+                m1FatalCases: Number(result.m1FatalCases) || 0,
+                m1MultiVictimCases: Number(result.m1MultiVictimCases) || 0,
+
+                m1TotalVictims: Number(result.m1TotalVictims) || 0,
+                m1FemaleVictims: Number(result.m1FemaleVictims) || 0,
+                m1FatalVictims: Number(result.m1FatalVictims) || 0,
+                m1SevereInjuries: Number(result.m1SevereInjuries) || 0,
+
+                m1NonManagedVictims: Number(result.m1NonManagedVictims) || 0,
+                m1NonManagedFemaleVictims: Number(result.m1NonManagedFemaleVictims) || 0,
+                m1NonManagedFatalVictims: Number(result.m1NonManagedFatalVictims) || 0,
+                m1NonManagedSevereInjuries: Number(result.m1NonManagedSevereInjuries) || 0,
+
+                m1MedicalCost: Number(result.m1MedicalCost) || 0,
+                m1SalaryCompensation: Number(result.m1SalaryCompensation) || 0,
+                m1PropertyDamage: Number(result.m1PropertyDamage) || 0,
+                m1TotalCost: Number(result.m1TotalCost) || 0,
+
+                m1TotalLeaveDays: Number(result.m1TotalLeaveDays) || 0,
+                m1TotalDamage: Number(result.m1TotalDamage) || 0,
+
+                details: result.details?.map((d, index) => ({
+                    idx: index,
+                    causeId: Number(d.causeId) || 0,
+                    traumaId: Number(d.traumaId) || 0,
+                    jobId: Number(d.jobId) || 0,
+
+                    totalCases: Number(d.totalCases) || 0,
+                    fatalCases: Number(d.fatalCases) || 0,
+                    multiVictimCases: Number(d.multiVictimCases) || 0,
+
+                    totalVictims: Number(d.totalVictims) || 0,
+                    femaleVictims: Number(d.femaleVictims) || 0,
+                    fatalVictims: Number(d.fatalVictims) || 0,
+                    severeInjuries: Number(d.severeInjuries) || 0,
+
+                    nonManagedVictims: Number(d.nonManagedVictims) || 0,
+                    nonManagedFemaleVictims: Number(d.nonManagedFemaleVictims) || 0,
+                    nonManagedFatalVictims: Number(d.nonManagedFatalVictims) || 0,
+                    nonManagedSevereInjuries: Number(d.nonManagedSevereInjuries) || 0,
+
+                    medicalCost: Number(d.medicalCost) || 0,
+                    salaryCompensation: Number(d.salaryCompensation) || 0,
+                    propertyDamage: Number(d.propertyDamage) || 0,
+                    totalCost: Number(d.totalCost) || 0,
+
+                    totalLeaveDays: Number(d.totalLeaveDays) || 0,
+                    totalDamage: Number(d.totalDamage) || 0,
+                })) ?? [],
+
+                m2TotalCases: Number(result.m2TotalCases) || 0,
+                m2FatalCases: Number(result.m2FatalCases) || 0,
+                m2MultiVictimCases: Number(result.m2MultiVictimCases) || 0,
+
+                m2TotalVictims: Number(result.m2TotalVictims) || 0,
+                m2FemaleVictims: Number(result.m2FemaleVictims) || 0,
+                m2FatalVictims: Number(result.m2FatalVictims) || 0,
+                m2SevereInjuries: Number(result.m2SevereInjuries) || 0,
+
+                m2NonManagedVictims: Number(result.m2NonManagedVictims) || 0,
+                m2NonManagedFemaleVictims: Number(result.m2NonManagedFemaleVictims) || 0,
+                m2NonManagedFatalVictims: Number(result.m2NonManagedFatalVictims) || 0,
+                m2NonManagedSevereInjuries: Number(result.m2NonManagedSevereInjuries) || 0,
+
+                m2MedicalCost: Number(result.m2MedicalCost) || 0,
+                m2SalaryCompensation: Number(result.m2SalaryCompensation) || 0,
+                m2PropertyDamage: Number(result.m2PropertyDamage) || 0,
+                m2TotalCost: Number(result.m2TotalCost) || 0,
+
+                m2TotalLeaveDays: Number(result.m2TotalLeaveDays) || 0,
+                m2TotalDamage: Number(result.m2TotalDamage) || 0,
+
+                fileIds: result.files?.map(f => ({ name: f.originalFilename, url: f.url })) ?? [],
+            });
         } catch (error) {
             alert(error);
         }
@@ -153,7 +237,7 @@ const TNLDTheoHDLDIdPage = () => {
         m2TotalLeaveDays: detail?.m2TotalLeaveDays || 0,
         m2TotalDamage: detail?.m2TotalDamage || 0,
 
-        fileIds: detail?.files!.map(f => f.originalFilename) ?? []
+        fileIds: detail?.files?.map(f => ({ name: f.originalFilename, url: f.url })) ?? [],
     });
 
     useEffect(() => {
@@ -164,91 +248,6 @@ const TNLDTheoHDLDIdPage = () => {
         if (!(detail.status === "DRAFT") && !(detail.status === "REJECTED")) {
             router.push(`/tnld-theo-hdld/view/${detail.id}`)
         }
-
-        setSubmitForm({
-            title: detail.title || "",
-            year: Number(detail.year) || 0,
-            reportTypeId: Number(detail.reportTypeId) || 0,
-
-            totalEmployees: Number(detail.totalEmployees) || 0,
-            femaleEmployees: Number(detail.femaleEmployees) || 0,
-            totalPayroll: Number(detail.totalPayroll) || 0,
-
-            m1TotalCases: Number(detail.m1TotalCases) || 0,
-            m1FatalCases: Number(detail.m1FatalCases) || 0,
-            m1MultiVictimCases: Number(detail.m1MultiVictimCases) || 0,
-
-            m1TotalVictims: Number(detail.m1TotalVictims) || 0,
-            m1FemaleVictims: Number(detail.m1FemaleVictims) || 0,
-            m1FatalVictims: Number(detail.m1FatalVictims) || 0,
-            m1SevereInjuries: Number(detail.m1SevereInjuries) || 0,
-
-            m1NonManagedVictims: Number(detail.m1NonManagedVictims) || 0,
-            m1NonManagedFemaleVictims: Number(detail.m1NonManagedFemaleVictims) || 0,
-            m1NonManagedFatalVictims: Number(detail.m1NonManagedFatalVictims) || 0,
-            m1NonManagedSevereInjuries: Number(detail.m1NonManagedSevereInjuries) || 0,
-
-            m1MedicalCost: Number(detail.m1MedicalCost) || 0,
-            m1SalaryCompensation: Number(detail.m1SalaryCompensation) || 0,
-            m1PropertyDamage: Number(detail.m1PropertyDamage) || 0,
-            m1TotalCost: Number(detail.m1TotalCost) || 0,
-
-            m1TotalLeaveDays: Number(detail.m1TotalLeaveDays) || 0,
-            m1TotalDamage: Number(detail.m1TotalDamage) || 0,
-
-            details: detail.details?.map((d, index) => ({
-                idx: index,
-                causeId: Number(d.causeId) || 0,
-                traumaId: Number(d.traumaId) || 0,
-                jobId: Number(d.jobId) || 0,
-
-                totalCases: Number(d.totalCases) || 0,
-                fatalCases: Number(d.fatalCases) || 0,
-                multiVictimCases: Number(d.multiVictimCases) || 0,
-
-                totalVictims: Number(d.totalVictims) || 0,
-                femaleVictims: Number(d.femaleVictims) || 0,
-                fatalVictims: Number(d.fatalVictims) || 0,
-                severeInjuries: Number(d.severeInjuries) || 0,
-
-                nonManagedVictims: Number(d.nonManagedVictims) || 0,
-                nonManagedFemaleVictims: Number(d.nonManagedFemaleVictims) || 0,
-                nonManagedFatalVictims: Number(d.nonManagedFatalVictims) || 0,
-                nonManagedSevereInjuries: Number(d.nonManagedSevereInjuries) || 0,
-
-                medicalCost: Number(d.medicalCost) || 0,
-                salaryCompensation: Number(d.salaryCompensation) || 0,
-                propertyDamage: Number(d.propertyDamage) || 0,
-                totalCost: Number(d.totalCost) || 0,
-
-                totalLeaveDays: Number(d.totalLeaveDays) || 0,
-                totalDamage: Number(d.totalDamage) || 0,
-            })) ?? [],
-
-            m2TotalCases: Number(detail.m2TotalCases) || 0,
-            m2FatalCases: Number(detail.m2FatalCases) || 0,
-            m2MultiVictimCases: Number(detail.m2MultiVictimCases) || 0,
-
-            m2TotalVictims: Number(detail.m2TotalVictims) || 0,
-            m2FemaleVictims: Number(detail.m2FemaleVictims) || 0,
-            m2FatalVictims: Number(detail.m2FatalVictims) || 0,
-            m2SevereInjuries: Number(detail.m2SevereInjuries) || 0,
-
-            m2NonManagedVictims: Number(detail.m2NonManagedVictims) || 0,
-            m2NonManagedFemaleVictims: Number(detail.m2NonManagedFemaleVictims) || 0,
-            m2NonManagedFatalVictims: Number(detail.m2NonManagedFatalVictims) || 0,
-            m2NonManagedSevereInjuries: Number(detail.m2NonManagedSevereInjuries) || 0,
-
-            m2MedicalCost: Number(detail.m2MedicalCost) || 0,
-            m2SalaryCompensation: Number(detail.m2SalaryCompensation) || 0,
-            m2PropertyDamage: Number(detail.m2PropertyDamage) || 0,
-            m2TotalCost: Number(detail.m2TotalCost) || 0,
-
-            m2TotalLeaveDays: Number(detail.m2TotalLeaveDays) || 0,
-            m2TotalDamage: Number(detail.m2TotalDamage) || 0,
-
-            fileIds: detail.files?.map(f => f.originalFilename) ?? []
-        });
     }, [detail]);
 
     const onChangDetail = (
@@ -260,7 +259,6 @@ const TNLDTheoHDLDIdPage = () => {
             const newDetails = [...prev.details];
 
             const existingIndex = newDetails.findIndex(d => d.idx === idx);
-            console.log(field, value)
 
             if (existingIndex === -1) return prev;
 
@@ -490,8 +488,6 @@ const TNLDTheoHDLDIdPage = () => {
         record["nguyennhan"] = nguyennhan;
         record["yeutochanthuong"] = yeutochanthuong;
         record["phantheonghenghiep"] = phantheonghenghiep;
-
-        console.log(record)
 
         setReport(record);
 
@@ -858,7 +854,8 @@ const TNLDTheoHDLDIdPage = () => {
             notificate?.showNotification({ type: "error", message: "Cập nhật báo cáo thất bại" });
         }
         finally {
-            setIsLoading(true);
+            setIsLoading(false);
+            router.push(`/tnld-theo-hdld/view/${detail!.id}`);
         }
     };
 
@@ -1691,11 +1688,11 @@ const TNLDTheoHDLDIdPage = () => {
                                             require={true}
                                             input={{
                                                 type: "number",
-                                                value: submitForm.m2FemaleVictims,
+                                                value: submitForm.m2TotalDamage,
                                                 onChange: (e) => {
                                                     const num = Number(e.target.value);
                                                     if (num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m2FemaleVictims: num }));
+                                                    setSubmitForm(prev => ({ ...prev, m2TotalDamage: num }));
                                                 }
                                             }}
                                             isSmall={true}
@@ -1750,10 +1747,13 @@ const TNLDTheoHDLDIdPage = () => {
                                         const url = URL.createObjectURL(selectedFile);
                                         window.open(url, "_blank");
                                     }}>
-                                        {selectedFile && selectedFile.name}
+                                        {selectedFile?.name ?? submitForm.fileIds?.[0]?.name}
                                     </span>
                                     {selectedFile && (
-                                        <button className="text-red-600 underline" onClick={() => setSelectedFile(null)}>Xóa</button>
+                                        <button className="text-red-600 underline" onClick={() => {
+                                            setSelectedFile(null);
+                                            setSubmitForm(prev => ({ ...prev, fileIds: [] }));
+                                        }}>Xóa</button>
                                     )}
                                 </div>
                             </span>
