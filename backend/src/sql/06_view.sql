@@ -23,7 +23,9 @@ INSERT INTO views (id, name, url, icon, "parentId", "order") VALUES
 (8, 'Kỳ báo cáo',               '/report-periods',          'fa-solid fa-circle',   1,      5),
 (9, 'Danh mục chung',           '/categories',              'fa-solid fa-circle',   2,      1),
 (10, 'TNLĐ theo HĐLĐ',          '/tnld-theo-hdld',          'fa-solid fa-circle',   2,      2),
-(11, 'Thông tin doanh nghiệp',  '/business-info',           'fa-solid fa-circle',   3,      1)
+(11, 'Thông tin doanh nghiệp',  '/business-info',           'fa-solid fa-circle',   3,      1),
+(12, 'TNLĐ theo HĐLĐ',          '/tnld-theo-hdld-admin',          'fa-solid fa-circle',   2,      2)
+
 ON CONFLICT (id) DO UPDATE SET 
     name = EXCLUDED.name, url = EXCLUDED.url, "parentId" = EXCLUDED."parentId", "order" = EXCLUDED."order", icon = EXCLUDED.icon;
 
@@ -54,6 +56,9 @@ SELECT 10, id FROM permissions WHERE code IN ('REPORT_VIEW', 'REPORT_CREATE', 'R
 INSERT INTO view_permissions ("viewId", "permissionId")
 SELECT 11, id FROM permissions WHERE code IN ('DOET_VIEW', 'DOET_UPDATE') ON CONFLICT DO NOTHING;
 
+INSERT INTO view_permissions ("viewId", "permissionId")
+SELECT 12, id FROM permissions WHERE code IN ('REPORT_MANAGEMENT_VIEW', 'REPORT_MANAGEMENT_CREATE', 'REPORT_MANAGEMENT_UPDATE', 'REPORT_MANAGEMENT_DELETE') ON CONFLICT DO NOTHING;
+
 -- =============================================
 -- 4. MAPPING ROLE - PERMISSIONS (CẤP QUYỀN SIDEBAR)
 -- =============================================
@@ -61,9 +66,11 @@ SELECT 11, id FROM permissions WHERE code IN ('DOET_VIEW', 'DOET_UPDATE') ON CON
 -- Làm sạch bảng mapping trước khi nạp lại để tránh sót quyền cũ
 DELETE FROM role_permissions;
 
--- Role 4: Admin — Toàn quyền hệ thống
+-- Role 4: Admin — Toàn quyền hệ thống, trừ REPORT_VIEW, .....
 INSERT INTO role_permissions ("roleId", "permissionId")
-SELECT 4, id FROM permissions ON CONFLICT DO NOTHING;
+SELECT 4, id FROM permissions 
+WHERE code <> 'REPORT_VIEW' AND code <> 'REPORT_CREATE' AND code <> 'REPORT_UPDATE' AND code <> 'REPORT_DELETE' AND code <> 'REPORT_CHANGE_STATUS'
+ON CONFLICT DO NOTHING;
 
 -- Role 3: Lãnh đạo — Xem + duyệt (Đã sửa lỗi thiếu dấu phẩy)
 INSERT INTO role_permissions ("roleId", "permissionId")

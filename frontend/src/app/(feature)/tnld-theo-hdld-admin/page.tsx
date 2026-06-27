@@ -7,9 +7,11 @@ import Pagination from "@/src/components/Pagination";
 import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import { OpenAdress, Province, Ward } from "@/src/services/open-address";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const TNLDTheoHDLDAdminPage = () => {
+    const router = useRouter();
     const now = new Date();
 
     const [filters, setFilters] = useState({
@@ -344,7 +346,9 @@ const TNLDTheoHDLDAdminPage = () => {
                         <div key={i.id} className="flex items-center gap-5 py-2.5 border-b border-gray-100 hover:bg-blue-50/40 transition-colors text-sm text-gray-700">
                             <div className="flex-1 flex items-center justify-start gap-4 text-gray-400">
                                 <input type="checkbox" />
-                                <button>
+                                <button onClick={() => {
+                                    router.push(`/tnld-theo-hdld-admin/view/${i.id}`)
+                                }}>
                                     <i className="fa-solid fa-eye"></i>
                                 </button>
 

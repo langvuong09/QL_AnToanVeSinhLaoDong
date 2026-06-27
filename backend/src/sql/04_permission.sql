@@ -53,7 +53,13 @@ INSERT INTO permissions (name, code, "groupPermissionId") VALUES
 ('Xem danh sách công việc',        'JOB_VIEW',     5),
 ('Tạo mới công việc',              'JOB_CREATE',   5),
 ('Cập nhật công việc',             'JOB_UPDATE',   5),
-('Xóa công việc',                  'JOB_DELETE',   5)
+('Xóa công việc',                  'JOB_DELETE',   5),
+
+-- Nhom 6: REPORT_MANAGEMENT
+('Xem danh sách báo cáo',          'REPORT_MANAGEMENT_VIEW', 4),
+('Tạo mới báo cáo',                'REPORT_MANAGEMENT_CREATE', 4),
+('Cập nhật báo cáo',               'REPORT_MANAGEMENT_UPDATE', 4),
+('Xóa báo cáo',                    'REPORT_MANAGEMENT_DELETE', 4)
 
 ON CONFLICT (code) 
 DO UPDATE SET 
