@@ -10,6 +10,7 @@ import { GetUser } from 'src/commons/guards/user.decorator';
 import { PermissionCode } from 'src/commons/enums/permission.enum';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { ApiExtraModels } from '@nestjs/swagger';
+import { BulkUpdateStatusDto } from './dto/bulk-update-status.dto';
 
 
 @ApiTags('Reports (Quản lý và tổng hợp báo cáo Tai nạn lao động)')
@@ -36,6 +37,16 @@ export class ReportController {
     @GetUser() user: any
   ) {
     return await this.reportService.changeStatus(id, dto, user);
+  }
+
+  @Put('bulk/status')
+  @RequirePermissions(PermissionCode.REPORT_CHANGE_STATUS)
+  @ApiOperation({ summary: '🎯 Duyệt/Thay đổi trạng thái hàng loạt cho nhiều báo cáo cùng lúc' })
+  async changeStatusBulk(
+    @Body() dto: BulkUpdateStatusDto,
+    @GetUser() user: any
+  ) {
+    return await this.reportService.changeStatusBulk(dto, user);
   }
 
   @Put(':id')
