@@ -14,6 +14,7 @@ import { ReportDetail } from './report-detail.entity';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { StatusHistory } from '../reportHistory/report-history.entity';
 import { Doet } from '../doet/doet.entity';
+import { BulkUpdateStatusDto } from './dto/bulk-update-status.dto';
 
 @Injectable()
 export class ReportService {
@@ -190,6 +191,33 @@ export class ReportService {
       id: report.id,
       status: report.status,
       note: report.note,
+    });
+  }
+
+  async changeStatusBulk(dto: BulkUpdateStatusDto, user: any) {
+    const { ids, status, note } = dto;
+
+    if (!ids || ids.length === 0) {
+      throw new BadRequestException('Danh sách ID báo cáo không được để trống!');
+    }
+
+    const reports = await this.reportRepository.findBy({ id: In(ids) });
+    if (reports.length === 0) {
+      throw new NotFoundException('Không tìm thấy báo cáo nào khớp với danh sách ID đã cung cấp!');
+    }
+
+    await this.dataSource.transaction(async (manager) => {
+      reports.forEach((report) => {
+        report.status = status;
+        report.note = note || report.note;
+      });
+      await manager.save(Report, reports);
+    });
+
+    return Response.get({
+      message: `Cập nhật trạng thái hàng loạt thành công cho ${reports.length} báo cáo.`,
+      updatedCount: reports.length,
+      affectedIds: reports.map((r) => r.id),
     });
   }
 
