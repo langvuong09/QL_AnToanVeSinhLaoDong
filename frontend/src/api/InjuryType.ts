@@ -1,42 +1,34 @@
 import { Base } from "./Base";
 
-export interface IJob {
+export interface IInjuryType {
     id: number;
     code: string;
     name: string;
     isActive: boolean;
     parentId?: number | null;
-    parent?: IJob | null;
-    children?: IJob[];
+    parent?: IInjuryType | null;
+    children?: IInjuryType[];
     level?: number;
     levelText?: string;
     deletedAt?: string;
 }
 
-export interface IJobListResponse {
-    items: IJob[];
+export interface IInjuryTypeListResponse {
+    items: IInjuryType[];
     count: number;
     pageSize: number;
     pageNumber: number;
 }
 
-export class Job extends Base {
+export class InjuryTypeApi extends Base {
     constructor() {
         let END_POINT = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3010";
         if (END_POINT.endsWith("/")) {
             END_POINT = END_POINT.slice(0, -1);
         }
         super({
-            baseURL: END_POINT + "/api/v1/jobs",
+            baseURL: END_POINT + "/api/v1/injury-types",
         });
-    }
-
-    async GetAll(): Promise<any[]> {
-        const result = await this.execute<IJobListResponse>({
-            url: "/",
-            method: "GET"
-        });
-        return result.data?.items || [];
     }
 
     async getAllForAdmin(query: {
@@ -46,8 +38,8 @@ export class Job extends Base {
         name?: string;
         level?: number;
         isActive?: boolean;
-    }): Promise<{ success: boolean; message: string; data?: IJobListResponse }> {
-        const result = await this.execute<IJobListResponse>({
+    }): Promise<{ success: boolean; message: string; data?: IInjuryTypeListResponse }> {
+        const result = await this.execute<IInjuryTypeListResponse>({
             url: "/admin",
             method: "GET",
             params: query,
@@ -55,7 +47,7 @@ export class Job extends Base {
 
         return {
             success: result.success,
-            message: result.message || "Có lỗi xảy ra khi lấy danh sách nghề nghiệp",
+            message: result.message || "Có lỗi xảy ra khi lấy danh sách loại chấn thương",
             data: result.data ?? undefined,
         };
     }
@@ -67,16 +59,16 @@ export class Job extends Base {
         name?: string;
         level?: number;
         isActive?: boolean;
-    }): Promise<{ success: boolean; message: string; data?: IJobListResponse }> {
-        const result = await this.execute<IJobListResponse>({
-            url: "",
+    }): Promise<{ success: boolean; message: string; data?: IInjuryTypeListResponse }> {
+        const result = await this.execute<IInjuryTypeListResponse>({
+            url: "/app",
             method: "GET",
             params: query,
         });
 
         return {
             success: result.success,
-            message: result.message || "Có lỗi xảy ra khi lấy danh sách nghề nghiệp",
+            message: result.message || "Có lỗi xảy ra khi lấy danh sách loại chấn thương",
             data: result.data ?? undefined,
         };
     }
@@ -86,8 +78,8 @@ export class Job extends Base {
         name: string;
         isActive?: boolean;
         parentId?: number | null;
-    }): Promise<{ success: boolean; message: string; data?: IJob }> {
-        const result = await this.execute<IJob>({
+    }): Promise<{ success: boolean; message: string; data?: IInjuryType }> {
+        const result = await this.execute<IInjuryType>({
             url: "",
             method: "POST",
             data: dto,
@@ -95,7 +87,7 @@ export class Job extends Base {
 
         return {
             success: result.success,
-            message: result.message || "Có lỗi xảy ra khi tạo nghề nghiệp",
+            message: result.message || "Có lỗi xảy ra khi tạo loại chấn thương",
             data: result.data ?? undefined,
         };
     }
@@ -105,8 +97,8 @@ export class Job extends Base {
         name?: string;
         parentId?: number | null;
         isActive?: boolean;
-    }): Promise<{ success: boolean; message: string; data?: IJob }> {
-        const result = await this.execute<IJob>({
+    }): Promise<{ success: boolean; message: string; data?: IInjuryType }> {
+        const result = await this.execute<IInjuryType>({
             url: `/${id}`,
             method: "PUT",
             data: dto,
@@ -114,14 +106,14 @@ export class Job extends Base {
 
         return {
             success: result.success,
-            message: result.message || "Có lỗi xảy ra khi cập nhật nghề nghiệp",
+            message: result.message || "Có lỗi xảy ra khi cập nhật loại chấn thương",
             data: result.data ?? undefined,
         };
     }
 
     async toggleActive(id: number, isActive: boolean): Promise<{ success: boolean; message: string }> {
         const result = await this.execute({
-            url: `/${id}/active`,
+            url: `/${id}/toggle-active`,
             method: "PATCH",
             data: { isActive },
         });
@@ -141,23 +133,20 @@ export class Job extends Base {
 
         return {
             success: result.success,
-            message: result.message || "Có lỗi xảy ra khi xóa nghề nghiệp",
+            message: result.message || "Có lỗi xảy ra khi xóa loại chấn thương",
         };
     }
 
-    async getDetail(id: number): Promise<{ success: boolean; message: string; data?: IJob }> {
-        const result = await this.execute<IJob>({
+    async getDetail(id: number): Promise<{ success: boolean; message: string; data?: IInjuryType }> {
+        const result = await this.execute<IInjuryType>({
             url: `/${id}`,
             method: "GET",
         });
 
         return {
             success: result.success,
-            message: result.message || "Có lỗi xảy ra khi lấy chi tiết nghề nghiệp",
+            message: result.message || "Có lỗi xảy ra khi lấy chi tiết loại chấn thương",
             data: result.data ?? undefined,
         };
     }
 }
-
-export const JobApi = Job;
-export type JobApi = Job;

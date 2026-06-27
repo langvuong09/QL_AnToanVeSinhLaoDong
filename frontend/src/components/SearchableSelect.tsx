@@ -2,20 +2,27 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import type { IIndustry } from '@/src/api/Industry'
+export interface ISearchableSelectOption {
+  id: number
+  code: string
+  name: string
+  level?: number
+  [key: string]: any
+}
 
 type SearchableSelectProps = {
   label?: string
   require?: boolean
   placeholder?: string
   value: string
-  options: IIndustry[]
+  options: ISearchableSelectOption[]
   disabled?: boolean
   errorMess?: string
   onChange: (value: string) => void
   loading?: boolean
-  fallbackSelectedOption?: IIndustry | null
+  fallbackSelectedOption?: ISearchableSelectOption | null
 }
+
 
 function removeAccents(str: string): string {
   return str
@@ -151,7 +158,7 @@ export default function SearchableSelect({
     }
   }
 
-  const handleSelect = (opt: IIndustry) => {
+  const handleSelect = (opt: ISearchableSelectOption) => {
     onChange(String(opt.id))
     setIsOpen(false)
     setSearchTerm('')
