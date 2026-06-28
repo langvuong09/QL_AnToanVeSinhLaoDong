@@ -7,6 +7,7 @@ import DeleteConfirmModal from '@/src/components/common/DeleteConfirmModal'
 import { JobApi, type IJob } from '@/src/api/Job'
 import { InjuryTypeApi, type IInjuryType } from '@/src/api/InjuryType'
 import { TraumaApi, type ITrauma } from '@/src/api/Trauma'
+import { Accident as AccidentApi, type IAccidentCause } from '@/src/api/Accident'
 import { NotificateContext } from '@/src/contexts/notificate/notificate'
 import { exportToExcel } from '@/src/utils/excel'
 
@@ -14,14 +15,36 @@ import { exportToExcel } from '@/src/utils/excel'
 import JobModal from '@/src/components/modals/JobModal'
 import InjuryTypeModal from '@/src/components/modals/InjuryTypeModal'
 import TraumaModal from '@/src/components/modals/TraumaModal'
-import TopHero from '@/src/components/TopHero'
 import { AuthenticateContext } from '@/src/contexts/authenticate/authenticate'
 import NotFound from '@/src/components/NotFound'
 
-type CategoryType = 'job' | 'trauma' | 'injury'
+type CategoryType = 'job' | 'trauma' | 'injury' | 'accident'
 
-const GRID_COLS_HIERARCHY = 'grid-cols-[40px_70px_120px_1fr_120px_140px]'
-const GRID_COLS_FLAT = 'grid-cols-[40px_70px_120px_1fr_140px]'
+const GRID_COLS_HIERARCHY = 'grid-cols-[40px_70px_160px_1fr_120px_100px]'
+const GRID_COLS_FLAT = 'grid-cols-[40px_70px_160px_1fr_100px]'
+const GRID_COLS_ACCIDENT = 'grid-cols-[40px_70px_160px_1fr_180px_100px]'
+
+function getJobLevel(code: string): number {
+  const clean = code.trim().toUpperCase().replace(/^JOB_/, '')
+  if (!clean || !/^\d+$/.test(clean)) return 0
+  if (clean.length === 1) return 1
+  if (clean.length === 2) {
+    if (clean.startsWith('0')) return 1
+    return 2
+  }
+  if (clean.length === 3) return 3
+  if (clean.length === 4) return 4
+  return 0
+}
+
+function getInjuryLevel(code: string): number {
+  const clean = code.trim().toUpperCase().replace(/^INJ_/, '')
+  if (!clean) return 0
+  const parts = clean.split('_')
+  if (parts.some((p) => !/^\d+$/.test(p))) return 0
+  if (parts.length > 3) return 0
+  return parts.length
+}
 
 function flattenTree<T extends { children?: T[]; level?: number; levelText?: string }>(items: T[]): T[] {
   const result: T[] = []
@@ -56,6 +79,7 @@ export default function GeneralCategoriesPage() {
   const jobApi = useMemo(() => new JobApi(), [])
   const injuryApi = useMemo(() => new InjuryTypeApi(), [])
   const traumaApi = useMemo(() => new TraumaApi(), [])
+  const accidentApi = useMemo(() => new AccidentApi(), [])
 
   // Selected general category
   const [currentCategory, setCurrentCategory] = useState<CategoryType>('job')
@@ -76,6 +100,7 @@ export default function GeneralCategoriesPage() {
   const [filterCode, setFilterCode] = useState('')
   const [filterName, setFilterName] = useState('')
   const [filterLevel, setFilterLevel] = useState('')
+  const [filterType, setFilterType] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
   // Parents lists for searchable select dropdowns in forms
@@ -87,6 +112,7 @@ export default function GeneralCategoriesPage() {
   const [isJobModalOpen, setIsJobModalOpen] = useState(false)
   const [isTraumaModalOpen, setIsTraumaModalOpen] = useState(false)
   const [isInjuryModalOpen, setIsInjuryModalOpen] = useState(false)
+  const [isAccidentModalOpen, setIsAccidentModalOpen] = useState(false)
 
   // Edit / Form states
   const [editingItem, setEditingItem] = useState<any | null>(null)
@@ -101,6 +127,9 @@ export default function GeneralCategoriesPage() {
 
   const [injuryForm, setInjuryForm] = useState({ code: '', name: '', parentId: '', status: 'true' })
   const [injuryErrors, setInjuryErrors] = useState({ code: '', name: '', parentId: '' })
+
+  const [accidentForm, setAccidentForm] = useState({ code: '', name: '', type: 'EMPLOYER', status: 'true' })
+  const [accidentErrors, setAccidentErrors] = useState({ code: '', name: '' })
 
   // Delete confirm modal states
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -119,6 +148,7 @@ export default function GeneralCategoriesPage() {
     setFilterCode('')
     setFilterName('')
     setFilterLevel('')
+    setFilterType('')
     setFilterStatus('')
     fetchDataList()
     fetchParentOptions()
@@ -127,7 +157,7 @@ export default function GeneralCategoriesPage() {
   // Trigger list refetch when filter fields change
   useEffect(() => {
     fetchDataList()
-  }, [filterCode, filterName, filterLevel, filterStatus])
+  }, [filterCode, filterName, filterLevel, filterType, filterStatus])
 
   // Load parent choices for selects
   const fetchParentOptions = async () => {
@@ -226,6 +256,26 @@ export default function GeneralCategoriesPage() {
             message: result.message || 'Không thể tải danh mục yếu tố gây chấn thương.',
           })
         }
+      } else if (currentCategory === 'accident') {
+        const result = await accidentApi.getAllForAdmin({
+          page: 1,
+          pageSize: 1000,
+          code: filterCode.trim() || undefined,
+          name: filterName.trim() || undefined,
+          type: filterType ? (filterType as 'EMPLOYEE' | 'EMPLOYER') : undefined,
+          isActive,
+        })
+        if (result.success && result.data) {
+          setData(result.data.items)
+          setTotalItems(result.data.items.length)
+        } else {
+          setData([])
+          setTotalItems(0)
+          notificate?.showNotification({
+            type: 'error',
+            message: result.message || 'Không thể tải danh mục nguyên nhân xảy ra TNLĐ.',
+          })
+        }
       }
     } catch (error) {
       console.error(error)
@@ -243,6 +293,7 @@ export default function GeneralCategoriesPage() {
     if (field === 'code') setFilterCode(value)
     if (field === 'name') setFilterName(value)
     if (field === 'level') setFilterLevel(value)
+    if (field === 'type') setFilterType(value)
     if (field === 'status') setFilterStatus(value)
     setCurrentPage(1)
   }
@@ -304,6 +355,15 @@ export default function GeneralCategoriesPage() {
       })
       setTraumaErrors({ code: '', name: '' })
       setIsTraumaModalOpen(true)
+    } else if (currentCategory === 'accident') {
+      setAccidentForm({
+        code: item.code,
+        name: item.name,
+        type: item.type || 'EMPLOYER',
+        status: item.isActive ? 'true' : 'false',
+      })
+      setAccidentErrors({ code: '', name: '' })
+      setIsAccidentModalOpen(true)
     }
   }
 
@@ -322,6 +382,10 @@ export default function GeneralCategoriesPage() {
       setTraumaForm({ code: '', name: '', status: 'true' })
       setTraumaErrors({ code: '', name: '' })
       setIsTraumaModalOpen(true)
+    } else if (currentCategory === 'accident') {
+      setAccidentForm({ code: '', name: '', type: 'EMPLOYER', status: 'true' })
+      setAccidentErrors({ code: '', name: '' })
+      setIsAccidentModalOpen(true)
     }
   }
 
@@ -339,8 +403,10 @@ export default function GeneralCategoriesPage() {
         result = await jobApi.toggleActive(item.id, nextStatus)
       } else if (currentCategory === 'injury') {
         result = await injuryApi.toggleActive(item.id, nextStatus)
-      } else {
+      } else if (currentCategory === 'trauma') {
         result = await traumaApi.toggleActive(item.id, nextStatus)
+      } else {
+        result = await accidentApi.toggleActive(item.id, nextStatus)
       }
 
       if (result.success) {
@@ -372,17 +438,72 @@ export default function GeneralCategoriesPage() {
     }
   }
 
+  const validateJob = () => {
+    const nextErrors = { code: '', name: '', parentId: '' }
+    const codeVal = jobForm.code.trim()
+
+    if (!codeVal) {
+      nextErrors.code = 'Mã ngành là bắt buộc'
+    } else {
+      const clean = codeVal.toUpperCase().replace(/^JOB_/, '')
+      if (!/^[a-zA-Z0-9_]+$/.test(codeVal)) {
+        nextErrors.code = 'Mã ngành chỉ được chứa ký tự chữ, số và dấu gạch dưới'
+      } else if (!/^\d+$/.test(clean)) {
+        nextErrors.code = 'Mã ngành phải kết thúc bằng các chữ số (Ví dụ: JOB_01, JOB_11)'
+      } else {
+        const jobLevel = getJobLevel(codeVal)
+        if (jobLevel === 0 || jobLevel > 4) {
+          nextErrors.code = 'Mã ngành không hợp lệ hoặc vượt quá cấp cho phép (tối đa Cấp 4)'
+        } else if (jobLevel >= 2 && jobLevel <= 4) {
+          if (!jobForm.parentId) {
+            nextErrors.parentId = `Nhóm ngành cha là bắt buộc cho mã ngành cấp ${jobLevel}`
+          }
+        }
+      }
+    }
+
+    if (!jobForm.name.trim()) {
+      nextErrors.name = 'Tên ngành là bắt buộc'
+    }
+
+    setJobErrors(nextErrors)
+    return !nextErrors.code && !nextErrors.name && !nextErrors.parentId
+  }
+
+  const validateInjury = () => {
+    const nextErrors = { code: '', name: '', parentId: '' }
+    const codeVal = injuryForm.code.trim()
+
+    if (!codeVal) {
+      nextErrors.code = 'Mã số là bắt buộc'
+    } else {
+      const clean = codeVal.toUpperCase().replace(/^INJ_/, '')
+      if (!/^[a-zA-Z0-9_]+$/.test(codeVal)) {
+        nextErrors.code = 'Mã số chỉ được chứa ký tự chữ, số và dấu gạch dưới'
+      } else {
+        const injuryLevel = getInjuryLevel(codeVal)
+        if (injuryLevel === 0 || injuryLevel > 3) {
+          nextErrors.code = 'Mã số không hợp lệ hoặc vượt quá cấp cho phép (tối đa Cấp 3)'
+        } else if (injuryLevel >= 2 && injuryLevel <= 3) {
+          if (!injuryForm.parentId) {
+            nextErrors.parentId = `Loại chấn thương cha là bắt buộc cho mã số cấp ${injuryLevel}`
+          }
+        }
+      }
+    }
+
+    if (!injuryForm.name.trim()) {
+      nextErrors.name = 'Tên loại chấn thương là bắt buộc'
+    }
+
+    setInjuryErrors(nextErrors)
+    return !nextErrors.code && !nextErrors.name && !nextErrors.parentId
+  }
+
   // Save changes
   const handleSaveItem = async () => {
     if (currentCategory === 'job') {
-      if (!jobForm.code.trim()) {
-        setJobErrors((prev) => ({ ...prev, code: 'Mã ngành là bắt buộc' }))
-        return
-      }
-      if (!jobForm.name.trim()) {
-        setJobErrors((prev) => ({ ...prev, name: 'Tên ngành là bắt buộc' }))
-        return
-      }
+      if (!validateJob()) return
 
       setIsSaving(true)
       try {
@@ -428,14 +549,7 @@ export default function GeneralCategoriesPage() {
         setIsSaving(false)
       }
     } else if (currentCategory === 'injury') {
-      if (!injuryForm.code.trim()) {
-        setInjuryErrors((prev) => ({ ...prev, code: 'Mã số là bắt buộc' }))
-        return
-      }
-      if (!injuryForm.name.trim()) {
-        setInjuryErrors((prev) => ({ ...prev, name: 'Tên loại chấn thương là bắt buộc' }))
-        return
-      }
+      if (!validateInjury()) return
 
       setIsSaving(true)
       try {
@@ -529,6 +643,60 @@ export default function GeneralCategoriesPage() {
       } finally {
         setIsSaving(false)
       }
+    } else if (currentCategory === 'accident') {
+      if (!accidentForm.code.trim()) {
+        setAccidentErrors((prev) => ({ ...prev, code: 'Mã nguyên nhân là bắt buộc' }))
+        return
+      }
+      if (!accidentForm.name.trim()) {
+        setAccidentErrors((prev) => ({ ...prev, name: 'Tên nguyên nhân là bắt buộc' }))
+        return
+      }
+
+      setIsSaving(true)
+      try {
+        if (editingItem) {
+          const updatePromises = [
+            accidentApi.update(editingItem.id, {
+              code: accidentForm.code,
+              name: accidentForm.name,
+              type: accidentForm.type as 'EMPLOYEE' | 'EMPLOYER',
+            }),
+          ]
+          const nextActive = accidentForm.status === 'true'
+          if (editingItem.isActive !== nextActive) {
+            updatePromises.push(accidentApi.toggleActive(editingItem.id, nextActive))
+          }
+          const [res] = await Promise.all(updatePromises)
+          if (res.success) {
+            notificate?.showNotification({ type: 'success', message: 'Cập nhật nguyên nhân tai nạn thành công.' })
+            setIsAccidentModalOpen(false)
+            fetchDataList()
+          } else {
+            notificate?.showNotification({ type: 'error', message: res.message || 'Lỗi khi cập nhật nguyên nhân.' })
+          }
+        } else {
+          const res = await accidentApi.create({
+            code: accidentForm.code,
+            name: accidentForm.name,
+            type: accidentForm.type as 'EMPLOYEE' | 'EMPLOYER',
+            isActive: accidentForm.status === 'true',
+          })
+          if (res.success) {
+            notificate?.showNotification({ type: 'success', message: 'Thêm mới nguyên nhân tai nạn thành công.' })
+            setIsAccidentModalOpen(false)
+            setCurrentPage(1)
+            fetchDataList()
+          } else {
+            notificate?.showNotification({ type: 'error', message: res.message || 'Lỗi khi tạo nguyên nhân tai nạn.' })
+          }
+        }
+      } catch (err) {
+        console.error(err)
+        notificate?.showNotification({ type: 'error', message: 'Lỗi lưu trữ dữ liệu.' })
+      } finally {
+        setIsSaving(false)
+      }
     }
   }
 
@@ -552,8 +720,10 @@ export default function GeneralCategoriesPage() {
         result = await jobApi.bulkDelete(selectedIds)
       } else if (currentCategory === 'injury') {
         result = await injuryApi.bulkDelete(selectedIds)
-      } else {
+      } else if (currentCategory === 'trauma') {
         result = await traumaApi.bulkDelete(selectedIds)
+      } else {
+        result = await accidentApi.bulkDelete(selectedIds)
       }
 
       if (result.success) {
@@ -632,6 +802,22 @@ export default function GeneralCategoriesPage() {
         ],
         'Yeu_to_gay_chan_thuong'
       )
+    } else if (currentCategory === 'accident') {
+      const exportData = data.map((item: any) => ({
+        ...item,
+        typeText: item.type === 'EMPLOYEE' ? 'Do người lao động' : 'Do người sử dụng lao động',
+        statusText: item.isActive ? 'Sử dụng' : 'Ngừng sử dụng',
+      }))
+      exportToExcel(
+        exportData,
+        [
+          { key: 'code', label: 'Mã nguyên nhân' },
+          { key: 'name', label: 'Tên nguyên nhân xảy ra TNLĐ' },
+          { key: 'typeText', label: 'Loại nguyên nhân' },
+          { key: 'statusText', label: 'Trạng thái' },
+        ],
+        'Nguyen_nhan_xay_ra_TNLD'
+      )
     }
   }
 
@@ -646,7 +832,7 @@ export default function GeneralCategoriesPage() {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const allSelected = paginatedData.length > 0 && paginatedData.every((r) => selectedIds.includes(r.id))
 
-  const GRID_COLS = currentCategory === 'trauma' ? GRID_COLS_FLAT : GRID_COLS_HIERARCHY
+  const GRID_COLS = currentCategory === 'trauma' ? GRID_COLS_FLAT : currentCategory === 'accident' ? GRID_COLS_ACCIDENT : GRID_COLS_HIERARCHY
 
   if (authenticate?.state?.role?.code === 'business') {
     return <NotFound />
@@ -701,6 +887,7 @@ export default function GeneralCategoriesPage() {
             <option value="job">Danh mục nghề nghiệp</option>
             <option value="trauma">Yếu tố gây chấn thương</option>
             <option value="injury">Loại chấn thương</option>
+            <option value="accident">Nguyên nhân xảy ra TNLĐ</option>
           </select>
           {/* Column titles */}
           <div className={`grid ${GRID_COLS} text-xs text-gray-500 font-medium bg-gray-50/50`}>
@@ -733,6 +920,13 @@ export default function GeneralCategoriesPage() {
                 <div className="px-3 py-2">Tên yếu tố gây chấn thương</div>
               </>
             )}
+            {currentCategory === 'accident' && (
+              <>
+                <div className="px-3 py-2">Mã nguyên nhân</div>
+                <div className="px-3 py-2">Tên nguyên nhân xảy ra TNLĐ</div>
+                <div className="px-3 py-2">Loại</div>
+              </>
+            )}
             <div className="px-3 py-2 text-center">Trạng thái</div>
           </div>
 
@@ -743,7 +937,7 @@ export default function GeneralCategoriesPage() {
             <div className="px-3">
               <input
                 type="text"
-                placeholder={currentCategory === 'trauma' ? 'Tìm mã yếu tố...' : currentCategory === 'job' ? 'Tìm mã ngành...' : 'Tìm mã số...'}
+                placeholder={currentCategory === 'trauma' ? 'Tìm mã yếu tố...' : currentCategory === 'job' ? 'Tìm mã ngành...' : currentCategory === 'accident' ? 'Tìm mã nguyên nhân...' : 'Tìm mã số...'}
                 value={filterCode}
                 onChange={(e) => handleFilterChange('code', e.target.value)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none focus:border-primary transition-colors bg-white"
@@ -752,13 +946,13 @@ export default function GeneralCategoriesPage() {
             <div className="px-3">
               <input
                 type="text"
-                placeholder={currentCategory === 'trauma' ? 'Tìm tên yếu tố...' : currentCategory === 'job' ? 'Tìm tên ngành...' : 'Tìm tên chấn thương...'}
+                placeholder={currentCategory === 'trauma' ? 'Tìm tên yếu tố...' : currentCategory === 'job' ? 'Tìm tên ngành...' : currentCategory === 'accident' ? 'Tìm tên nguyên nhân...' : 'Tìm tên chấn thương...'}
                 value={filterName}
                 onChange={(e) => handleFilterChange('name', e.target.value)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none focus:border-primary transition-colors bg-white"
               />
             </div>
-            {currentCategory !== 'trauma' && (
+            {currentCategory !== 'trauma' && currentCategory !== 'accident' && (
               <div className="px-3">
                 <select
                   value={filterLevel}
@@ -770,6 +964,19 @@ export default function GeneralCategoriesPage() {
                   <option value="2">Cấp 2</option>
                   <option value="3">Cấp 3</option>
                   {currentCategory === 'job' && <option value="4">Cấp 4</option>}
+                </select>
+              </div>
+            )}
+            {currentCategory === 'accident' && (
+              <div className="px-3">
+                <select
+                  value={filterType}
+                  onChange={(e) => handleFilterChange('type', e.target.value)}
+                  className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm outline-none focus:border-primary transition-colors bg-white"
+                >
+                  <option value="">Tất cả</option>
+                  <option value="EMPLOYEE">Do người lao động</option>
+                  <option value="EMPLOYER">Do người sử dụng lao động</option>
                 </select>
               </div>
             )}
@@ -831,10 +1038,10 @@ export default function GeneralCategoriesPage() {
                 </div>
 
                 {/* Name */}
-                <div className="flex items-center px-3 py-2.5">
-                  <span>
-                    {currentCategory !== 'trauma' && getLevelPrefix(item.level)}
-                    {currentCategory !== 'trauma' && item.level === 1 ? (
+                <div className="flex items-center px-3 py-2.5 min-w-0" title={item.name}>
+                  <span className="truncate">
+                    {currentCategory !== 'trauma' && currentCategory !== 'accident' && getLevelPrefix(item.level)}
+                    {currentCategory !== 'trauma' && currentCategory !== 'accident' && item.level === 1 ? (
                       <span className="font-semibold uppercase">{item.name}</span>
                     ) : (
                       item.name
@@ -843,9 +1050,16 @@ export default function GeneralCategoriesPage() {
                 </div>
 
                 {/* Level (Hierarchy only) */}
-                {currentCategory !== 'trauma' && (
+                {currentCategory !== 'trauma' && currentCategory !== 'accident' && (
                   <div className="flex items-center px-3 py-2.5">
                     {item.levelText || `Cấp ${item.level}`}
+                  </div>
+                )}
+
+                {/* Type (Accident only) */}
+                {currentCategory === 'accident' && (
+                  <div className="flex items-center px-3 py-2.5">
+                    {item.type === 'EMPLOYEE' ? 'Do người lao động' : 'Do người sử dụng lao động'}
                   </div>
                 )}
 
@@ -977,6 +1191,19 @@ export default function GeneralCategoriesPage() {
         onClose={() => setIsTraumaModalOpen(false)}
         onSave={handleSaveItem}
         onChange={(field, val) => setTraumaForm((prev) => ({ ...prev, [field]: val }))}
+      />
+
+      {/* Accident Cause Form Modal */}
+      <TraumaModal
+        isOpen={isAccidentModalOpen}
+        editingItem={editingItem}
+        form={accidentForm}
+        errors={accidentErrors}
+        isLoading={isSaving}
+        isAccident={true}
+        onClose={() => setIsAccidentModalOpen(false)}
+        onSave={handleSaveItem}
+        onChange={(field, val) => setAccidentForm((prev) => ({ ...prev, [field]: val }))}
       />
     </main>
   )

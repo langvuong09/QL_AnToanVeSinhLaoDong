@@ -7,6 +7,19 @@ import SelectLegend from '@/src/components/SelectLegend'
 import SearchableSelect from '@/src/components/SearchableSelect'
 import Loading from '@/src/components/Loading'
 
+function getJobLevel(code: string): number {
+  const clean = code.trim().toUpperCase().replace(/^JOB_/, '')
+  if (!clean || !/^\d+$/.test(clean)) return 0
+  if (clean.length === 1) return 1
+  if (clean.length === 2) {
+    if (clean.startsWith('0')) return 1
+    return 2
+  }
+  if (clean.length === 3) return 3
+  if (clean.length === 4) return 4
+  return 0
+}
+
 type JobModalProps = {
   isOpen: boolean
   editingItem: IJob | null
@@ -32,19 +45,44 @@ export default function JobModal({
   onSave,
   onChange,
 }: JobModalProps) {
+  const codeVal = form.code.trim()
+  const jobLevel = useMemo(() => getJobLevel(codeVal), [codeVal])
 
-  // Parent options: filter out the item itself to prevent self-parenting
-  // and only show active items with level < 4 as possible parents.
+  const requiredParentLevel = useMemo(() => {
+    if (jobLevel === 2) return 1
+    if (jobLevel === 3) return 2
+    if (jobLevel === 4) return 3
+    return null
+  }, [jobLevel])
+
   const parentOptions = useMemo(() => {
     let filtered = allJobs.filter((i) =>
       editingItem ? i.id !== editingItem.id : true
     )
 
-    filtered = filtered.filter(
-      (i) => (i.level ?? 1) < 4 && (i.isActive || String(i.id) === form.parentId)
-    )
+    if (requiredParentLevel !== null) {
+      filtered = filtered.filter(
+        (i) => i.level === requiredParentLevel && (i.isActive || String(i.id) === form.parentId)
+      )
+    } else {
+      filtered = []
+    }
     return filtered
-  }, [allJobs, editingItem, form.parentId])
+  }, [allJobs, editingItem, requiredParentLevel, form.parentId])
+
+  const isParentSelectDisabled = useMemo(() => {
+    if (isLoading) return true
+    if (jobLevel === 1) return true
+    if (jobLevel === 0) return true
+    return jobLevel < 2 || jobLevel > 4
+  }, [isLoading, jobLevel])
+
+  const parentSelectPlaceholder = useMemo(() => {
+    if (jobLevel === 0) return 'Vui lòng nhập mã ngành để chọn ngành cha'
+    if (jobLevel === 1) return 'Cấp 1 không yêu cầu chọn ngành cha'
+    if (jobLevel > 4) return 'Mã ngành không hợp lệ'
+    return `Chọn nhóm ngành cha cấp ${jobLevel - 1}`
+  }, [jobLevel])
 
   const fallbackParent = useMemo(() => {
     if (editingItem && editingItem.parent) {
@@ -101,12 +139,12 @@ export default function JobModal({
 
               <SearchableSelect
                 label="Nhóm ngành cha"
-                require={false}
+                require={jobLevel >= 2 && jobLevel <= 4}
                 value={form.parentId}
                 options={parentOptions}
-                disabled={isLoading}
+                disabled={isParentSelectDisabled}
                 loading={loadingParents}
-                placeholder="Chọn nhóm ngành cha (Cấp 1, 2, 3)"
+                placeholder={parentSelectPlaceholder}
                 errorMess={errors.parentId}
                 fallbackSelectedOption={fallbackParent}
                 onChange={(val) => onChange('parentId', val)}
