@@ -34,8 +34,9 @@ export class JobController {
   @ApiQuery({ name: 'code', required: false, description: 'Tìm chính xác hoặc gần đúng theo Mã ngành (Ví dụ: 01, 0111)' })
   @ApiQuery({ name: 'name', required: false, description: 'Tìm gần đúng theo Tên ngành nghề (Ví dụ: Trồng lúa)' })
   @ApiQuery({ name: 'level', required: false, enum: [1, 2, 3, 4], description: 'Lọc đích danh theo cấp bậc ngành (1 -> 4)' })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean, description: 'Lọc theo trạng thái: true (Đang sử dụng), false (Ngừng sử dụng)' })
   async getAllForAdmin(
-    @Query() query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number }
+    @Query() query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number ; isActive?: boolean }
   ) {
     return await this.jobService.getAllForAdmin(query);
   }

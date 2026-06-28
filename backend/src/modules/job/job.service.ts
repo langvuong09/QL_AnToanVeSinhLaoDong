@@ -77,28 +77,46 @@ export class JobService {
   private async getJobsBase(query: any, onlyActive: boolean) {
     const page = Number(query.page) || 1;
     const pageSize = Number(query.pageSize) || 10;
-    const { code, name, level } = query;
+    
+    const { code, name, level, isActive } = query;
 
     const qb = this.jobRepository.createQueryBuilder('job')
       .leftJoinAndSelect('job.parent', 'parent')
       .leftJoinAndSelect('parent.parent', 'gp')
       .where('job.deletedAt IS NULL');
 
-    if (onlyActive) qb.andWhere('job.isActive = :isActive', { isActive: true });
+    if (onlyActive) {
+      qb.andWhere('job.isActive = :isActive', { isActive: true });
+    } else if (isActive !== undefined && isActive !== '') {
+      const isAct = String(isActive) === 'true' || isActive === '1';
+      qb.andWhere('job.isActive = :isActiveFilter', { isActiveFilter: isAct });
+    }
+
     if (code) qb.andWhere('job.code ILike :code', { code: `%${code.trim()}%` });
     if (name) qb.andWhere('job.name ILike :name', { name: `%${name.trim()}%` });
 
     const allRawItems = await qb.orderBy('job.code', 'ASC').getMany();
-    
-    // 1. Map dữ liệu sang dạng phẳng sạch sẽ trước
     const formattedItems = allRawItems.map(item => this.mapLevelAndFormat(item));
     
     let result: any[];
     if (level) {
       result = formattedItems.filter(i => i.level === Number(level));
     } else {
-      // 2. Xây dựng cây từ dữ liệu đã được map
-      result = this.buildTree(formattedItems, null);
+      const itemIds = new Set(formattedItems.map(i => i.id));
+      
+      const roots = formattedItems.filter(i => !i.parentId || !itemIds.has(i.parentId));
+      
+      const buildTreeSafe = (nodes: any[]): any[] => {
+        return nodes.map(node => {
+          const children = formattedItems.filter(i => i.parentId === node.id);
+          return {
+            ...node,
+            children: children.length > 0 ? buildTreeSafe(children) : undefined
+          };
+        });
+      };
+
+      result = buildTreeSafe(roots);
     }
     
     return Response.getList({

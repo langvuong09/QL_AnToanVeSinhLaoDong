@@ -12,7 +12,7 @@ INSERT INTO "traumas" ("id", "code", "name", "isActive", "deletedAt") VALUES
 (8, 'TRAUMA_08', 'Nổ vật lý, nổ hóa học (Nổ bình khí nén, nổ nồi hơi, nổ hóa chất, chất nổ)',       true, NULL),
 (9, 'TRAUMA_09', 'Tai nạn giao thông trong giờ làm việc (Di chuyển bằng xe máy, ô tô, xe nâng)',    true, NULL),
 (10,'TRAUMA_10', 'Yếu tố khác (Động vật cắn, đuối nước, thiên tai tại nơi làm việc)',               true, NULL);
-
+SELECT setval(pg_get_serial_sequence('traumas', 'id'), (SELECT MAX(id) FROM traumas));
 
 -- ====================================================================================
 -- 2. DỮ LIỆU MẪU CHO BẢNG: injury_types (Loại chấn thương)
@@ -22,17 +22,21 @@ INSERT INTO "traumas" ("id", "code", "name", "isActive", "deletedAt") VALUES
 -- --- Nhóm 1: Chấn thương sọ não và hàm mặt ---
 INSERT INTO "jobs" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
 -- Cấp 1
-(1, 'INJ_01', 'Nhà lãnh đạo trong các ngành, các cấp và các đơn vị', true, NULL, NULL),
+(1, 'JOB_01', 'Nhà lãnh đạo trong các ngành, các cấp và các đơn vị', true, NULL, NULL),
 
 -- Cấp 2
-(2, 'INJ_11', 'Nhà lãnh đạo cơ quan Đảng Cộng sản Việt Nam cấp Trung ương và địa phương', true, 1, NULL),
+(2, 'JOB_11', 'Nhà lãnh đạo cơ quan Đảng Cộng sản Việt Nam cấp Trung ương và địa phương', true, 1, NULL),
 
 -- Cấp 3
-(3, 'INJ_111', 'Nhà lãnh đạo cơ quan Đảng Cộng sản Việt Nam cấp Trung ương', true, 2, NULL),
+(3, 'JOB_111', 'Nhà lãnh đạo cơ quan Đảng Cộng sản Việt Nam cấp Trung ương', true, 2, NULL),
 
 -- Cấp 4
-(4, 'INJ_1111', 'Trưởng ban, Phó Trưởng ban và tương đương trở lên thuộc cấp Trung ương', true, 3, NULL);
-
+(4, 'JOB_1111', 'Trưởng ban, Phó Trưởng ban và tương đương trở lên thuộc cấp Trung ương', true, 3, NULL);
+ON CONFLICT (id) DO UPDATE SET 
+    name = EXCLUDED.name,
+    "parentId" = EXCLUDED."parentId",
+    "isActive" = EXCLUDED."isActive";
+SELECT setval(pg_get_serial_sequence('jobs', 'id'), (SELECT MAX(id) FROM jobs));
 
 -- ====================================================================================
 -- SEED DỮ LIỆU MẪU: injury_types (Loại chấn thương)
@@ -72,9 +76,13 @@ INSERT INTO "injury_types" ("id", "code", "name", "isActive", "parentId", "delet
 -- CẤP 2 (Thuộc Cấp 4)
 (41, 'INJ_04_01', 'Gãy xương chi dưới', true, 4, NULL),
 (42, 'INJ_04_02', 'Giập nát bàn chân', true, 4, NULL);
+ON CONFLICT (id) DO UPDATE SET 
+    name = EXCLUDED.name,
+    "parentId" = EXCLUDED."parentId",
+    "isActive" = EXCLUDED."isActive";
 
 -- Cập nhật SEQUENCE để tránh trùng lặp ID khi thêm mới từ hệ thống sau khi seed
-SELECT setval(pg_get_serial_sequence('"injury_types"', 'id'), coalesce(max("id"), 1)) FROM "injury_types";
+SELECT setval(pg_get_serial_sequence('"injury_types"', 'id'), (SELECT MAX("id") FROM "injury_types"));
 
 
 INSERT INTO "accident_causes" ("id", "code", "name", "type", "isActive", "deletedAt") VALUES
@@ -91,3 +99,4 @@ INSERT INTO "accident_causes" ("id", "code", "name", "type", "isActive", "delete
 (8, 'CAUSE_WORKER_03', 'Làm việc trong tình trạng sức khỏe không đảm bảo (Say rượu, mệt mỏi)', 'EMPLOYEE', true, NULL),
 (9, 'CAUSE_WORKER_04', 'Thao tác sai kỹ thuật, chủ quan khi làm việc', 'EMPLOYEE', true, NULL),
 (10, 'CAUSE_WORKER_05', 'Đùa nghịch, làm việc riêng trong giờ làm', 'EMPLOYEE', true, NULL);
+SELECT setval(pg_get_serial_sequence('accident_causes', 'id'), (SELECT MAX(id) FROM accident_causes));

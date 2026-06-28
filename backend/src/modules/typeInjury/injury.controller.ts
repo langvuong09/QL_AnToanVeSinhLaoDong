@@ -53,7 +53,8 @@ export class InjuryTypeController {
   @ApiQuery({ name: 'code', required: false, type: String, description: 'Tìm kiếm theo mã chấn thương' })
   @ApiQuery({ name: 'name', required: false, type: String, description: 'Tìm kiếm theo tên chấn thương' })
   @ApiQuery({ name: 'level', required: false, type: Number, description: 'Lọc chính xác theo cấp độ (1, 2, 3...)' })
-  async getAllForAdmin(@Query() query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number }) {
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean, description: 'Lọc theo trạng thái: true (Đang sử dụng), false (Ngừng sử dụng)' })
+  async getAllForAdmin(@Query() query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number; isActive?: boolean }) {
     return await this.injuryTypeService.getAllForAdmin(query);
   }
 
