@@ -7,6 +7,15 @@ import SelectLegend from '@/src/components/SelectLegend'
 import SearchableSelect from '@/src/components/SearchableSelect'
 import Loading from '@/src/components/Loading'
 
+function getInjuryLevel(code: string): number {
+  const clean = code.trim().toUpperCase().replace(/^INJ_/, '')
+  if (!clean) return 0
+  const parts = clean.split('_')
+  if (parts.some((p) => !/^\d+$/.test(p))) return 0
+  if (parts.length > 3) return 0
+  return parts.length
+}
+
 type InjuryTypeModalProps = {
   isOpen: boolean
   editingItem: IInjuryType | null
@@ -32,19 +41,43 @@ export default function InjuryTypeModal({
   onSave,
   onChange,
 }: InjuryTypeModalProps) {
+  const codeVal = form.code.trim()
+  const injuryLevel = useMemo(() => getInjuryLevel(codeVal), [codeVal])
 
-  // Parent options: filter out the item itself to prevent cycles
-  // and only show active items with level < 3 as possible parents.
+  const requiredParentLevel = useMemo(() => {
+    if (injuryLevel === 2) return 1
+    if (injuryLevel === 3) return 2
+    return null
+  }, [injuryLevel])
+
   const parentOptions = useMemo(() => {
     let filtered = allInjuries.filter((i) =>
       editingItem ? i.id !== editingItem.id : true
     )
 
-    filtered = filtered.filter(
-      (i) => (i.level ?? 1) < 3 && (i.isActive || String(i.id) === form.parentId)
-    )
+    if (requiredParentLevel !== null) {
+      filtered = filtered.filter(
+        (i) => i.level === requiredParentLevel && (i.isActive || String(i.id) === form.parentId)
+      )
+    } else {
+      filtered = []
+    }
     return filtered
-  }, [allInjuries, editingItem, form.parentId])
+  }, [allInjuries, editingItem, requiredParentLevel, form.parentId])
+
+  const isParentSelectDisabled = useMemo(() => {
+    if (isLoading) return true
+    if (injuryLevel === 1) return true
+    if (injuryLevel === 0) return true
+    return injuryLevel < 2 || injuryLevel > 3
+  }, [isLoading, injuryLevel])
+
+  const parentSelectPlaceholder = useMemo(() => {
+    if (injuryLevel === 0) return 'Vui lòng nhập mã số để chọn chấn thương cha'
+    if (injuryLevel === 1) return 'Cấp 1 không yêu cầu chọn chấn thương cha'
+    if (injuryLevel > 3) return 'Mã số không hợp lệ'
+    return `Chọn loại chấn thương cha cấp ${injuryLevel - 1}`
+  }, [injuryLevel])
 
   const fallbackParent = useMemo(() => {
     if (editingItem && editingItem.parent) {
@@ -101,12 +134,12 @@ export default function InjuryTypeModal({
 
               <SearchableSelect
                 label="Loại chấn thương cha"
-                require={false}
+                require={injuryLevel >= 2 && injuryLevel <= 3}
                 value={form.parentId}
                 options={parentOptions}
-                disabled={isLoading}
+                disabled={isParentSelectDisabled}
                 loading={loadingParents}
-                placeholder="Chọn loại chấn thương cha (Cấp 1, 2)"
+                placeholder={parentSelectPlaceholder}
                 errorMess={errors.parentId}
                 fallbackSelectedOption={fallbackParent}
                 onChange={(val) => onChange('parentId', val)}

@@ -1,16 +1,16 @@
 'use client'
 
-import type { ITrauma } from '@/src/api/Trauma'
 import InputLegend from '@/src/components/InputLegend'
 import SelectLegend from '@/src/components/SelectLegend'
 import Loading from '@/src/components/Loading'
 
 type TraumaModalProps = {
   isOpen: boolean
-  editingItem: ITrauma | null
-  form: { code: string; name: string; status: string }
+  editingItem: any | null
+  form: { code: string; name: string; status: string; type?: string }
   errors: { code: string; name: string }
   isLoading?: boolean
+  isAccident?: boolean
   onClose: () => void
   onSave: () => void
   onChange: (field: string, value: string) => void
@@ -22,6 +22,7 @@ export default function TraumaModal({
   form,
   errors,
   isLoading = false,
+  isAccident = false,
   onClose,
   onSave,
   onChange,
@@ -35,18 +36,22 @@ export default function TraumaModal({
         <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden">
           <div className="bg-primary px-6 py-4">
             <h2 className="text-white text-base font-semibold">
-              {editingItem ? 'Cập nhật yếu tố gây chấn thương' : 'Thêm mới yếu tố gây chấn thương'}
+              {isAccident ? (
+                editingItem ? 'Cập nhật nguyên nhân xảy ra TNLĐ' : 'Thêm mới nguyên nhân xảy ra TNLĐ'
+              ) : (
+                editingItem ? 'Cập nhật yếu tố gây chấn thương' : 'Thêm mới yếu tố gây chấn thương'
+              )}
             </h2>
           </div>
 
           <div className="px-6 py-5 space-y-4">
             <div className="grid grid-cols-1 gap-5">
               <InputLegend
-                label="Mã yếu tố"
+                label={isAccident ? 'Mã nguyên nhân' : 'Mã yếu tố'}
                 require={true}
                 input={{
                   type: 'text',
-                  placeholder: 'Nhập mã yếu tố',
+                  placeholder: isAccident ? 'Nhập mã nguyên nhân' : 'Nhập mã yếu tố',
                   value: form.code,
                   onChange: (e) => onChange('code', (e.target as HTMLInputElement).value),
                   disabled: isLoading || !!editingItem,
@@ -55,17 +60,32 @@ export default function TraumaModal({
               />
 
               <InputLegend
-                label="Tên yếu tố"
+                label={isAccident ? 'Tên nguyên nhân' : 'Tên yếu tố'}
                 require={true}
                 input={{
                   type: 'text',
-                  placeholder: 'Nhập tên yếu tố gây chấn thương',
+                  placeholder: isAccident ? 'Nhập tên nguyên nhân xảy ra TNLĐ' : 'Nhập tên yếu tố gây chấn thương',
                   value: form.name,
                   onChange: (e) => onChange('name', (e.target as HTMLInputElement).value),
                   disabled: isLoading,
                 }}
                 errorMess={errors.name}
               />
+
+              {isAccident && (
+                <SelectLegend
+                  label="Loại"
+                  require={true}
+                  select={{
+                    value: form.type || 'EMPLOYER',
+                    onChange: (e) => onChange('type', (e.target as HTMLSelectElement).value),
+                    disabled: isLoading,
+                  }}
+                >
+                  <option value="EMPLOYEE">Do người lao động</option>
+                  <option value="EMPLOYER">Do người sử dụng lao động</option>
+                </SelectLegend>
+              )}
 
               {editingItem && (
                 <SelectLegend
