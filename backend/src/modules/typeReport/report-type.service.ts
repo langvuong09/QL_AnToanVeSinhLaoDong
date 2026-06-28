@@ -190,12 +190,15 @@ export class ReportTypeService {
       queryBuilder.andWhere('rt.period = :period', { period: period.trim() });
     }
 
-    if (startDate) {
-      queryBuilder.andWhere('rt.startDate >= :startDate', { startDate });
-    }
-
-    if (endDate) {
-      queryBuilder.andWhere('rt.endDate <= :endDate', { endDate });
+    if (startDate && endDate) {
+      queryBuilder.andWhere('rt.startDate <= :endDate AND rt.endDate >= :startDate', { 
+        startDate, 
+        endDate 
+      });
+    } else if (startDate) {
+      queryBuilder.andWhere('rt.endDate >= :startDate', { startDate });
+    } else if (endDate) {
+      queryBuilder.andWhere('rt.startDate <= :endDate', { endDate });
     }
 
     queryBuilder.orderBy('rt.year', 'DESC').addOrderBy('rt.startDate', 'ASC');

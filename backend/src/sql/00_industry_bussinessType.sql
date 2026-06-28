@@ -62,4 +62,4 @@ ON CONFLICT (id) DO UPDATE SET
     "parentId" = EXCLUDED."parentId",
     "isActive" = EXCLUDED."isActive";
 
-SELECT setval(pg_get_serial_sequence('industries', 'id'), coalesce(max(id), 1)) FROM industries;
+SELECT setval(pg_get_serial_sequence('industries', 'id'), (SELECT MAX(id) FROM industries));

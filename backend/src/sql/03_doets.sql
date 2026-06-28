@@ -85,4 +85,4 @@ ON CONFLICT (id) DO UPDATE SET
     province        = EXCLUDED.province,
     "updatedAt"     = NOW();
 
-SELECT setval(pg_get_serial_sequence('doets', 'id'), coalesce(max(id), 1)) FROM doets;
+SELECT setval(pg_get_serial_sequence('doets', 'id'), (SELECT MAX(id) FROM doets));
