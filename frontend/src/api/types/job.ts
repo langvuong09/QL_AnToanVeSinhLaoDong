@@ -3,5 +3,6 @@ export type JobDto = {
     name: string;
     isActive: boolean;
     code: string;
+    children?: JobDto[];
     deleteAt: string;
 }
