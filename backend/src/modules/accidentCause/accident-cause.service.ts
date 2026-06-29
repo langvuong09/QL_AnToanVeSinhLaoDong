@@ -1,15 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, Not, IsNull } from "typeorm";
+import { Repository, Not, IsNull, In, DataSource } from "typeorm";
 import Response from '../../commons/response';
 import { AccidentCause } from "./accident-cause.entity";
 import { CreateAccidentCauseDto } from "./dto/create-accident-cause.dto";
+import { ReportDetail } from "../report/report-detail.entity";
 
 @Injectable()
 export class AccidentCauseService {
   constructor(
     @InjectRepository(AccidentCause)
     private readonly repo: Repository<AccidentCause>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(dto: CreateAccidentCauseDto) {
@@ -69,6 +71,14 @@ export class AccidentCauseService {
   }
 
   async bulkRemove(ids: number[]) {
+    const isUsed = await this.dataSource.getRepository(ReportDetail).findOne({
+      where: { causeId: In(ids) }
+    });
+
+    if (isUsed) {
+      throw new BadRequestException('Không thể xóa! Có nguyên nhân tai nạn đang được sử dụng trong báo cáo.');
+    }
+
     await this.repo.softDelete(ids);
     return Response.SUCCESSFULLY;
   }

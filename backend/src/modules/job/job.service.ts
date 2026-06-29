@@ -1,16 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, In, IsNull } from 'typeorm';
+import { Repository, Not, In, IsNull, DataSource } from 'typeorm';
 import Response from '../../commons/response';
 import { Job } from './job.entity';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
+import { ReportDetail } from '../report/report-detail.entity';
 
 @Injectable()
 export class JobService {
   constructor(
     @InjectRepository(Job)
     private readonly jobRepository: Repository<Job>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(dto: CreateJobDto) {
@@ -189,7 +191,18 @@ export class JobService {
       });
     };
     collectChildren(ids);
-    await this.jobRepository.softDelete(Array.from(finalIds));
+
+    const finalIdsArray = Array.from(finalIds);
+
+    const isUsed = await this.dataSource.getRepository(ReportDetail).findOne({
+      where: { jobId: In(finalIdsArray) }
+    });
+
+    if (isUsed) {
+      throw new BadRequestException('Không thể xóa! Có nghề nghiệp (hoặc nghề nghiệp con) đang được sử dụng trong báo cáo.');
+    }
+
+    await this.jobRepository.softDelete(finalIdsArray);
     return Response.SUCCESSFULLY;
   }
 }
