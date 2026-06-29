@@ -32,7 +32,6 @@ export class ReportService {
     const sum = args.reduce<number>((acc, val) => acc + (Number(val) || 0), 0);
     return sum > 0 ? sum : undefined;
   }
-
   private async findOneById(id: number) {
     return this.reportRepository.findOne({
       where: { id },
@@ -43,6 +42,7 @@ export class ReportService {
         details: { trauma: true, job: true, cause: true },
         statusHistories: { user: true },
       },
+      withDeleted: true,
     });
   }
 
@@ -161,7 +161,7 @@ export class ReportService {
       }
       report.status = dto.status || report.status;
 
-      console.log("..........................", dto.status)
+      console.log('..........................', dto.status);
 
       await manager.save(Report, report);
     });
@@ -198,12 +198,16 @@ export class ReportService {
     const { ids, status, note } = dto;
 
     if (!ids || ids.length === 0) {
-      throw new BadRequestException('Danh sách ID báo cáo không được để trống!');
+      throw new BadRequestException(
+        'Danh sách ID báo cáo không được để trống!',
+      );
     }
 
     const reports = await this.reportRepository.findBy({ id: In(ids) });
     if (reports.length === 0) {
-      throw new NotFoundException('Không tìm thấy báo cáo nào khớp với danh sách ID đã cung cấp!');
+      throw new NotFoundException(
+        'Không tìm thấy báo cáo nào khớp với danh sách ID đã cung cấp!',
+      );
     }
 
     await this.dataSource.transaction(async (manager) => {
@@ -230,6 +234,7 @@ export class ReportService {
   async getAllForAdmin(query: any) {
     const qb = this.reportRepository
       .createQueryBuilder('r')
+      .withDeleted()
       .leftJoinAndSelect('r.doet', 'd')
       .leftJoinAndSelect('r.reportType', 'rt');
 
@@ -241,38 +246,53 @@ export class ReportService {
     }
 
     if (query.period) {
-      qb.andWhere('rt.period ILike :period', { period: `%${query.period.trim()}%` });
+      qb.andWhere('rt.period ILike :period', {
+        period: `%${query.period.trim()}%`,
+      });
     }
 
     if (query.businessName) {
-      qb.andWhere('d.name ILike :bName', { bName: `%${query.businessName.trim()}%` });
+      qb.andWhere('d.name ILike :bName', {
+        bName: `%${query.businessName.trim()}%`,
+      });
     }
     if (query.taxCode) {
-      qb.andWhere('d.taxCode ILike :taxCode', { taxCode: `%${query.taxCode.trim()}%` });
+      qb.andWhere('d.taxCode ILike :taxCode', {
+        taxCode: `%${query.taxCode.trim()}%`,
+      });
     }
 
     if (query.province) {
       const pText = query.province.trim();
-      qb.andWhere("(d.province->>'key' = :pKey OR d.province->>'value' ILike :pValue)", {
-        pKey: pText,
-        pValue: `%${pText}%`,
-      });
+      qb.andWhere(
+        "(d.province->>'key' = :pKey OR d.province->>'value' ILike :pValue)",
+        {
+          pKey: pText,
+          pValue: `%${pText}%`,
+        },
+      );
     }
 
     if (query.district) {
       const dText = query.district.trim();
-      qb.andWhere("(d.district->>'key' = :dKey OR d.district->>'value' ILike :dValue)", {
-        dKey: dText,
-        dValue: `%${dText}%`,
-      });
+      qb.andWhere(
+        "(d.district->>'key' = :dKey OR d.district->>'value' ILike :dValue)",
+        {
+          dKey: dText,
+          dValue: `%${dText}%`,
+        },
+      );
     }
 
     if (query.ward) {
       const wText = query.ward.trim();
-      qb.andWhere("(d.ward->>'key' = :wKey OR d.ward->>'value' ILike :wValue)", {
-        wKey: wText,
-        wValue: `%${wText}%`,
-      });
+      qb.andWhere(
+        "(d.ward->>'key' = :wKey OR d.ward->>'value' ILike :wValue)",
+        {
+          wKey: wText,
+          wValue: `%${wText}%`,
+        },
+      );
     }
 
     const page = Number(query.page) || 1;
@@ -291,6 +311,7 @@ export class ReportService {
 
     const qb = this.reportRepository
       .createQueryBuilder('r')
+      .withDeleted()
       .leftJoinAndSelect('r.reportType', 'rt')
       .leftJoinAndSelect('r.doet', 'd')
       .where('r.doetId = :doetId', { doetId: user.doetId });

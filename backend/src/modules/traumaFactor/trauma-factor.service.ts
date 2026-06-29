@@ -1,16 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, Not, IsNull } from 'typeorm';
+import { Repository, In, Not, IsNull, DataSource } from 'typeorm';
 import Response from '../../commons/response';
 import { Trauma } from './trauma-factor.entity';
 import { CreateTraumaDto } from './dto/create-trauma.dto';
 import { UpdateTraumaDto } from './dto/update-trauma.dto';
+import { ReportDetail } from '../report/report-detail.entity';
 
 @Injectable()
 export class TraumaService {
   constructor(
     @InjectRepository(Trauma)
     private readonly traumaRepository: Repository<Trauma>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(dto: CreateTraumaDto) {
@@ -73,6 +75,13 @@ export class TraumaService {
   }
 
   async bulkRemove(ids: number[]) {
+    const isUsed = await this.dataSource.getRepository(ReportDetail).findOne({
+      where: { traumaId: In(ids) }
+    });
+
+    if (isUsed) {
+      throw new BadRequestException('Không thể xóa! Có yếu tố chấn thương đang được sử dụng trong báo cáo.');
+    }
     await this.traumaRepository.softDelete(ids);
     return Response.SUCCESSFULLY;
   }
