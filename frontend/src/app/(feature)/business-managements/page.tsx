@@ -65,7 +65,7 @@ function mapDoetUserToEnterprise(item: IDoetUser): Enterprise {
     industry: doet.industry ? `${doet.industry.code} - ${doet.industry.name}` : '',
     industryId: doet.industryId,
     ward: doet.ward?.value || '',
-    status: doet.status,
+    status: item.status,
     foreignName: doet.foreignName || '',
     email: item.email || '',
     phone: doet.phone || '',
@@ -124,6 +124,8 @@ export default function BusinessManagementsPage() {
   const [resetTarget, setResetTarget] = useState<Enterprise | null>(null)
   const [businessTypes, setBusinessTypes] = useState<IBusinessType[]>([])
   const [industries, setIndustries] = useState<IIndustry[]>([])
+  const [activeBusinessTypes, setActiveBusinessTypes] = useState<IBusinessType[]>([])
+  const [activeIndustries, setActiveIndustries] = useState<IIndustry[]>([])
   const [totalItems, setTotalItems] = useState(0)
   const [isImportOpen, setIsImportOpen] = useState(false)
 
@@ -146,13 +148,23 @@ export default function BusinessManagementsPage() {
 
   useEffect(() => {
     const loadOptions = async () => {
-      const [businessTypeResult, industryResult] = await Promise.all([
+      const [
+        businessTypeResult,
+        industryResult,
+        activeBusinessTypeResult,
+        activeIndustryResult
+      ] = await Promise.all([
         new BusinessTypeApi().getAllForAdmin({ page: 1, pageSize: 1000 }),
         new IndustryApi().getAllForAdmin({ page: 1, pageSize: 1000, level: 4 }),
+        new BusinessTypeApi().getAllForAdmin({ page: 1, pageSize: 1000, isActive: true }),
+        new IndustryApi().getAllForAdmin({ page: 1, pageSize: 1000, level: 4, isActive: true }),
       ])
 
       if (businessTypeResult.success) setBusinessTypes(businessTypeResult.data?.items || [])
       if (industryResult.success) setIndustries((industryResult.data?.items || []).filter((item) => item.level === 4))
+
+      if (activeBusinessTypeResult.success) setActiveBusinessTypes((activeBusinessTypeResult.data?.items || []).filter((item) => item.isActive))
+      if (activeIndustryResult.success) setActiveIndustries((activeIndustryResult.data?.items || []).filter((item) => item.level === 4 && item.isActive))
     }
 
     loadOptions()
@@ -283,6 +295,7 @@ export default function BusinessManagementsPage() {
           type: 'success',
           message: `Thay đổi trạng thái của doanh nghiệp "${item.companyName}" thành công.`
         })
+        await fetchData()
       }
     } catch (error) {
       console.error(error)
@@ -331,8 +344,8 @@ export default function BusinessManagementsPage() {
         mode={viewMode}
         initialData={selectedEnterprise}
         userRole={userRole}
-        businessTypes={businessTypes}
-        industries={industries}
+        businessTypes={viewMode === 'view' ? businessTypes : activeBusinessTypes}
+        industries={viewMode === 'view' ? industries : activeIndustries}
       />
     )
   }

@@ -228,6 +228,7 @@ export default function EnterpriseModal({
     resetAttachments,
     initFromServer,
     hasErrors: hasFileErrors,
+    commitDeletes,
   } = useFileAttachment()
 
   const [showAccountPopup, setShowAccountPopup] = useState(false)
@@ -486,9 +487,9 @@ export default function EnterpriseModal({
     if (!validate()) return
     setSubmitting(true)
     const result = await onSave(form, attachmentGroups, registerToken)
-    setSubmitting(false)
 
     if (!result.success) {
+      setSubmitting(false)
       let friendlyMessage = result.message
       if (result.message.includes('IDX_78ca3a129ee713cf4082cb89fd') || result.message.includes('unique constraint')) {
         friendlyMessage = 'Email này đã tồn tại trên hệ thống!'
@@ -518,6 +519,18 @@ export default function EnterpriseModal({
       }
       return
     }
+
+    // Thực hiện xóa các file chờ xóa sau khi cập nhật thành công
+    try {
+      const deleteResult = await commitDeletes()
+      if (!deleteResult.success) {
+        showToast('error', deleteResult.message || 'Có lỗi xảy ra khi xóa file cũ')
+      }
+    } catch (err) {
+      console.error('Error committing file deletes:', err)
+    }
+
+    setSubmitting(false)
 
     if (mode === 'create' || isRegister) {
       setAccountInfo(generateAccountInfo(form.taxCode, (result as any).rawResult))
