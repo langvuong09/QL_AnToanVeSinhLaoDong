@@ -29,7 +29,11 @@ export class Trauma extends Base {
     async GetAll(): Promise<any[]> {
         const result = await this.execute<ITraumaListResponse>({
             url: "/admin",
-            method: "GET"
+            method: "GET",
+            params: {
+                page: 1,
+                pageSize: 1000,
+            }
         });
         return result.data?.items || [];
     }

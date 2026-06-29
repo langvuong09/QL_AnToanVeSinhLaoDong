@@ -23,15 +23,10 @@ SELECT setval(pg_get_serial_sequence('traumas', 'id'), (SELECT MAX(id) FROM trau
 INSERT INTO "jobs" ("id", "code", "name", "isActive", "parentId", "deletedAt") VALUES
 -- Cấp 1
 (1, 'JOB_01', 'Nhà lãnh đạo trong các ngành, các cấp và các đơn vị', true, NULL, NULL),
-
--- Cấp 2
-(2, 'JOB_11', 'Nhà lãnh đạo cơ quan Đảng Cộng sản Việt Nam cấp Trung ương và địa phương', true, 1, NULL),
-
--- Cấp 3
-(3, 'JOB_111', 'Nhà lãnh đạo cơ quan Đảng Cộng sản Việt Nam cấp Trung ương', true, 2, NULL),
-
--- Cấp 4
-(4, 'JOB_1111', 'Trưởng ban, Phó Trưởng ban và tương đương trở lên thuộc cấp Trung ương', true, 3, NULL);
+(2, 'JOB_02', 'Chuyên môn kỹ thuật bậc cao', true, NULL, NULL),
+(3, 'JOB_03', 'Chuyên môn kỹ thuật bậc trung', true, NULL, NULL),
+(4, 'JOB_04', 'Nhân viên trợ lý văn phòng', true, NULL, NULL),
+(5, 'JOB_05', 'Nhân viên dịch vụ và bán hàng', true, NULL, NULL)
 ON CONFLICT (id) DO UPDATE SET 
     name = EXCLUDED.name,
     "parentId" = EXCLUDED."parentId",

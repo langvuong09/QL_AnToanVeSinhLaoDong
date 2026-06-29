@@ -33,8 +33,12 @@ export class Job extends Base {
 
     async GetAll(): Promise<any[]> {
         const result = await this.execute<IJobListResponse>({
-            url: "/",
-            method: "GET"
+            url: "/admin",
+            method: "GET",
+            params: {
+                page: 1,
+                pageSize: 1000,
+            }
         });
         return result.data?.items || [];
     }

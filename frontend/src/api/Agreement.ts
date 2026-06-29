@@ -44,7 +44,6 @@ export class Agreement extends Base {
         throw Error("Lỗi khi lấy dữ liệu");
     }
 
-
     async UpdateReportForBussiness(id: any, data: UpdateAgreementData) {
         const result = await this.execute<AgreementTable>({
             url: `${id}`,
@@ -54,6 +53,24 @@ export class Agreement extends Base {
 
         if (result.success && result.data) {
             return result.data;
+        }
+
+        throw Error("Lỗi khi cập nhật dữ liệu");
+    }
+
+    async UpdateBulkStatus(ids: number[], status: string, note?: string) {
+        const result = await this.execute<AgreementTable>({
+            url: "/bulk/status",
+            method: "PUT",
+            data: {
+                ids: ids,
+                status: status,
+                note: note || undefined
+            }
+        });
+
+        if (result.success) {
+            return true;
         }
 
         throw Error("Lỗi khi cập nhật dữ liệu");
