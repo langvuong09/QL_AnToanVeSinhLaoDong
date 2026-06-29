@@ -97,7 +97,7 @@ export class IndustryService {
     return await this.industryRepository.save(industry);
   }
 
-  async getAllForAdmin(query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number }) {
+  async getAllForAdmin(query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number ; isActive?: boolean }) {
     return this.getIndustriesBase(query, false);
   }
 
@@ -108,7 +108,7 @@ export class IndustryService {
   private async getIndustriesBase(query: any, onlyActive: boolean) {
     const page = Number(query.page) || 1;
     const pageSize = Number(query.pageSize) || 10;
-    const { code, name, level } = query;
+    const { code, name, level , isActive} = query;
 
     const queryBuilder = this.industryRepository.createQueryBuilder('industry')
       .leftJoinAndSelect('industry.parent', 'parent')
@@ -117,6 +117,10 @@ export class IndustryService {
 
     if (onlyActive) {
       queryBuilder.andWhere('industry.isActive = :isActive', { isActive: true });
+    } 
+    else if (isActive !== undefined) {
+      const activeBool = String(isActive) === 'true';
+      queryBuilder.andWhere('industry.isActive = :isActive', { isActive: activeBool });
     }
 
     if (code) {

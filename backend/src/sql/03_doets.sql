@@ -37,10 +37,6 @@ INSERT INTO doets (
     "createdAt",
     "updatedAt"
 ) VALUES
--- id=1  Nông nghiệp CN cao (100→30)
-(1,  'Sở Thương binh và Lao động TPHCM',           'TAX001',     '2026-01-01', 1, 30, '02839393939', '159 Pasteur, Võ Thị Sáu, Quận 3',                     'Nguyễn Văn An',    '0901234567', true, '{"key":"26815","value":"Phường Võ Thị Sáu"}'::jsonb, '{"key":"770","value":"Quận 3"}'::jsonb,                    '{"key":"79","value":"Thành phố Hồ Chí Minh"}'::jsonb, NOW(), NOW()),
--- id=2  Nông nghiệp CN cao (100→30)
-(2,  'Phòng TBLĐ Quận 1',                          'TAX002',     '2026-01-01', 1, 30, '02838291000', '47 Lê Duẩn, Bến Nghé, Quận 1',                         'Trần Minh Tâm',    '0912345678', true, '{"key":"26734","value":"Phường Bến Nghé"}'::jsonb,   '{"key":"760","value":"Quận 1"}'::jsonb,                    '{"key":"79","value":"Thành phố Hồ Chí Minh"}'::jsonb, NOW(), NOW()),
 -- id=10 Lập trình (111→14)
 (10, 'Công ty Cổ phần Công nghệ Sao Việt',         '0312345678', '2015-06-12', 3, 14, '02838445566', 'Tòa nhà Landmark 81, Phường 22, Bình Thạnh',            'Phạm Minh Trí',    '0987654321', true, '{"key":"27082","value":"Phường 22"}'::jsonb,         '{"key":"772","value":"Quận Bình Thạnh"}'::jsonb,           '{"key":"79","value":"Thành phố Hồ Chí Minh"}'::jsonb, NOW(), NOW()),
 -- id=11 Tư vấn CNTT (112→15)
