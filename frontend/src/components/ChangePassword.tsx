@@ -1,6 +1,7 @@
 'use client'
 
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import PasswordInput from "./form/PasswordInput";
 import { NotificateContext } from "../contexts/notificate/notificate";
 import { User } from "../api/User";
@@ -26,6 +27,12 @@ const ChangePassword = ({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -79,10 +86,12 @@ const ChangePassword = ({
     notificate?.showNotification({ type: "error", message: result.message });
   }
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4 py-6">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center px-4 py-6">
       <div className="w-full max-w-md rounded-lg bg-white shadow-2xl overflow-hidden">
-        <div className="bg-blue-600 px-6 py-4 text-center">
+        <div className="bg-primary px-6 py-4 text-center">
           <h1 className="text-lg font-semibold text-white">Đổi mật khẩu</h1>
         </div>
 
@@ -138,7 +147,7 @@ const ChangePassword = ({
             error={errors.confirmPassword}
           />
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end pt-2">
             <Button
               className="text-sm"
               type="button"
@@ -157,7 +166,8 @@ const ChangePassword = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

@@ -1,5 +1,5 @@
-'use client'
-
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
 
 type Props = {
@@ -25,10 +25,18 @@ export default function ConfirmationModal({
   isLoading = false,
   isDangerous = false,
 }: Props) {
-  if (!isOpen) return null
+  const [mounted, setMounted] = useState(false)
 
-  return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50">
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
+
+  if (!isOpen) return null
+  if (!mounted) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
       <div className="w-[400px] bg-white rounded-xl shadow-2xl overflow-hidden animate-[fadeInScale_0.2s_ease-out]">
         {/* Content */}
         <div className="px-6 pt-8 pb-6 text-center">
@@ -64,6 +72,8 @@ export default function ConfirmationModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
+
