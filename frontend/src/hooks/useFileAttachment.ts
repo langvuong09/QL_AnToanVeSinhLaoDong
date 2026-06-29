@@ -60,6 +60,7 @@ export function useFileAttachment() {
   const [attachmentGroups, setAttachmentGroups] = useState<AttachmentGroup[]>(
     DEFAULT_GROUPS.map((g) => ({ ...g, files: [] })),
   )
+  const [pendingDeleteFileIds, setPendingDeleteFileIds] = useState<string[]>([])
   const nextFileIdRef = useRef(1)
 
   // Keep latest attachmentGroups in a ref for synchronous access in addFiles
@@ -68,18 +69,19 @@ export function useFileAttachment() {
 
   // ── removeFile ─────────────────────────────────────────────────────
   const removeFile = useCallback(
-    async (groupIndex: number, fileId: number | string) => {
+    async (groupIndex: number, fileId: number | string): Promise<{ success: boolean; message?: string }> => {
       // Tìm file target trước khi xóa
       const targetGroup = attachmentGroupsRef.current[groupIndex]
       const targetFile = targetGroup?.files.find((f) => f.id === fileId)
 
-      // Nếu là file đã lưu trên server (id là string, không có f.file), gọi API xóa
+      // Nếu là file đã lưu trên server (id là string, không có f.file), lưu vào danh sách chờ xóa
       if (typeof fileId === 'string' && targetFile && !targetFile.file) {
-        const media = new Media()
-        const result = await media.deleteFile(fileId)
-        if (!result.success) {
-          return { success: false, message: result.message }
-        }
+        setPendingDeleteFileIds((prev) => {
+          if (!prev.includes(fileId)) {
+            return [...prev, fileId]
+          }
+          return prev
+        })
       }
 
       // Revoke blob URL nếu có (local file)
@@ -87,7 +89,7 @@ export function useFileAttachment() {
         URL.revokeObjectURL(targetFile.url)
       }
 
-      // Xóa file khỏi state
+      // Xóa file khỏi state hiển thị
       setAttachmentGroups((prev) =>
         prev.map((group, idx) =>
           idx === groupIndex
@@ -154,6 +156,7 @@ export function useFileAttachment() {
       revokeBlobUrls(prev)
       return DEFAULT_GROUPS.map((g) => ({ ...g, files: [] }))
     })
+    setPendingDeleteFileIds([])
     nextFileIdRef.current = 1
   }, [])
 
@@ -176,9 +179,27 @@ export function useFileAttachment() {
             })) || [],
       }))
     })
+    setPendingDeleteFileIds([])
     // Reset ID counter cao hơn để tránh conflict với server file IDs
     nextFileIdRef.current = 1
   }, [])
+
+  // ── commitDeletes ──────────────────────────────────────────────────
+  const commitDeletes = useCallback(async () => {
+    if (pendingDeleteFileIds.length === 0) return { success: true }
+
+    const media = new Media()
+    const deletePromises = pendingDeleteFileIds.map((fileId) => media.deleteFile(fileId))
+    const results = await Promise.all(deletePromises)
+    const failed = results.filter((res) => !res.success)
+
+    setPendingDeleteFileIds([])
+
+    if (failed.length > 0) {
+      return { success: false, message: 'Có lỗi xảy ra khi xóa một số file cũ trên server.' }
+    }
+    return { success: true }
+  }, [pendingDeleteFileIds])
 
   // ── Computed values ────────────────────────────────────────────────
   const hasErrors = attachmentGroups.some((group) => group.files.some((f) => f.error))
@@ -196,5 +217,7 @@ export function useFileAttachment() {
     initFromServer,
     hasErrors,
     pendingFileCount,
+    commitDeletes,
+    pendingDeleteFileIds,
   }
 }

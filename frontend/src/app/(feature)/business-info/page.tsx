@@ -105,7 +105,7 @@ function mapDoetUserToEnterprise(item: IDoetUser): Enterprise {
     industry: doet.industry ? `${doet.industry.code} - ${doet.industry.name}` : '',
     industryId: doet.industryId,
     ward: doet.ward?.value || '',
-    status: doet.status,
+    status: item.status,
     foreignName: doet.foreignName || '',
     email: item.email || '',
     phone: doet.phone || '',
@@ -203,6 +203,7 @@ export default function BusinessInfoPage() {
     resetAttachments,
     initFromServer,
     hasErrors: hasFileErrors,
+    commitDeletes,
   } = useFileAttachment()
 
   const [provinces, setProvinces] = useState<Province[]>([])
@@ -467,6 +468,7 @@ export default function BusinessInfoPage() {
 
     try {
       await handleUploadPendingFiles(result.data.id, attachmentGroups)
+      await commitDeletes()
       notificate?.showNotification({ type: 'success', message: 'Cập nhật thông tin doanh nghiệp thành công' })
       await authenticate?.refreshAuth()
       await fetchEnterpriseData()
