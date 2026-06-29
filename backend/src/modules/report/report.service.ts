@@ -233,10 +233,16 @@ export class ReportService {
 
   async getAllForAdmin(query: any) {
     const qb = this.reportRepository
-      .createQueryBuilder('r')
-      .withDeleted()
-      .leftJoinAndSelect('r.doet', 'd')
-      .leftJoinAndSelect('r.reportType', 'rt');
+    .createQueryBuilder('r')
+    .withDeleted()
+    .leftJoinAndSelect('r.doet', 'd')
+    .leftJoinAndSelect('r.reportType', 'rt')
+    .leftJoinAndSelect('r.details', 'details')
+    .leftJoinAndSelect('details.trauma', 'trauma')
+    .leftJoinAndSelect('details.job', 'job')
+    .leftJoinAndSelect('details.cause', 'cause')
+    .leftJoinAndSelect('r.statusHistories', 'sh')
+    .leftJoinAndSelect('sh.user', 'user');
 
     if (query.year) {
       qb.andWhere('r.year = :year', { year: Number(query.year) });
