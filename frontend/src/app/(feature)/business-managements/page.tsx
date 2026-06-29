@@ -147,12 +147,12 @@ export default function BusinessManagementsPage() {
   useEffect(() => {
     const loadOptions = async () => {
       const [businessTypeResult, industryResult] = await Promise.all([
-        new BusinessTypeApi().getAllForBusiness({ page: 1, pageSize: 1000 }),
-        new IndustryApi().getAllForBusiness({ page: 1, pageSize: 1000, level: 4 }),
+        new BusinessTypeApi().getAllForAdmin({ page: 1, pageSize: 1000 }),
+        new IndustryApi().getAllForAdmin({ page: 1, pageSize: 1000, level: 4 }),
       ])
 
-      if (businessTypeResult.success) setBusinessTypes(businessTypeResult.data?.items.filter((item) => item.isActive) || [])
-      if (industryResult.success) setIndustries((industryResult.data?.items || []).filter((item) => item.level === 4 && item.isActive))
+      if (businessTypeResult.success) setBusinessTypes(businessTypeResult.data?.items || [])
+      if (industryResult.success) setIndustries((industryResult.data?.items || []).filter((item) => item.level === 4))
     }
 
     loadOptions()

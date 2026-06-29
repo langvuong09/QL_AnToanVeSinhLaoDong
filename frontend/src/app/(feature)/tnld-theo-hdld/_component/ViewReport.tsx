@@ -172,7 +172,7 @@ const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
                             {(report?.["nguyennhan"] ?? []).map((row: any, i: number) => (
                                 <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-gray-5"}>
                                     <td className="border border-black p-2 ps-5">{row.label}</td>
-                                    <td className="border border-black p-2 text-center">{i + 1}</td>
+                                    <td className="border border-black p-2 text-center">{row.id}</td>
                                     <td className="border border-black p-2 text-center">{row.totalCases}</td>
                                     <td className="border border-black p-2 text-center">{row.fatalCases}</td>
                                     <td className="border border-black p-2 text-center">{row.multiVictimCases}</td>
@@ -195,7 +195,7 @@ const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
                             {(report?.["yeutochanthuong"] ?? []).map((row: any, i: number) => (
                                 <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-gray-5"}>
                                     <td className="border border-black p-2 ps-5">{row.label}</td>
-                                    <td className="border border-black p-2 text-center">{i + 1}</td>
+                                    <td className="border border-black p-2 text-center">{row.id}</td>
                                     <td className="border border-black p-2 text-center">{row.totalCases}</td>
                                     <td className="border border-black p-2 text-center">{row.fatalCases}</td>
                                     <td className="border border-black p-2 text-center">{row.multiVictimCases}</td>
@@ -217,7 +217,7 @@ const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
                             {(report?.["phantheonghenghiep"] ?? []).map((row: any, i: number) => (
                                 <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-white"}>
                                     <td className="border border-black p-2 ps-5">{row.label}</td>
-                                    <td className="border border-black p-2 text-center">{i + 1}</td>
+                                    <td className="border border-black p-2 text-center">{row.id}</td>
                                     <td className="border border-black p-2 text-center">{row.totalCases}</td>
                                     <td className="border border-black p-2 text-center">{row.fatalCases}</td>
                                     <td className="border border-black p-2 text-center">{row.multiVictimCases}</td>

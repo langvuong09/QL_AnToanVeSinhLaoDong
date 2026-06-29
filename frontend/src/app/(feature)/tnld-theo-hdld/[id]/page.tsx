@@ -135,13 +135,24 @@ const TNLDTheoHDLDIdPage = () => {
     const [accidents, setAccidents] = useState<AccidentDto[]>([]);
     const [traumas, setTraumas] = useState<TraumaDto[]>([]);
     const [jobs, setJobs] = useState<JobDto[]>([]);
+
+    const flattenJobs = (jobs: JobDto[]): JobDto[] => {
+        return jobs.flatMap(job => [
+            {
+                ...job,
+                children: undefined,
+            },
+            ...(job.children ? flattenJobs(job.children) : []),
+        ]);
+    };
+
     const fetchOtherData = async () => {
         const accidentCls = new Accident();
         const traumaCls = new Trauma();
         const jobCls = new Job();
 
         const result = await Promise.all([jobCls.GetAll(), traumaCls.GetAll(), accidentCls.GetAll()]);
-        setJobs(result[0]);
+        setJobs(flattenJobs(result[0]));
         setTraumas(result[1])
         setAccidents(result[2]);
     }
@@ -1822,7 +1833,7 @@ const TNLDTheoHDLDIdPage = () => {
                                         {(report?.["nguyennhan"] ?? []).map((row: any, i: number) => (
                                             <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-gray-5"}>
                                                 <td className="border border-gray-400 p-2 ps-5">{row.label}</td>
-                                                <td className="border border-gray-400 p-2 text-center">{i + 1}</td>
+                                                <td className="border border-gray-400 p-2 text-center">{row.id}</td>
                                                 <td className="border border-gray-400 p-2 text-center">{row.totalCases}</td>
                                                 <td className="border border-gray-400 p-2 text-center">{row.fatalCases}</td>
                                                 <td className="border border-gray-400 p-2 text-center">{row.multiVictimCases}</td>
@@ -1845,7 +1856,7 @@ const TNLDTheoHDLDIdPage = () => {
                                         {(report?.["yeutochanthuong"] ?? []).map((row: any, i: number) => (
                                             <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-gray-5"}>
                                                 <td className="border border-gray-400 p-2 ps-5">{row.label}</td>
-                                                <td className="border border-gray-400 p-2 text-center">{i + 1}</td>
+                                                <td className="border border-gray-400 p-2 text-center">{row.id}</td>
                                                 <td className="border border-gray-400 p-2 text-center">{row.totalCases}</td>
                                                 <td className="border border-gray-400 p-2 text-center">{row.fatalCases}</td>
                                                 <td className="border border-gray-400 p-2 text-center">{row.multiVictimCases}</td>
@@ -1868,7 +1879,7 @@ const TNLDTheoHDLDIdPage = () => {
                                         {(report?.["phantheonghenghiep"] ?? []).map((row: any, i: number) => (
                                             <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-white"}>
                                                 <td className="border border-gray-400 p-2 ps-5">{row.label}</td>
-                                                <td className="border border-gray-400 p-2 text-center">{i + 1}</td>
+                                                <td className="border border-gray-400 p-2 text-center">{row.id}</td>
                                                 <td className="border border-gray-400 p-2 text-center">{row.totalCases}</td>
                                                 <td className="border border-gray-400 p-2 text-center">{row.fatalCases}</td>
                                                 <td className="border border-gray-400 p-2 text-center">{row.multiVictimCases}</td>
