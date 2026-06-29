@@ -82,15 +82,35 @@ export default function EnterpriseImportModal({
 
   // --- Dynamic File Generator ---
   const downloadSampleValid = () => {
+    const addressService = new OpenAdress()
+
+    // Get business types dynamically
+    const bType1 = businessTypes[0]?.name || 'Công ty cổ phần'
+    const bType2 = businessTypes[1]?.name || 'Công ty TNHH một thành viên'
+    const bType3 = businessTypes[2]?.name || 'Doanh nghiệp tư nhân'
+
+    // Get level 4 industries dynamically
+    const ind1 = level4Industries[0]?.code || '6201'
+    const ind2 = level4Industries[1]?.name || 'Thiết kế hệ thống máy tính'
+    const ind3 = level4Industries[2]?.code || '8129'
+
+    // Get valid provinces and matching wards
+    const hcmProvince = addressService.provinces.find(p => normalizeName(p.name).includes('ho chi minh')) || addressService.provinces[0]
+    const hcmWard1 = hcmProvince?.wards?.[0]?.name || 'Phường Võ Thị Sáu'
+    const hcmWard2 = hcmProvince?.wards?.[1]?.name || 'Phường Đa Kao'
+
+    const canThoProvince = addressService.provinces.find(p => normalizeName(p.name).includes('can tho')) || addressService.provinces[1] || hcmProvince
+    const canThoWard = canThoProvince?.wards?.[0]?.name || 'Phường An Bình'
+
     const data = [
       {
         'Tên doanh nghiệp': 'Công ty Cổ phần Công nghệ Sao Việt',
         'Mã số thuế': '0312345678',
-        'Loại hình doanh nghiệp': 'Công ty cổ phần',
-        'Ngành nghề kinh doanh': 'Lập trình máy vi tính',
+        'Loại hình doanh nghiệp': bType1,
+        'Ngành nghề kinh doanh': ind1,
         'Ngày thành lập': '2015-06-12',
-        'Tỉnh/Thành phố ĐKKD': 'Thành phố Hồ Chí Minh',
-        'Phường/Xã ĐKKD': 'Phường Thủ Dầu Một',
+        'Tỉnh/Thành phố ĐKKD': hcmProvince?.name || 'Thành phố Hồ Chí Minh',
+        'Phường/Xã ĐKKD': hcmWard1,
         'Địa chỉ ĐKKD': 'Tòa nhà Landmark 81, Phường 22, Bình Thạnh',
         'Tên tiếng nước ngoài': 'Sao Viet Technology Joint Stock Company',
         'Email': 'contact@saoviet.com.vn',
@@ -102,11 +122,11 @@ export default function EnterpriseImportModal({
       {
         'Tên doanh nghiệp': 'Công ty TNHH Giải pháp Phần mềm Mekong',
         'Mã số thuế': '0323456789',
-        'Loại hình doanh nghiệp': 'Công ty TNHH một thành viên',
-        'Ngành nghề kinh doanh': '6202',
+        'Loại hình doanh nghiệp': bType2,
+        'Ngành nghề kinh doanh': ind2,
         'Ngày thành lập': '2018-09-20',
-        'Tỉnh/Thành phố ĐKKD': 'Thành phố Cần Thơ',
-        'Phường/Xã ĐKKD': 'Phường An Bình',
+        'Tỉnh/Thành phố ĐKKD': canThoProvince?.name || 'Thành phố Cần Thơ',
+        'Phường/Xã ĐKKD': canThoWard,
         'Địa chỉ ĐKKD': 'Khu dân cư Hồng Phát, An Bình, Ninh Kiều',
         'Tên tiếng nước ngoài': 'Mekong Software Solutions Company Limited',
         'Email': 'info@mekongsoft.vn',
@@ -118,11 +138,11 @@ export default function EnterpriseImportModal({
       {
         'Tên doanh nghiệp': 'Doanh nghiệp tư nhân Minh Tâm',
         'Mã số thuế': '3500123456',
-        'Loại hình doanh nghiệp': 'Doanh nghiệp tư nhân',
-        'Ngành nghề kinh doanh': 'Vệ sinh công nghiệp',
+        'Loại hình doanh nghiệp': bType3,
+        'Ngành nghề kinh doanh': ind3,
         'Ngày thành lập': '2011-02-28',
-        'Tỉnh/Thành phố ĐKKD': 'Thành phố Hồ Chí Minh',
-        'Phường/Xã ĐKKD': 'Phường Võ Thị Sáu',
+        'Tỉnh/Thành phố ĐKKD': hcmProvince?.name || 'Thành phố Hồ Chí Minh',
+        'Phường/Xã ĐKKD': hcmWard2,
         'Địa chỉ ĐKKD': '215 Điện Biên Phủ, Võ Thị Sáu, Quận 3',
         'Tên tiếng nước ngoài': 'Minh Tam Private Enterprise',
         'Email': 'minhtamco@gmail.com',
@@ -139,15 +159,22 @@ export default function EnterpriseImportModal({
   }
 
   const downloadSampleInvalid = () => {
+    const addressService = new OpenAdress()
+    const hcmProvince = addressService.provinces.find(p => normalizeName(p.name).includes('ho chi minh')) || addressService.provinces[0]
+    const hcmWard = hcmProvince?.wards?.[0]?.name || 'Phường Võ Thị Sáu'
+
+    const bType1 = businessTypes[0]?.name || 'Công ty cổ phần'
+    const ind1 = level4Industries[0]?.code || '6201'
+
     const data = [
       {
         'Tên doanh nghiệp': '', // Lỗi: Thiếu tên doanh nghiệp
         'Mã số thuế': '12345', // Lỗi: Mã số thuế sai độ dài
-        'Loại hình doanh nghiệp': 'Công ty cổ phần',
-        'Ngành nghề kinh doanh': 'Lập trình máy vi tính',
+        'Loại hình doanh nghiệp': bType1,
+        'Ngành nghề kinh doanh': ind1,
         'Ngày thành lập': '2015-06-12',
-        'Tỉnh/Thành phố ĐKKD': 'Thành phố Hồ Chí Minh',
-        'Phường/Xã ĐKKD': 'Phường Võ Thị Sáu',
+        'Tỉnh/Thành phố ĐKKD': hcmProvince?.name || 'Thành phố Hồ Chí Minh',
+        'Phường/Xã ĐKKD': hcmWard,
         'Địa chỉ ĐKKD': 'Địa chỉ test',
         'Tên tiếng nước ngoài': '',
         'Email': 'contact_saoviet.com', // Lỗi: Email sai định dạng
