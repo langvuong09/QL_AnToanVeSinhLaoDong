@@ -112,7 +112,7 @@ const TNLDTheoHDLDPage = () => {
                             <div className="flex-1 truncate">{i.doet.taxCode}</div>
                             <div className="flex-1">{i.reportType.period}</div>
                             <div className="flex-1">
-                                {i.status === "DRAFT" && (
+                                {(i.status === "DRAFT" || i.status === "REJECTED" || i.status === "OVERDUE_WARNING" || i.status === "OVERDUE") && (
                                     <div className="text-gray-500 flex items-center gap-1.5 text-xs font-semibold">
                                         <i className="fa-solid fa-circle text-[8px]"></i>
                                         <span>Đang báo cáo</span>
