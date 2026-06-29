@@ -88,12 +88,15 @@ async function bootstrap() {
   );
 
   app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: false,
+    transform: true,
+    transformOptions: {
+      enableImplicitConversion: true, 
+    },
+  }),
+);
 
   await seedSampleData(app);
 

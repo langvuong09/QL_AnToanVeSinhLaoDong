@@ -87,7 +87,7 @@ export class Report {
   @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2TotalCost?: number;
 
   @Column({ type: "int", nullable: true }) m2TotalLeaveDays?: number;
- @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2TotalDamage?: number;
+  @Column({ type: "decimal", precision: 15, scale: 2, nullable: true }) m2TotalDamage?: number;
 
   // =========================================================
   // QUAN HỆ & FILE ĐÍNH KÈM
