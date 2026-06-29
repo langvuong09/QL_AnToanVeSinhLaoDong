@@ -84,10 +84,10 @@ const InputLegend = ({
                 {/* Label */}
                 {label && (
                     <label
-                        className={`absolute text-gray-500 text-[14px] bg-white transition-all duration-200 
+                        className={`absolute text-gray-500 text-[12px] bg-white transition-all duration-200 
                             top-1/2 -translate-y-1/2 left-2.5
                             peer-focus:top-0 
-                            ${errorMess ? "peer-focus:text-red-600" : "peer-focus:text-blue-500"} peer-focus:text-sm
+                            ${errorMess ? "peer-focus:text-red-600" : "peer-focus:text-blue-500"} peer-focus:text-[13px]
 
                             peer-[:not(:placeholder-shown)]:top-0 
                             `}
