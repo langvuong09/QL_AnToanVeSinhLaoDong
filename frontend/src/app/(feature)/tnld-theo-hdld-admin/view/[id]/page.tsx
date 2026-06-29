@@ -33,8 +33,6 @@ const TNLDTheoHDLDAdminViewIdPage = () => {
                 title: result.title || "",
                 year: Number(result.year) || 0,
                 reportTypeId: Number(result.reportTypeId) || 0,
-                status: result.status,
-                note: result.note,
 
                 totalEmployees: Number(result.totalEmployees) || 0,
                 femaleEmployees: Number(result.femaleEmployees) || 0,
