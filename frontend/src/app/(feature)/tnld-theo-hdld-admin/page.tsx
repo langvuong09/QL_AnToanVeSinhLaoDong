@@ -134,119 +134,103 @@ const TNLDTheoHDLDAdminPage = () => {
 
     const [report, setReport] = useState<Record<string, any[]>>();
     useEffect(() => {
-        const phantheonganhnghe = jobs.map(job => {
-            const matchedDetails = reports.flatMap(re =>
+        const byJob = jobs.map(job => {
+            const matched = reports.flatMap(re =>
                 re.details?.filter(d => d.jobId === job.id) ?? []
             );
 
             return {
                 id: job.id,
-                totalCases: matchedDetails?.reduce((s, d) => s + d.totalCases, 0),
-                fatalCases: matchedDetails?.reduce((s, d) => s + d.fatalCases, 0),
-                multiVictimCases: matchedDetails?.reduce((s, d) => s + d.multiVictimCases, 0),
-
-                totalVictims: matchedDetails?.reduce((s, d) => s + d.totalVictims, 0),
-                femaleVictims: matchedDetails?.reduce((s, d) => s + d.femaleVictims, 0),
-                fatalVictims: matchedDetails?.reduce((s, d) => s + d.fatalVictims, 0),
-                severeInjuries: matchedDetails?.reduce((s, d) => s + d.severeInjuries, 0),
-
-                totalLeaveDays: matchedDetails?.reduce((s, d) => s + d.totalLeaveDays, 0),
-                totalCost: matchedDetails?.reduce((s, d) => s + d.totalCost, 0),
-
-                medicalCost: matchedDetails?.reduce((s, d) => s + d.medicalCost, 0),
-                salaryCompensation: matchedDetails?.reduce((s, d) => s + d.salaryCompensation, 0),
-                propertyDamage: matchedDetails?.reduce((s, d) => s + d.propertyDamage, 0),
-
-                totalDamage: matchedDetails?.reduce((s, d) => s + d.totalDamage, 0),
-
-            }
+                totalCases: matched.reduce((s, d) => s + Number(d.totalCases), 0),
+                fatalCases: matched.reduce((s, d) => s + Number(d.fatalCases), 0),
+                multiVictimCases: matched.reduce((s, d) => s + Number(d.multiVictimCases), 0),
+                totalVictims: matched.reduce((s, d) => s + Number(d.totalVictims), 0),
+                femaleVictims: matched.reduce((s, d) => s + Number(d.femaleVictims), 0),
+                fatalVictims: matched.reduce((s, d) => s + Number(d.fatalVictims), 0),
+                severeInjuries: matched.reduce((s, d) => s + Number(d.severeInjuries), 0),
+                totalLeaveDays: matched.reduce((s, d) => s + Number(d.totalLeaveDays), 0),
+                totalCost: matched.reduce((s, d) => s + Number(d.totalCost), 0),
+                medicalCost: matched.reduce((s, d) => s + Number(d.medicalCost), 0),
+                salaryCompensation: matched.reduce((s, d) => s + Number(d.salaryCompensation), 0),
+                propertyDamage: matched.reduce((s, d) => s + Number(d.propertyDamage), 0),
+                totalDamage: matched.reduce((s, d) => s + Number(d.totalDamage), 0),
+            };
         });
 
-        const phantheonguyennhan = accidents.map(acc => {
-            const matchedDetails = reports.flatMap(re =>
+        const byCause = accidents.map(acc => {
+            const matched = reports.flatMap(re =>
                 re.details?.filter(d => d.causeId === acc.id) ?? []
             );
 
             return {
                 id: acc.id,
-                totalCases: matchedDetails?.reduce((s, d) => s + d.totalCases, 0),
-                fatalCases: matchedDetails?.reduce((s, d) => s + d.fatalCases, 0),
-                multiVictimCases: matchedDetails?.reduce((s, d) => s + d.multiVictimCases, 0),
-
-                totalVictims: matchedDetails?.reduce((s, d) => s + d.totalVictims, 0),
-                femaleVictims: matchedDetails?.reduce((s, d) => s + d.femaleVictims, 0),
-                fatalVictims: matchedDetails?.reduce((s, d) => s + d.fatalVictims, 0),
-                severeInjuries: matchedDetails?.reduce((s, d) => s + d.severeInjuries, 0),
-
-                totalLeaveDays: matchedDetails?.reduce((s, d) => s + d.totalLeaveDays, 0),
-                totalCost: matchedDetails?.reduce((s, d) => s + d.totalCost, 0),
-
-                medicalCost: matchedDetails?.reduce((s, d) => s + d.medicalCost, 0),
-                salaryCompensation: matchedDetails?.reduce((s, d) => s + d.salaryCompensation, 0),
-                propertyDamage: matchedDetails?.reduce((s, d) => s + d.propertyDamage, 0),
-
-                totalDamage: matchedDetails?.reduce((s, d) => s + d.totalDamage, 0),
-
-            }
+                totalCases: matched.reduce((s, d) => s + Number(d.totalCases), 0),
+                fatalCases: matched.reduce((s, d) => s + Number(d.fatalCases), 0),
+                multiVictimCases: matched.reduce((s, d) => s + Number(d.multiVictimCases), 0),
+                totalVictims: matched.reduce((s, d) => s + Number(d.totalVictims), 0),
+                femaleVictims: matched.reduce((s, d) => s + Number(d.femaleVictims), 0),
+                fatalVictims: matched.reduce((s, d) => s + Number(d.fatalVictims), 0),
+                severeInjuries: matched.reduce((s, d) => s + Number(d.severeInjuries), 0),
+                totalLeaveDays: matched.reduce((s, d) => s + Number(d.totalLeaveDays), 0),
+                totalCost: matched.reduce((s, d) => s + Number(d.totalCost), 0),
+                medicalCost: matched.reduce((s, d) => s + Number(d.medicalCost), 0),
+                salaryCompensation: matched.reduce((s, d) => s + Number(d.salaryCompensation), 0),
+                propertyDamage: matched.reduce((s, d) => s + Number(d.propertyDamage), 0),
+                totalDamage: matched.reduce((s, d) => s + Number(d.totalDamage), 0),
+            };
         });
 
-        const phantheoyeuitogaychanthuong = traumas.map(trau => {
-            const matchedDetails = reports.flatMap(re =>
+        const byTrauma = traumas.map(trau => {
+            const matched = reports.flatMap(re =>
                 re.details?.filter(d => d.traumaId === trau.id) ?? []
             );
 
             return {
                 id: trau.id,
-                totalCases: matchedDetails?.reduce((s, d) => s + d.totalCases, 0),
-                fatalCases: matchedDetails?.reduce((s, d) => s + d.fatalCases, 0),
-                multiVictimCases: matchedDetails?.reduce((s, d) => s + d.multiVictimCases, 0),
-
-                totalVictims: matchedDetails?.reduce((s, d) => s + d.totalVictims, 0),
-                femaleVictims: matchedDetails?.reduce((s, d) => s + d.femaleVictims, 0),
-                fatalVictims: matchedDetails?.reduce((s, d) => s + d.fatalVictims, 0),
-                severeInjuries: matchedDetails?.reduce((s, d) => s + d.severeInjuries, 0),
-
-                totalLeaveDays: matchedDetails?.reduce((s, d) => s + d.totalLeaveDays, 0),
-                totalCost: matchedDetails?.reduce((s, d) => s + d.totalCost, 0),
-
-                medicalCost: matchedDetails?.reduce((s, d) => s + d.medicalCost, 0),
-                salaryCompensation: matchedDetails?.reduce((s, d) => s + d.salaryCompensation, 0),
-                propertyDamage: matchedDetails?.reduce((s, d) => s + d.propertyDamage, 0),
-
-                totalDamage: matchedDetails?.reduce((s, d) => s + d.totalDamage, 0),
-
-            }
+                totalCases: matched.reduce((s, d) => s + Number(d.totalCases), 0),
+                fatalCases: matched.reduce((s, d) => s + Number(d.fatalCases), 0),
+                multiVictimCases: matched.reduce((s, d) => s + Number(d.multiVictimCases), 0),
+                totalVictims: matched.reduce((s, d) => s + Number(d.totalVictims), 0),
+                femaleVictims: matched.reduce((s, d) => s + Number(d.femaleVictims), 0),
+                fatalVictims: matched.reduce((s, d) => s + Number(d.fatalVictims), 0),
+                severeInjuries: matched.reduce((s, d) => s + Number(d.severeInjuries), 0),
+                totalLeaveDays: matched.reduce((s, d) => s + Number(d.totalLeaveDays), 0),
+                totalCost: matched.reduce((s, d) => s + Number(d.totalCost), 0),
+                medicalCost: matched.reduce((s, d) => s + Number(d.medicalCost), 0),
+                salaryCompensation: matched.reduce((s, d) => s + Number(d.salaryCompensation), 0),
+                propertyDamage: matched.reduce((s, d) => s + Number(d.propertyDamage), 0),
+                totalDamage: matched.reduce((s, d) => s + Number(d.totalDamage), 0),
+            };
         });
 
-        const record: Record<string, any[]> = {};
-        record["phantheonganhnghe"] = phantheonganhnghe;
-        record["phantheonguyennhan"] = phantheonguyennhan;
-        record["phantheoyeuitogaychanthuong"] = phantheoyeuitogaychanthuong;
+        const byBusinessType = businessTyppes.map(bus => {
+            const matched = reports.filter(re => re.doet.businessTypeId === bus.id);
 
-        // Tan suat tai nan lao dong = (so nguoi bi tai nan lao dong / tong so nhan vien) * 1000
-        const tongquanloaihinhcoso = businessTyppes.map(bus => {
-            const matchedBusinesses = reports.filter(re => re.doet.businessTypeId == bus.id);
+            const totalVictims = matched.reduce((s, d) => s + Number(d.m1TotalVictims) + Number(d.m2TotalVictims), 0);
+            const fatalVictims = matched.reduce((s, d) => s + Number(d.m1FatalVictims) + Number(d.m2FatalVictims), 0);
+            const totalEmployees = matched.reduce((s, d) => s + Number(d.totalEmployees), 0);
 
             return {
                 id: bus.id,
                 label: bus.name,
-                totalCases: matchedBusinesses?.reduce((s, d) => s + d.m1TotalCases + d.m2TotalCases, 0),
-                totalParticipate: matchedBusinesses?.reduce((s, d) => s + d.status === "SUBMITTED" ? 1 : 0, 0),
-
-                totalEmployees: matchedBusinesses?.reduce((s, d) => s + d.totalEmployees, 0),
+                totalCases: matched.reduce((s, d) => s + Number(d.m1TotalCases) + Number(d.m2TotalCases), 0),
+                totalParticipate: matched.reduce((s, d) => s + (d.status === "SUBMITTED" ? 1 : 0), 0),
+                totalEmployees,
                 totalEmployeesParticipate: 0,
-                femaleEmployees: matchedBusinesses?.reduce((s, d) => s + d.femaleEmployees, 0),
-
-                totalVictims: matchedBusinesses?.reduce((s, d) => s + d.m1TotalVictims + d.m2TotalVictims, 0),
-                fatalVictims: matchedBusinesses?.reduce((s, d) => s + d.m1FatalVictims + d.m2FatalVictims, 0),
-                severeInjuries: matchedBusinesses?.reduce((s, d) => s + d.m1SevereInjuries + d.m2SevereInjuries, 0),
-
-                ktnld: (matchedBusinesses?.reduce((s, d) => s + d.m1TotalVictims + d.m2TotalVictims, 0) / matchedBusinesses?.reduce((s, d) => s + d.totalEmployees, 0)) * 1000 || 0,
-                kchet: (matchedBusinesses?.reduce((s, d) => s + d.m1FatalVictims + d.m2FatalVictims, 0) / matchedBusinesses?.reduce((s, d) => s + d.totalEmployees, 0)) * 1000 || 0
-            }
-            
+                femaleEmployees: matched.reduce((s, d) => s + Number(d.femaleEmployees), 0),
+                totalVictims,
+                fatalVictims,
+                severeInjuries: matched.reduce((s, d) => s + Number(d.m1SevereInjuries) + Number(d.m2SevereInjuries), 0),
+                ktnld: totalEmployees ? (totalVictims / totalEmployees) * 1000 : 0,
+                kchet: totalEmployees ? (fatalVictims / totalEmployees) * 1000 : 0,
+            };
         });
-        record["tongquanloaihinhcoso"] = tongquanloaihinhcoso;
+
+        const record: Record<string, any[]> = {};
+        record["phantheonganhnghe"] = byJob;
+        record["phantheonguyennhan"] = byCause;
+        record["phantheoyeuitogaychanthuong"] = byTrauma;
+        record["tongquanloaihinhcoso"] = byBusinessType;
 
         setReport(record);
     }, [accidents, traumas, jobs, businessTyppes]);
@@ -310,7 +294,7 @@ const TNLDTheoHDLDAdminPage = () => {
                         <button className="px-2 py-1 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition-all" onClick={() => setIsChange(true)}>
                             Thay đổi
                         </button>
-                        <button className="px-2 py-1 bg-red-600 text-white rounded font-semibold hover:bg-red-700 transition-all" onClick={() => setIsChange(false)}>
+                        <button className="px-2 py-1 bg-red-600 text-white rounded font-semibold hover:bg-red-700 transition-all" onClick={() => setSelectedIds([])}>
                             Hủy
                         </button>
                     </div>
@@ -346,7 +330,7 @@ const TNLDTheoHDLDAdminPage = () => {
                     <div className="flex gap-5 rounded">
                         {isPrintSummary ? (
                             <>
-                                <button className="text-xs text-gray-500 font-semibold px-3 py-2">
+                                <button className="text-xs text-gray-500 font-semibold px-3 py-2" onClick={() => setIsSummary(false)}>
                                     Hủy bỏ
                                 </button>
                             </>
@@ -377,7 +361,7 @@ const TNLDTheoHDLDAdminPage = () => {
             />
 
             {isPrintSummary ? (
-                <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden mt-2 space-y-3 overflow-y-auto pb-10">
+                <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden mt-2 space-y-3 overflow-y-auto pb-10 px-5 py-5">
                     <div className="space-y-3">
                         <h1 className="font-semibold">I. Thông tin tổng quan:</h1>
                         <div>
@@ -410,7 +394,7 @@ const TNLDTheoHDLDAdminPage = () => {
                                 </thead>
 
                                 <tbody>
-                                    
+
                                     {(report?.["tongquanloaihinhcoso"] ?? []).map((row: any, i: number) => (
                                         <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-white"}>
                                             <td className="border border-gray-400 p-2 text-left">{row.label}</td>
@@ -500,11 +484,11 @@ const TNLDTheoHDLDAdminPage = () => {
                                             <td className="border border-gray-400 p-2 text-center">{row.fatalVictims}</td>
                                             <td className="border border-gray-400 p-2 text-center">{row.severeInjuries}</td>
                                             <td className="border border-gray-400 p-2 text-center">{row.totalLeaveDays}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.totalCost}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.medicalCost}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.salaryCompensation}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.propertyDamage}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.totalDamage}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalCost.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.medicalCost.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.salaryCompensation.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.propertyDamage.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalDamage.toLocaleString("vi-VN")}</td>
                                         </tr>
                                     ))}
 
@@ -522,11 +506,11 @@ const TNLDTheoHDLDAdminPage = () => {
                                             <td className="border border-gray-400 p-2 text-center">{row.fatalVictims}</td>
                                             <td className="border border-gray-400 p-2 text-center">{row.severeInjuries}</td>
                                             <td className="border border-gray-400 p-2 text-center">{row.totalLeaveDays}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.totalCost}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.medicalCost}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.salaryCompensation}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.propertyDamage}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.totalDamage}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalCost.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.medicalCost.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.salaryCompensation.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.propertyDamage.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalDamage.toLocaleString("vi-VN")}</td>
                                         </tr>
                                     ))}
 
@@ -544,11 +528,11 @@ const TNLDTheoHDLDAdminPage = () => {
                                             <td className="border border-gray-400 p-2 text-center">{row.fatalVictims}</td>
                                             <td className="border border-gray-400 p-2 text-center">{row.severeInjuries}</td>
                                             <td className="border border-gray-400 p-2 text-center">{row.totalLeaveDays}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.totalCost}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.medicalCost}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.salaryCompensation}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.propertyDamage}</td>
-                                            <td className="border border-gray-400 p-2 text-center">{row.totalDamage}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalCost.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.medicalCost.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.salaryCompensation.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.propertyDamage.toLocaleString("vi-VN")}</td>
+                                            <td className="border border-gray-400 p-2 text-center">{row.totalDamage.toLocaleString("vi-VN")}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -780,13 +764,13 @@ const TNLDTheoHDLDAdminPage = () => {
                                     {i.status === "APPROVED" && (
                                         <div className="text-green-600 flex items-center gap-1.5 text-xs font-semibold">
                                             <i className="fa-solid fa-circle text-[8px]"></i>
-                                            <span>chấp nhận</span>
+                                            <span>Chấp nhận</span>
                                         </div>
                                     )}
                                     {i.status === "REJECTED" && (
                                         <div className="text-red-600 flex items-center gap-1.5 text-xs font-semibold">
                                             <i className="fa-solid fa-circle text-[8px]"></i>
-                                            <span>chấp nhận</span>
+                                            <span>Bị từ chối</span>
                                         </div>
                                     )}
                                     {i.status === "OVERDUE_WARNING" && (

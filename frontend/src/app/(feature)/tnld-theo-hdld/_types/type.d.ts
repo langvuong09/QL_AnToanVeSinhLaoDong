@@ -2,6 +2,8 @@ export type SubmitForm = {
     title: string;
     year: number;
     reportTypeId: number;
+    status: string;
+    note: string;
 
     totalEmployees: number;
     femaleEmployees: number;
