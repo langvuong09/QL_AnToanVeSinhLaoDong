@@ -125,7 +125,7 @@ const TNLDTheoHDLDIdPage = () => {
                 m2TotalLeaveDays: Number(result.m2TotalLeaveDays) || 0,
                 m2TotalDamage: Number(result.m2TotalDamage) || 0,
 
-                fileIds: result.files?.map(f => ({ name: f.originalFilename, url: f.url })) ?? [],
+                fileIds: result.files?.map(f => ({ id: f.id, name: f.originalFilename, url: f.url })) ?? [],
             });
         } catch (error) {
             alert(error);
@@ -763,7 +763,8 @@ const TNLDTheoHDLDIdPage = () => {
             return;
         }
 
-        if (!selectedFile) {
+        const hasExistingFile = submitForm.fileIds && submitForm.fileIds.length > 0;
+        if (!selectedFile && !hasExistingFile) {
             setOptionReport("review-report");
             notificate?.showNotification({ type: "error", message: "Vui lòng tải file trước khi lưu" });
             return;
@@ -776,13 +777,17 @@ const TNLDTheoHDLDIdPage = () => {
             setIsLoading(true);
 
             const mediaCls = new Media();
-            const agreementCls = new Agreement()
-            const form = new FormData;
-            form.set("file", selectedFile);
-            form.set("fileType", "REPORT_ATTACHMENT");
+            const agreementCls = new Agreement();
 
-            const resMedia = await mediaCls.UploadImage(form);
-            const mediaD = resMedia.data!;
+            let finalFileIds: string[] = submitForm.fileIds?.map((f: any) => f.id).filter(Boolean) ?? [];
+
+            if (selectedFile) {
+                const form = new FormData();
+                form.set("file", selectedFile);
+                form.set("fileType", "REPORT_ATTACHMENT");
+                const resMedia = await mediaCls.UploadImage(form);
+                finalFileIds = [resMedia.data!.id];
+            }
 
             await agreementCls.UpdateReportForBussiness(id, {
                 title: submitForm.title,
@@ -856,7 +861,7 @@ const TNLDTheoHDLDIdPage = () => {
                 "m2TotalLeaveDays": submitForm.m2TotalLeaveDays,
                 "m2TotalDamage": submitForm.m2TotalDamage,
 
-                fileIds: [mediaD.id],
+                fileIds: finalFileIds,
                 status: "SUBMITTED",
             });
             notificate?.showNotification({ type: "success", message: "Cập nhật báo cáo thành công" });
@@ -1698,12 +1703,14 @@ const TNLDTheoHDLDIdPage = () => {
                                             label="Thiệt hại tài sản"
                                             require={true}
                                             input={{
-                                                type: "number",
-                                                value: submitForm.m2TotalDamage,
+                                                type: "text",
+                                                value: submitForm.m2TotalDamage.toLocaleString("vi-VN"),
                                                 onChange: (e) => {
-                                                    const num = Number(e.target.value);
-                                                    if (num < 0) return;
-                                                    setSubmitForm(prev => ({ ...prev, m2TotalDamage: num }));
+                                                    const value = e.target.value.replace(/\./g, "");
+                                                    const n = Number(value);
+
+                                                    if (Number.isNaN(n)) return;
+                                                    setSubmitForm(prev => ({ ...prev, m2TotalDamage: n }));
                                                 }
                                             }}
                                             isSmall={true}
