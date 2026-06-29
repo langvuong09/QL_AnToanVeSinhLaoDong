@@ -214,7 +214,7 @@ const TNLDTheoHDLDAdminPage = () => {
                 id: bus.id,
                 label: bus.name,
                 totalCases: matched.reduce((s, d) => s + Number(d.m1TotalCases) + Number(d.m2TotalCases), 0),
-                totalParticipate: matched.reduce((s, d) => s + (d.status === "SUBMITTED" ? 1 : 0), 0),
+                totalParticipate: matched.reduce((s, d) => s + ((d.status === "SUBMITTED" || d.status === "APPROVED") ? 1 : 0), 0),
                 totalEmployees,
                 totalEmployeesParticipate: 0,
                 femaleEmployees: matched.reduce((s, d) => s + Number(d.femaleEmployees), 0),
