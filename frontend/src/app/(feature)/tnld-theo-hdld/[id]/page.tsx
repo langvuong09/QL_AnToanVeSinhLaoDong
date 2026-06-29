@@ -48,6 +48,9 @@ const TNLDTheoHDLDIdPage = () => {
                 year: Number(result.year) || 0,
                 reportTypeId: Number(result.reportTypeId) || 0,
 
+                status: result.status,
+                note: result.note,
+
                 totalEmployees: Number(result.totalEmployees) || 0,
                 femaleEmployees: Number(result.femaleEmployees) || 0,
                 totalPayroll: Number(result.totalPayroll) || 0,
@@ -168,6 +171,10 @@ const TNLDTheoHDLDIdPage = () => {
         year: detail?.year! || 0,
         reportTypeId: detail?.reportTypeId || 0,
 
+        note: detail?.note || "",
+        status: detail?.status || "",
+
+
         totalEmployees: detail?.totalEmployees || 0,
         femaleEmployees: detail?.femaleEmployees || 0,
         totalPayroll: detail?.totalPayroll || 0,
@@ -253,10 +260,7 @@ const TNLDTheoHDLDIdPage = () => {
 
     useEffect(() => {
         if (!detail) return;
-        if (detail.status === "DRAFT" || detail.status === "REJECTED") {
-            return;
-        }
-        if (!(detail.status === "DRAFT") && !(detail.status === "REJECTED")) {
+        if (detail.status === "SUBMITTED" || detail.status === "APPROVED") {
             router.push(`/tnld-theo-hdld/view/${detail.id}`)
         }
     }, [detail]);
@@ -939,7 +943,7 @@ const TNLDTheoHDLDIdPage = () => {
 
 
 
-                            {detail?.status === "DRAFT" && (
+                            {detail?.status !== "SUBMITTED" && detail?.status !== "APPROVED" && (
                                 <>
                                     <button className="bg-green-600 px-4 py-2 flex items-center gap-1 border-2 border-green-600 text-white hover:bg-green-700 hover:border-green-700 rounded-lg transition-all"
                                         onClick={handleSave}
@@ -994,6 +998,16 @@ const TNLDTheoHDLDIdPage = () => {
                             <span className="text-sm font-semibold text-red-500">
                                 *** Lưu ý: Nhập tổng quỹ lương 6 tháng khi khai báo TNLĐ 6 tháng hoặc tổng quỹ lương 12 tháng khi khai báo TNLĐ cả năm
                             </span>
+
+                            {detail?.status === "REJECTED" && (
+                                <div className="bg-red-50 px-3 py-2 rounded text-sm text-red-600">
+                                    <p>Hồ sơ báo cáo của doanh nghiệp bạn đang bị từ chối</p>
+                                    <p>
+                                        <strong>Lý do:</strong>
+                                        <span>{detail.note}</span>
+                                    </p>
+                                </div>
+                            )}
 
                             <div className="mt-5 space-y-5">
                                 <div className="flex gap-10">
