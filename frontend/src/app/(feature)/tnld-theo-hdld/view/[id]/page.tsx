@@ -38,6 +38,9 @@ const TNLDTheoHDLDViewIdPage = () => {
                 year: Number(result.year) || 0,
                 reportTypeId: Number(result.reportTypeId) || 0,
 
+                status: result.status,
+                note: result.note,
+
                 totalEmployees: Number(result.totalEmployees) || 0,
                 femaleEmployees: Number(result.femaleEmployees) || 0,
                 totalPayroll: Number(result.totalPayroll) || 0,
@@ -263,7 +266,7 @@ const TNLDTheoHDLDViewIdPage = () => {
 
         setReport(record);
 
-    }, [accidents, traumas, jobs]);
+    }, [accidents, traumas, jobs, detail]);
 
     return (
         <main className="flex flex-col min-h-screen pb-10">
@@ -354,6 +357,16 @@ const TNLDTheoHDLDViewIdPage = () => {
                                 *** Lưu ý: Nhập tổng quỹ lương 6 tháng khi khai báo TNLĐ 6 tháng hoặc tổng quỹ lương 12 tháng khi khai báo TNLĐ cả năm
                             </span>
 
+                            {detail?.status === "REJECTED" && (
+                                <div className="bg-red-50 px-3 py-2 rounded text-sm text-red-600">
+                                    <p>Hồ sơ báo cáo của doanh nghiệp bạn đang bị từ chối</p>
+                                    <p>
+                                        <strong>Lý do:</strong>
+                                        <span>{detail.note}</span>
+                                    </p>
+                                </div>
+                            )}
+                            
                             <div className="mt-5 space-y-5">
                                 <div className="flex gap-10">
                                     <div className="flex-1">

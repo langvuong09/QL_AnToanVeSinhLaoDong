@@ -233,7 +233,7 @@ const TNLDTheoHDLDAdminPage = () => {
         record["tongquanloaihinhcoso"] = byBusinessType;
 
         setReport(record);
-    }, [accidents, traumas, jobs, businessTyppes]);
+    }, [accidents, traumas, jobs, businessTyppes, reports]);
 
     useEffect(() => {
         if (!provinceCodeSelected) return;
@@ -553,6 +553,7 @@ const TNLDTheoHDLDAdminPage = () => {
                                     placeholder: "Tìm tỉnh/thành phố",
                                     value: filters.province || provinceSearch,
                                     onChange: (event) => {
+                                        console.log(event)
                                         setProvinceSearch(event.target.value);
                                         setShowProvinceDropdown(true);
                                         setFilters(prev => ({ ...prev, province: event.target.value }));
@@ -577,7 +578,11 @@ const TNLDTheoHDLDAdminPage = () => {
                                         <li
                                             key={province.code}
                                             className="px-3 py-2 hover:bg-blue-50 cursor-pointer"
-                                            onMouseDown={() => handleSelectProvince(province)}
+                                            
+                                            onMouseDown={() => {
+                                                setFilters(prev => ({ ...prev, province: province.name }));
+                                                handleSelectProvince(province)
+                                            }}
                                         >
                                             {province.name}
                                         </li>
@@ -622,7 +627,10 @@ const TNLDTheoHDLDAdminPage = () => {
                                         <li
                                             key={ward.code}
                                             className="px-3 py-2 hover:bg-blue-50 cursor-pointer"
-                                            onMouseDown={() => handleSelectWard(ward)}
+                                            onMouseDown={() => {
+                                                setFilters(prev => ({ ...prev, ward: ward.name }));
+                                                handleSelectWard(ward)
+                                            }}
                                         >
                                             {ward.name}
                                         </li>

@@ -102,7 +102,7 @@ const TNLDTheoHDLDPage = () => {
                                 <button className="hover:text-primary transition-colors" onClick={() => route.push(`/tnld-theo-hdld/view/${i.id}`)}>
                                     <i className="fa-solid fa-eye text-xs"></i>
                                 </button>
-                                {i.status === "DRAFT" && (
+                                {i.status !== "SUBMITTED" && i.status !== "APPROVED" && (
                                     <button className="hover:text-primary transition-colors" onClick={() => route.push(`/tnld-theo-hdld/${i.id}`)}>
                                         <i className="fa-solid fa-pencil text-xs"></i>
                                     </button>
@@ -112,7 +112,7 @@ const TNLDTheoHDLDPage = () => {
                             <div className="flex-1 truncate">{i.doet.taxCode}</div>
                             <div className="flex-1">{i.reportType.period}</div>
                             <div className="flex-1">
-                                {(i.status === "DRAFT" || i.status === "REJECTED" || i.status === "OVERDUE_WARNING" || i.status === "OVERDUE") && (
+                                {(i.status === "DRAFT") && (
                                     <div className="text-gray-500 flex items-center gap-1.5 text-xs font-semibold">
                                         <i className="fa-solid fa-circle text-[8px]"></i>
                                         <span>Đang báo cáo</span>
