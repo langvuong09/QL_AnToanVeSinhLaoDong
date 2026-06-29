@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, IsDateString, IsObject, Matches } from 'class-validator';
 import { KeyValue } from 'src/commons/bases/baseAddressEntity';
+import { Transform } from 'class-transformer';
 
 export class CreateDoetDto {
   @ApiProperty({ example: 'Công ty Cổ phần Công nghệ Quốc tế VNA' })
@@ -22,6 +23,9 @@ export class CreateDoetDto {
 
   @ApiProperty({ example: '2020-01-01' })
   @IsNotEmpty()
+  @Transform(({ value }) => {
+    return value ? new Date(value).toISOString() : value;
+  })
   @IsDateString()
   issuedDate!: Date;
 
