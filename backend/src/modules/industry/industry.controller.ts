@@ -34,8 +34,9 @@ export class IndustryController {
   @ApiQuery({ name: 'code', required: false, description: 'Tìm chính xác hoặc gần đúng theo Mã ngành (Ví dụ: 01, 0111)' })
   @ApiQuery({ name: 'name', required: false, description: 'Tìm gần đúng theo Tên ngành nghề (Ví dụ: Trồng lúa)' })
   @ApiQuery({ name: 'level', required: false, enum: [1, 2, 3, 4], description: 'Lọc đích danh theo cấp bậc ngành (1 -> 4)' })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean, description: 'Lọc theo trạng thái hoạt động' })
   async getAllForAdmin(
-    @Query() query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number }
+    @Query() query: { page?: number; pageSize?: number; code?: string; name?: string; level?: number; isActive?: boolean }
   ) {
     return await this.industryService.getAllForAdmin(query);
   }
@@ -44,7 +45,6 @@ export class IndustryController {
   @Public()
   @RequirePermissions(PermissionCode.INDUSTRY_VIEW)
   @ApiOperation({ summary: 'Lấy danh sách ngành nghề đang hoạt động (Dành cho Doanh nghiệp)' })
-
   @ApiQuery({ name: 'page', required: false, example: 1, description: 'Số trang hiện tại' })
   @ApiQuery({ name: 'pageSize', required: false, example: 10, description: 'Số lượng bản ghi trên một trang' })
   @ApiQuery({ name: 'code', required: false, description: 'Tìm chính xác hoặc gần đúng theo Mã ngành' })
