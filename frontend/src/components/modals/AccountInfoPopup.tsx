@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+
 type AccountInfoPopupProps = {
   isOpen: boolean
   onClose: () => void
@@ -13,10 +16,18 @@ export default function AccountInfoPopup({
   accountNumber,
   password,
 }: AccountInfoPopupProps) {
-  if (!isOpen) return null
+  const [mounted, setMounted] = useState(false)
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50">
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
+
+  if (!isOpen) return null
+  if (!mounted) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
       <div className="w-[400px] bg-white rounded-xl shadow-2xl overflow-hidden animate-[fadeInScale_0.25s_ease-out]">
         {/* Header */}
         <div className="bg-primary px-6 py-4 text-center">
@@ -52,6 +63,8 @@ export default function AccountInfoPopup({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
+

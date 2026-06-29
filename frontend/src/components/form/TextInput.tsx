@@ -1,15 +1,15 @@
-import clsx from "clsx"
-import FormField from "./FormField"
+import { HTMLInputTypeAttribute } from "react"
+import InputLegend from "../InputLegend"
 
 type TextInputProps = {
-  label: string,
-  required?: boolean,
-  placeholder?: string,
-  classname?: string,
-  value?: string,
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void,
-  type?: string,
-  disabled?: boolean,
+  label: string
+  required?: boolean
+  placeholder?: string
+  classname?: string
+  value?: string
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  type?: string
+  disabled?: boolean
   error?: string
 }
 
@@ -25,25 +25,18 @@ export default function TextInput({
   error
 }: TextInputProps) {
   return (
-    <FormField
+    <InputLegend
       label={label}
-      required={required}
-      error={error}
-    >
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        className={clsx(
-          "outline-none ps-4 pt-1 py-2.5 w-full disabled:bg-gray-100 disabled:cursor-not-allowed",
-          {
-            "border-red-500": error
-          },
-          classname
-        )}
-      />
-    </FormField>
+      require={required}
+      errorMess={error}
+      input={{
+        type: type as HTMLInputTypeAttribute,
+        placeholder: placeholder,
+        value: value,
+        onChange: onChange,
+        disabled: disabled,
+        className: classname,
+      }}
+    />
   )
 }

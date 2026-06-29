@@ -60,7 +60,7 @@ const InputLegend = ({
                         input.onBlur?.(e);
                         setIsFocused(false);
                     }}
-                    placeholder={!label ? input.placeholder : ""}
+                    placeholder={!label ? input.placeholder : " "}
                     ref={inputRef}
                 />
 
