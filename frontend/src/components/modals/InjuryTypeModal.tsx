@@ -9,11 +9,11 @@ import Loading from '@/src/components/Loading'
 
 function getInjuryLevel(code: string): number {
   const clean = code.trim().toUpperCase().replace(/^INJ_/, '')
-  if (!clean) return 0
-  const parts = clean.split('_')
-  if (parts.some((p) => !/^\d+$/.test(p))) return 0
-  if (parts.length > 3) return 0
-  return parts.length
+  if (!clean || !/^\d+$/.test(clean)) return 0
+  if (clean.length >= 1 && clean.length <= 4) {
+    return clean.length
+  }
+  return 0
 }
 
 type InjuryTypeModalProps = {
@@ -47,6 +47,7 @@ export default function InjuryTypeModal({
   const requiredParentLevel = useMemo(() => {
     if (injuryLevel === 2) return 1
     if (injuryLevel === 3) return 2
+    if (injuryLevel === 4) return 3
     return null
   }, [injuryLevel])
 
@@ -69,13 +70,13 @@ export default function InjuryTypeModal({
     if (isLoading) return true
     if (injuryLevel === 1) return true
     if (injuryLevel === 0) return true
-    return injuryLevel < 2 || injuryLevel > 3
+    return injuryLevel < 2 || injuryLevel > 4
   }, [isLoading, injuryLevel])
 
   const parentSelectPlaceholder = useMemo(() => {
     if (injuryLevel === 0) return 'Vui lòng nhập mã số để chọn chấn thương cha'
     if (injuryLevel === 1) return 'Cấp 1 không yêu cầu chọn chấn thương cha'
-    if (injuryLevel > 3) return 'Mã số không hợp lệ'
+    if (injuryLevel > 4) return 'Mã số không hợp lệ'
     return `Chọn loại chấn thương cha cấp ${injuryLevel - 1}`
   }, [injuryLevel])
 
@@ -134,7 +135,7 @@ export default function InjuryTypeModal({
 
               <SearchableSelect
                 label="Loại chấn thương cha"
-                require={injuryLevel >= 2 && injuryLevel <= 3}
+                require={injuryLevel >= 2 && injuryLevel <= 4}
                 value={form.parentId}
                 options={parentOptions}
                 disabled={isParentSelectDisabled}

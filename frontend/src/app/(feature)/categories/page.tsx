@@ -39,11 +39,11 @@ function getJobLevel(code: string): number {
 
 function getInjuryLevel(code: string): number {
   const clean = code.trim().toUpperCase().replace(/^INJ_/, '')
-  if (!clean) return 0
-  const parts = clean.split('_')
-  if (parts.some((p) => !/^\d+$/.test(p))) return 0
-  if (parts.length > 3) return 0
-  return parts.length
+  if (!clean || !/^\d+$/.test(clean)) return 0
+  if (clean.length >= 1 && clean.length <= 4) {
+    return clean.length
+  }
+  return 0
 }
 
 function flattenTree<T extends { children?: T[]; level?: number; levelText?: string }>(items: T[]): T[] {
@@ -480,11 +480,13 @@ export default function GeneralCategoriesPage() {
       const clean = codeVal.toUpperCase().replace(/^INJ_/, '')
       if (!/^[a-zA-Z0-9_]+$/.test(codeVal)) {
         nextErrors.code = 'Mã số chỉ được chứa ký tự chữ, số và dấu gạch dưới'
+      } else if (!/^\d+$/.test(clean)) {
+        nextErrors.code = 'Mã số phải kết thúc bằng các chữ số (Ví dụ: INJ_01, INJ_11)'
       } else {
         const injuryLevel = getInjuryLevel(codeVal)
-        if (injuryLevel === 0 || injuryLevel > 3) {
-          nextErrors.code = 'Mã số không hợp lệ hoặc vượt quá cấp cho phép (tối đa Cấp 3)'
-        } else if (injuryLevel >= 2 && injuryLevel <= 3) {
+        if (injuryLevel === 0 || injuryLevel > 4) {
+          nextErrors.code = 'Mã số không hợp lệ hoặc vượt quá cấp cho phép (tối đa Cấp 4)'
+        } else if (injuryLevel >= 2 && injuryLevel <= 4) {
           if (!injuryForm.parentId) {
             nextErrors.parentId = `Loại chấn thương cha là bắt buộc cho mã số cấp ${injuryLevel}`
           }
@@ -963,7 +965,7 @@ export default function GeneralCategoriesPage() {
                   <option value="1">Cấp 1</option>
                   <option value="2">Cấp 2</option>
                   <option value="3">Cấp 3</option>
-                  {currentCategory === 'job' && <option value="4">Cấp 4</option>}
+                  {(currentCategory === 'job' || currentCategory === 'injury') && <option value="4">Cấp 4</option>}
                 </select>
               </div>
             )}
