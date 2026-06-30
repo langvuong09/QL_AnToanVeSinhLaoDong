@@ -258,7 +258,7 @@ const TNLDTheoHDLDAdminViewIdPage = () => {
 
         setReport(record);
 
-    }, [accidents, traumas, jobs]);
+    }, [accidents, traumas, jobs, detail]);
 
 
     return (

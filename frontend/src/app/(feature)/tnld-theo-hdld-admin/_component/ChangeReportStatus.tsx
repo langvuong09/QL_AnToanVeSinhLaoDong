@@ -3,6 +3,7 @@
 import { Agreement } from "@/src/api/Agreement";
 import InputLegend from "@/src/components/InputLegend";
 import SelectLegend from "@/src/components/SelectLegend";
+import { ConfirmContext } from "@/src/contexts/confirm/confirm";
 import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { useContext, useState } from "react";
 
@@ -14,6 +15,7 @@ type ChangeReportStatusProps = {
 
 const ChangeReportStatus = ({ ids, onSuccess, onClose }: ChangeReportStatusProps) => {
     const notificate = useContext(NotificateContext);
+    const confirm = useContext(ConfirmContext);
 
     const [submitForm, setSubmitForm] = useState<{
         status: string;
@@ -57,6 +59,9 @@ const ChangeReportStatus = ({ ids, onSuccess, onClose }: ChangeReportStatusProps
         }
 
         try {
+            const w = await confirm.waitConfirm();
+            if (!w) return;
+
             const cls = new Agreement();
             await cls.UpdateBulkStatus(ids, submitForm.status, submitForm.note);
             onSuccess(submitForm.status);
@@ -69,7 +74,7 @@ const ChangeReportStatus = ({ ids, onSuccess, onClose }: ChangeReportStatusProps
     }
 
     return (
-        <div className="fixed top-0 left-0 w-full h-screen bg-gray-800/50 flex justify-center items-center z-100 rounded overflow-hidden">
+        <div className="fixed top-0 left-0 w-full h-screen bg-gray-800/50 flex justify-center items-center z-50 rounded overflow-hidden">
             <div className="bg-white space-y-3">
                 <div className="text-center py-3 bg-blue-600 text-white font-semibold">
                     <h1>Thay đổi trạng thái</h1>
@@ -87,6 +92,7 @@ const ChangeReportStatus = ({ ids, onSuccess, onClose }: ChangeReportStatusProps
                                     }
                                 }}
                                 isSmall={false}
+                                errorMess={error.note}
                             />
                         </div>
                         <div>
