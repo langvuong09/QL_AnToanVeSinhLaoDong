@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
 import { ReportType } from './report-type.entity';
 import { CreateReportTypeDto } from './dto/create-report-type.dto';
 import { UpdateReportTypeDto } from './dto/update-report-type.dto';
@@ -21,7 +21,11 @@ export class ReportTypeService {
   ) {}
 
   async create(dto: CreateReportTypeDto, adminUser?: any) {
-    if (new Date(dto.startDate) > new Date(dto.endDate)) {
+    const startDate = new Date(dto.startDate);
+    const endDate = new Date(dto.endDate);
+    const now = new Date(); // Lấy thời gian hiện tại
+
+    if (startDate > endDate) {
       throw new BadRequestException(
         'Thời gian bắt đầu không thể lớn hơn thời gian kết thúc!',
       );
@@ -35,33 +39,36 @@ export class ReportTypeService {
       const newConfig = queryRunner.manager.create(ReportType, dto);
       const savedConfig = await queryRunner.manager.save(ReportType, newConfig);
 
-      const activeCompanies = await queryRunner.manager.find(Doet, {
-        where: { status: true, deletedAt: IsNull() },
-        select: { id: true },
-      });
+      // CHỈ SINH BÁO CÁO NẾU NGÀY BẮT ĐẦU <= NGÀY HIỆN TẠI
+      if (startDate <= now) {
+        const activeCompanies = await queryRunner.manager.find(Doet, {
+          where: { status: true, deletedAt: IsNull() },
+          select: { id: true },
+        });
 
-      if (activeCompanies.length > 0) {
-        const warningThresholdDate = new Date();
-        warningThresholdDate.setDate(warningThresholdDate.getDate() + 5);
+        if (activeCompanies.length > 0) {
+          const warningThresholdDate = new Date();
+          warningThresholdDate.setDate(warningThresholdDate.getDate() + 5);
 
-        const initialStatus =
-          new Date(savedConfig.endDate) <= warningThresholdDate
-            ? ReportStatus.OVERDUE_WARNING
-            : ReportStatus.DRAFT;
+          const initialStatus =
+            endDate <= warningThresholdDate
+              ? ReportStatus.OVERDUE_WARNING
+              : ReportStatus.DRAFT;
 
-        const autoReports = activeCompanies.map((company) =>
-          queryRunner.manager.create(Report, {
-            title: `Báo cáo định kỳ - ${savedConfig.name} (Tự động khởi tạo)`,
-            year: savedConfig.year,
-            note: "",
-            status: initialStatus,
-            reportTypeId: savedConfig.id,
-            doetId: company.id,
-            details: [],
-          }),
-        );
+          const autoReports = activeCompanies.map((company) =>
+            queryRunner.manager.create(Report, {
+              title: `Báo cáo định kỳ - ${savedConfig.name} (Tự động khởi tạo)`,
+              year: savedConfig.year,
+              note: '',
+              status: initialStatus,
+              reportTypeId: savedConfig.id,
+              doetId: company.id,
+              details: [],
+            }),
+          );
 
-        await queryRunner.manager.insert(Report, autoReports);
+          await queryRunner.manager.insert(Report, autoReports);
+        }
       }
 
       await queryRunner.commitTransaction();
@@ -108,6 +115,7 @@ export class ReportTypeService {
     try {
       Object.assign(config, dto);
       const savedConfig = await queryRunner.manager.save(ReportType, config);
+
       if (dto.endDate) {
         const warningThresholdDate = new Date();
         warningThresholdDate.setDate(warningThresholdDate.getDate() + 5);
@@ -115,13 +123,19 @@ export class ReportTypeService {
         if (finalEndDate <= warningThresholdDate) {
           await queryRunner.manager.update(
             Report,
-            { reportTypeId: id, status: ReportStatus.DRAFT },
+            {
+              reportTypeId: id,
+              status: In([ReportStatus.DRAFT, ReportStatus.OVERDUE]),
+            },
             { status: ReportStatus.OVERDUE_WARNING },
           );
         } else {
           await queryRunner.manager.update(
             Report,
-            { reportTypeId: id, status: ReportStatus.OVERDUE_WARNING },
+            {
+              reportTypeId: id,
+              status: In([ReportStatus.OVERDUE_WARNING, ReportStatus.OVERDUE]),
+            },
             { status: ReportStatus.DRAFT },
           );
         }
@@ -191,10 +205,13 @@ export class ReportTypeService {
     }
 
     if (startDate && endDate) {
-      queryBuilder.andWhere('rt.startDate <= :endDate AND rt.endDate >= :startDate', { 
-        startDate, 
-        endDate 
-      });
+      queryBuilder.andWhere(
+        'rt.startDate <= :endDate AND rt.endDate >= :startDate',
+        {
+          startDate,
+          endDate,
+        },
+      );
     } else if (startDate) {
       queryBuilder.andWhere('rt.endDate >= :startDate', { startDate });
     } else if (endDate) {
