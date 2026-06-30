@@ -244,6 +244,7 @@ export class ReportService {
     .leftJoinAndSelect('r.statusHistories', 'sh')
     .leftJoinAndSelect('sh.user', 'user');
 
+    qb.andWhere('rt.isActive = :isActive', { isActive: true });
     if (query.year) {
       qb.andWhere('r.year = :year', { year: Number(query.year) });
     }
