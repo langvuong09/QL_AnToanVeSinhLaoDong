@@ -1,17 +1,19 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, In, IsNull } from 'typeorm'; // Thêm IsNull ở đây
+import { Repository, Not, In, IsNull, DataSource } from 'typeorm'; // Thêm IsNull ở đây
 
 import Response from '../../commons/response';
 import { Industry } from '../industry/industry.entity';
 import { CreateIndustryDto } from '../industry/dto/create-industry.dto';
 import { UpdateIndustryDto } from '../industry/dto/update-industry.dto';
+import { Doet } from '../doet/doet.entity';
 
 @Injectable()
 export class IndustryService {
   constructor(
     @InjectRepository(Industry)
     private readonly industryRepository: Repository<Industry>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(dto: CreateIndustryDto) {
@@ -232,16 +234,20 @@ export class IndustryService {
     if (!ids || ids.length === 0) {
       throw new BadRequestException('Danh sách ID cần xóa không được để trống');
     }
+
     const existing = await this.industryRepository.findBy({ 
       id: In(ids), 
       deletedAt: IsNull() 
     });
+
     if (existing.length === 0) {
       throw new NotFoundException('Không tìm thấy ngành nghề nào hợp lệ để tiến hành xóa');
     }
+
     const allIndustries = await this.industryRepository.find({ 
       where: { deletedAt: IsNull() } 
     });
+    
     const finalIdsToDelete = new Set<number>(ids);
 
     const collectChildrenIdsRecursive = (parentIds: number[]) => {
@@ -254,7 +260,19 @@ export class IndustryService {
     };
 
     collectChildrenIdsRecursive(ids);
-    await this.industryRepository.softDelete(Array.from(finalIdsToDelete));
+    const idsToDeleteArray = Array.from(finalIdsToDelete);
+
+    const isUsedByDoet = await this.dataSource.getRepository(Doet).findOne({
+      where: { industryId: In(idsToDeleteArray) },
+    });
+
+    if (isUsedByDoet) {
+      throw new BadRequestException(
+        'Không thể xóa! Có ngành nghề (hoặc ngành nghề con) đang được liên kết với dữ liệu doanh nghiệp.',
+      );
+    }
+
+    await this.industryRepository.softDelete(idsToDeleteArray);
     return Response.SUCCESSFULLY;
   }
 }
