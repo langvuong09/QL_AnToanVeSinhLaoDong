@@ -15,6 +15,19 @@ const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
     const handlePrint = useReactToPrint({
         contentRef: reportRef,
         documentTitle: "BaoCaoTNLD",
+        pageStyle: `
+        @page {
+            size: A4;
+            margin: 10mm 5mm;
+        }
+        @media print {
+            * {
+                font-family: "Times New Roman", Times, serif !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    `,
     });
 
     return (
