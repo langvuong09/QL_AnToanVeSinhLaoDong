@@ -684,6 +684,14 @@ const TNLDTheoHDLDIdPage = () => {
                     detailErrors["totalDamage"] = `${label}: Thiệt hại tài sản phải từ 1.000đ trở lên`;
                 }
 
+                if (detail.femaleVictims > detail.totalVictims) {
+                    detailErrors["femaleVictims"] = `${label}: Số nhân lao động nữ bị tai nạn nhỏ hơn tổng người bị nạn`;
+                }
+
+                if (detail.nonManagedFemaleVictims > detail.nonManagedVictims) {
+                    detailErrors["nonManagedFemaleVictims"] = `${label}: Số nhân lao động nữ bị tai nạn  KQLnhỏ hơn tổng người bị nạn`;
+                }
+
                 if (Object.keys(detailErrors).length > 0) {
                     errors.details = [
                         ...(errors.details ?? []),
@@ -706,7 +714,7 @@ const TNLDTheoHDLDIdPage = () => {
         }
 
         // 3. BÁO CÁO TAI NẠN LAO ĐỘNG ĐIỀU KHÁC (Mục 2)
-        if (submitForm.m2TotalCases > 0) {
+        if (true) {
             // Thông tin số vụ & nạn nhân
             // if (submitForm.m2FatalCases < 0) {
             //     errors["m2FatalCases"] = "Số vụ có người chết không hợp lệ";
@@ -727,6 +735,16 @@ const TNLDTheoHDLDIdPage = () => {
             //     errors["m2FemaleVictims"] = "Vui lòng nhập tổng số lao động nữ bị nạn";
             //     hasError = true;
             // }
+
+            if (submitForm.m2FemaleVictims > submitForm.m2TotalVictims) {
+                errors["m2FemaleVictims"] = "Số lao động nữ bị nạn không được lớn hơn tổng số người bị nạn";
+                hasError = true;
+            }
+
+            if (submitForm.m2NonManagedFemaleVictims > submitForm.m2NonManagedVictims) {
+                errors["m2NonManagedFemaleVictims"] = "Số lao động nữ bị nạn không được lớn hơn tổng số người bị nạn";
+                hasError = true;
+            }
 
             if (submitForm.m2FemaleVictims > submitForm.m2TotalVictims) {
                 errors["m2FemaleVictims"] = "Số lao động nữ bị nạn không được lớn hơn tổng số người bị nạn";
@@ -764,6 +782,7 @@ const TNLDTheoHDLDIdPage = () => {
             setOptionReport("option-2");
             const firstError = Object.values(errors)[0];
             notificate?.showNotification({ type: "error", message: firstError });
+            setError(errors);
             return;
         }
 
@@ -776,7 +795,9 @@ const TNLDTheoHDLDIdPage = () => {
 
         try {
             const cf = await confirm.waitConfirm();
-            if (!cf) return;
+            if (!cf) {
+                return;
+            }
 
             setIsLoading(true);
 
@@ -1500,6 +1521,7 @@ const TNLDTheoHDLDIdPage = () => {
                                                 }
                                             }}
                                             isSmall={true}
+                                            errorMess={error?.m2FemaleVictims}
                                         />
                                     </div>
                                     <div className="flex-1">
@@ -1565,7 +1587,7 @@ const TNLDTheoHDLDIdPage = () => {
                                     </div>
                                     <div className="flex-1">
                                         <InputLegend
-                                            label="Số lao đọng nữ bị nạn không QL"
+                                            label="Số lao động nữ bị nạn không QL"
                                             require={true}
                                             input={{
                                                 type: "number",
@@ -1576,6 +1598,7 @@ const TNLDTheoHDLDIdPage = () => {
                                                     setSubmitForm(prev => ({ ...prev, m2NonManagedFemaleVictims: num }));
                                                 }
                                             }}
+                                            errorMess={error?.m2NonManagedFemaleVictims}
                                             isSmall={true}
                                         />
                                     </div>

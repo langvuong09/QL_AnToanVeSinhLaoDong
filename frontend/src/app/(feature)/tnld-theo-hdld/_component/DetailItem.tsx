@@ -26,7 +26,8 @@ type DetailItemProps = {
 const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, traumas, jobs, errors, clearError, isDisable }: DetailItemProps) => {
     const [isOpen, setIsOpen] = useState(true);
 
-    console.log(onChangDetail === null)
+    console.log(onChangDetail === null);
+    console.log(errors)
 
     return (
         <div className="space-y-4 px-2 border-b pb-5 border-gray-300">
@@ -198,6 +199,7 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                             }
                                         }}
                                         isSmall={true}
+                                        errorMess={errors?.femaleVictims}
                                     />
                                 </div>
                                 <div className="flex-1">
@@ -271,6 +273,7 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                             }
                                         }}
                                         isSmall={true}
+                                        errorMess={errors?.nonManagedFemaleVictims}
                                     />
                                 </div>
                                 <div className="flex-1">
