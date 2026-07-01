@@ -31,7 +31,7 @@ export class Accident extends Base {
         const result = await this.execute<IAccidentCauseListResponse>({
             url: "/admin",
             method: "GET",
-            params: { page: 1, pageSize: 1000 },
+            params: { page: 1, pageSize: 1000, isActive: true },
         });
         return result.data?.items || [];
     }

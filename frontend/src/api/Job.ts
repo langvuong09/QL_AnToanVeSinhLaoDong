@@ -38,6 +38,7 @@ export class Job extends Base {
             params: {
                 page: 1,
                 pageSize: 1000,
+                isActive: true
             }
         });
         return result.data?.items || [];
