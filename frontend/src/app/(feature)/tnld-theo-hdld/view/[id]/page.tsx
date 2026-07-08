@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import DetailItem from "../../_component/DetailItem";
 import { SubmitForm } from "../../_types/type";
 import ViewReport from "../../_component/ViewReport";
+import { AgreementTable } from "@/src/api/types/agreement";
 
 type OptionReport = "business-info" | "option-1" | "option-2" | "review-report";
 
@@ -27,12 +28,14 @@ const TNLDTheoHDLDViewIdPage = () => {
     }
 
     const [detail, setDetail] = useState<SubmitForm>();
+    const [agg, setAgg] = useState<AgreementTable>();
+
     const fetchDetail = async () => {
         if (!id) return;
         try {
             const cls = new Agreement();
             const result = await cls.GetFeTableById(Array.isArray(id) ? id[0] : id);
-
+            setAgg(result);
             setDetail({
                 title: result.title || "",
                 year: Number(result.year) || 0,
@@ -272,7 +275,7 @@ const TNLDTheoHDLDViewIdPage = () => {
         <main className="flex flex-col min-h-screen pb-10">
             {isPrint && (
                 <div className="fixed top-0 left-0 w-full h-screen bg-gray-800/50 z-100 flex justify-center py-10">
-                    <ViewReport submitForm={detail!} report={report!} onClose={() => setIsPrint(false)} />
+                    <ViewReport submitForm={detail!} report={report!} onClose={() => setIsPrint(false)} detail={agg} />
                 </div>
             )}
 

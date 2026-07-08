@@ -104,6 +104,7 @@ export default function ReportPeriodsPage() {
     <main className="h-screen flex flex-col py-2">
       {isClickedCreate && (
         <CreateReport
+          reports={items}
           onClose={() => setIsClickedCreate(false)}
           onSuccess={(e) => {
             setIsClickedCreate(false);
