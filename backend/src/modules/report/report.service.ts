@@ -195,33 +195,40 @@ export class ReportService {
   }
 
   async changeStatusBulk(dto: BulkUpdateStatusDto, user: any) {
-    const { ids, status, note } = dto;
+    const { items, status } = dto;
 
-    if (!ids || ids.length === 0) {
-      throw new BadRequestException(
-        'Danh sách ID báo cáo không được để trống!',
-      );
+    if (!items || items.length === 0) {
+      throw new BadRequestException('Danh sách báo cáo không được để trống!');
     }
 
+    const ids = items.map((item) => item.id);
     const reports = await this.reportRepository.findBy({ id: In(ids) });
+    
     if (reports.length === 0) {
-      throw new NotFoundException(
-        'Không tìm thấy báo cáo nào khớp với danh sách ID đã cung cấp!',
-      );
+      throw new NotFoundException('Không tìm thấy báo cáo nào hợp lệ!');
     }
 
     await this.dataSource.transaction(async (manager) => {
-      reports.forEach((report) => {
+      const histories: StatusHistory[] = [];
+
+      for (const report of reports) {
+        const item = items.find((i) => i.id === report.id);
+        
         report.status = status;
-        report.note = note || report.note;
-      });
-      await manager.save(Report, reports);
+        if (item?.note !== undefined) {
+          report.note = item.note;
+        }
+
+        await manager.save(Report, report);
+      }
+
+      await manager.save(StatusHistory, histories);
     });
 
     return Response.get({
-      message: `Cập nhật trạng thái hàng loạt thành công cho ${reports.length} báo cáo.`,
+      message: `Cập nhật thành công ${reports.length} báo cáo.`,
       updatedCount: reports.length,
-      affectedIds: reports.map((r) => r.id),
+      affectedIds: ids,
     });
   }
 
