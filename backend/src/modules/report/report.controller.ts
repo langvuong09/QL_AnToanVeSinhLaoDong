@@ -38,8 +38,7 @@ export class ReportController {
   @Put('bulk/status')
   @RequirePermissions(PermissionCode.REPORT_CHANGE_STATUS)
   @ApiOperation({
-    summary:
-      '🎯 Duyệt/Thay đổi trạng thái hàng loạt cho nhiều báo cáo cùng lúc',
+    summary: '🎯 Duyệt/Thay đổi trạng thái hàng loạt, mỗi báo cáo có ghi chú riêng',
   })
   async changeStatusBulk(
     @Body() dto: BulkUpdateStatusDto,
