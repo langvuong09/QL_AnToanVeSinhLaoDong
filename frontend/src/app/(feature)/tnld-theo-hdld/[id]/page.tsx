@@ -913,7 +913,7 @@ const TNLDTheoHDLDIdPage = () => {
 
             {isPrint && (
                 <div className="fixed top-0 left-0 w-full h-screen bg-gray-800/50 z-100 flex justify-center py-10">
-                    <ViewReport submitForm={submitForm} report={report!} onClose={() => setIsPrint(false)} />
+                    <ViewReport submitForm={submitForm} report={report!} onClose={() => setIsPrint(false)} detail={detail} />
                 </div>
             )}
 
@@ -977,7 +977,7 @@ const TNLDTheoHDLDIdPage = () => {
                                         onClick={handleSubmit}
                                     >
                                         <i className="fa-solid fa-floppy-disk"></i>
-                                        <span>Lưu</span>
+                                        <span>Lưu và Gửi</span>
                                     </button>
                                 </>
                             )}
@@ -1161,6 +1161,7 @@ const TNLDTheoHDLDIdPage = () => {
                                                 input={{
                                                     type: "number",
                                                     value: submitForm.m1TotalCases,
+                                                    disabled: true,
                                                     onChange: (e) => {
                                                         const num = Number(e.target.value);
                                                         if (num < 0) return;

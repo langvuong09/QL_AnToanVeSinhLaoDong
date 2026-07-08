@@ -5,8 +5,8 @@ import { useState } from "react";
 import { Detail } from "../_types/type";
 import { JobDto, } from "@/src/api/types/job";
 import { AccidentDto } from "@/src/api/types/accident";
-import SelectInputLengend from "@/src/components/SelectInputLengend";
 import { TraumaDto } from "@/src/api/types/trauma";
+import SelectLegend from "@/src/components/SelectLegend";
 
 type DetailItemProps = {
     detail: Detail;
@@ -47,21 +47,25 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                 1. Phân theo nguyên nhân xảy ra TNLĐ
                             </label>
                             <div className="mt-1">
-                                <SelectInputLengend
-                                    inputLengend={{
-                                        input: {
-                                            disabled: isDisable
-                                        },
-                                        errorMess: errors?.causeId,
-                                    }}
-                                    onChange={(e) => {
-                                        onChangDetail?.(detail.idx, "causeId", e.key);
-                                        clearError?.(detail.idx, "causeId");
-                                    }}
-                                    value={accidents?.find(v => v.id == detail.causeId)?.name || ""}
-                                    items={accidents?.map(t => ({ key: t.id.toString(), value: t.name })) || []}
+                                <SelectLegend
                                     isSmall={true}
-                                />
+                                    errorMess={errors?.causeId}
+                                    select={{
+                                        value: detail.causeId?.toString() ?? "",
+                                        disabled: isDisable,
+                                        onChange: (e) => {
+                                            onChangDetail?.(detail.idx, "causeId", e.target.value);
+                                            clearError?.(detail.idx, "causeId");
+                                        }
+                                    }}
+                                >
+                                    {/* <option value="">-- Chọn --</option> */}
+                                    {accidents?.map((item) => (
+                                        <option key={item.id} value={item.id.toString()}>
+                                            {item.name}
+                                        </option>
+                                    ))}
+                                </SelectLegend>
                             </div>
                         </div>
                         <div className="flex-1">
@@ -70,21 +74,25 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                             </label>
 
                             <div className="mt-1">
-                                <SelectInputLengend
-                                    inputLengend={{
-                                        input: {
-                                            disabled: isDisable
-                                        },
-                                        errorMess: errors?.traumaId
-                                    }}
-                                    onChange={(e) => {
-                                        onChangDetail?.(detail.idx, "traumaId", e.key);
-                                        clearError?.(detail.idx, "traumaId");
-                                    }}
-                                    value={traumas?.find(v => v.id == detail.traumaId)?.name || ""}
-                                    items={traumas?.map(t => ({ key: t.id.toString(), value: t.name })) || []}
+                                <SelectLegend
                                     isSmall={true}
-                                />
+                                    errorMess={errors?.traumaId}
+                                    select={{
+                                        value: detail.traumaId?.toString() ?? "",
+                                        disabled: isDisable,
+                                        onChange: (e) => {
+                                            onChangDetail?.(detail.idx, "traumaId", e.target.value);
+                                            clearError?.(detail.idx, "traumaId");
+                                        }
+                                    }}
+                                >
+                                    {/* <option value="">-- Chọn --</option> */}
+                                    {traumas?.map((item) => (
+                                        <option key={item.id} value={item.id.toString()}>
+                                            {item.name}
+                                        </option>
+                                    ))}
+                                </SelectLegend>
                             </div>
                         </div>
                         <div className="flex-1"></div>
@@ -96,21 +104,25 @@ const DetailItem = ({ detail, onChangDetail, handleDeleteDetail, accidents, trau
                                 3. Phân theo nghề nghiệp
                             </label>
                             <div className="mt-1">
-                                <SelectInputLengend
-                                    inputLengend={{
-                                        input: {
-                                            disabled: isDisable
-                                        },
-                                        errorMess: errors?.jobId
-                                    }}
-                                    onChange={(e) => {
-                                        onChangDetail?.(detail.idx, "jobId", e.key);
-                                        clearError?.(detail.idx, "jobId");
-                                    }}
-                                    value={jobs?.find(v => v.id == detail.jobId)?.name || ""}
-                                    items={jobs?.map(t => ({ key: t.id.toString(), value: t.name })) || []}
+                                <SelectLegend
                                     isSmall={true}
-                                />
+                                    errorMess={errors?.jobId}
+                                    select={{
+                                        value: detail.jobId?.toString() ?? "",
+                                        disabled: isDisable,
+                                        onChange: (e) => {
+                                            onChangDetail?.(detail.idx, "jobId", e.target.value);
+                                            clearError?.(detail.idx, "jobId");
+                                        }
+                                    }}
+                                >
+                                    {/* <option value="">-- Chọn --</option> */}
+                                    {jobs?.map((item) => (
+                                        <option key={item.id} value={item.id.toString()}>
+                                            {item.name}
+                                        </option>
+                                    ))}
+                                </SelectLegend>
                             </div>
                         </div>
                         <div className="flex-1"></div>

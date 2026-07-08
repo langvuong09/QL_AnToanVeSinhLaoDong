@@ -26,7 +26,7 @@ const TNLDTheoHDLDAdminPage = () => {
         businessName: "",
         taxCode: "",
         period: "",
-        status: "",
+        status: "SUBMITTED",
         year: now.getFullYear(),
 
         province: "",
@@ -276,9 +276,35 @@ const TNLDTheoHDLDAdminPage = () => {
     };
 
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [selectedStatus, setSelectedStatus] = useState<string>("");
     const [isChange, setIsChange] = useState<boolean>(false);
 
     const [isPrintSummary, setIsSummary] = useState<boolean>(false);
+
+    const handleToggleSelectReport = (report: AgreementTable, checked: boolean) => {
+        if (report.status !== "SUBMITTED") return;
+
+        setSelectedIds(prev => {
+            if (!checked) {
+                const nextIds = prev.filter(id => id !== report.id);
+                if (nextIds.length === 0) {
+                    setSelectedStatus("");
+                }
+                return nextIds;
+            }
+
+            if (prev.length === 0) {
+                setSelectedStatus(report.status);
+                return [report.id];
+            }
+
+            if (selectedStatus !== report.status) {
+                return prev;
+            }
+
+            return prev.includes(report.id) ? prev : [...prev, report.id];
+        });
+    };
 
     return (
         <main className="h-screen flex flex-col py-2">
@@ -578,7 +604,7 @@ const TNLDTheoHDLDAdminPage = () => {
                                         <li
                                             key={province.code}
                                             className="px-3 py-2 hover:bg-blue-50 cursor-pointer"
-                                            
+
                                             onMouseDown={() => {
                                                 setFilters(prev => ({ ...prev, province: province.name }));
                                                 handleSelectProvince(province)
@@ -650,9 +676,19 @@ const TNLDTheoHDLDAdminPage = () => {
                     <div className="shrink-0 px-5 py-3 bg-gray-100 space-y-3">
                         <div className="flex font-semibold gap-5 text-xs text-gray-500">
                             <div className="flex-1 text-center flex items-center gap-3">
-                                <input type="checkbox" onChange={(e) => {
-                                    setSelectedIds(e.target.checked ? reports.map(r => r.id) : []);
-                                }} />
+                                <input
+                                    type="checkbox"
+                                    checked={reports.filter(r => r.status === "SUBMITTED").length > 0 && reports.filter(r => r.status === "SUBMITTED").every(r => selectedIds.includes(r.id))}
+                                    onChange={(e) => {
+                                        const submitIds = reports.filter(r => r.status === "SUBMITTED").map(r => r.id);
+                                        if (e.target.checked) {
+                                            setSelectedIds(submitIds);
+                                            setSelectedStatus("SUBMITTED");
+                                        } else {
+                                            setSelectedIds([]);
+                                            setSelectedStatus("");
+                                        }
+                                    }} />
                                 <span>Thao tác</span>
                             </div>
                             <div className="flex-3">Tên doanh nghiệp</div>
@@ -739,13 +775,13 @@ const TNLDTheoHDLDAdminPage = () => {
                         {reports.map((i) => (
                             <div key={i.id} className="flex items-center gap-5 py-2.5 border-b border-gray-100 hover:bg-blue-50/40 transition-colors text-sm text-gray-700">
                                 <div className="flex-1 flex items-center justify-start gap-4 text-gray-400">
-                                    <input type="checkbox" checked={selectedIds.includes(i.id)} onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setSelectedIds(prev => [...prev, i.id]);
-                                        } else {
-                                            setSelectedIds(prev => prev.filter(p => p !== i.id));
-                                        }
-                                    }} />
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.includes(i.id)}
+                                        disabled={i.status !== "SUBMITTED" || (selectedStatus !== "" && selectedStatus !== i.status)}
+                                        onChange={(e) => {
+                                            handleToggleSelectReport(i, e.target.checked);
+                                        }} />
                                     <button onClick={() => {
                                         router.push(`/tnld-theo-hdld-admin/view/${i.id}`)
                                     }}>

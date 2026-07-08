@@ -109,12 +109,12 @@ const ChangeReportStatus = ({ ids, onSuccess, onClose }: ChangeReportStatusProps
                                 isSmall={false}
                             >
                                 <option value="">Trạng thái</option>
-                                <option value="DRAFT">Đang báo cáo</option>
-                                <option value="SUBMITTED">Đã nộp</option>
+                                {/* <option value="DRAFT">Đang báo cáo</option> */}
+                                {/* <option value="SUBMITTED">Đã nộp</option> */}
                                 <option value="APPROVED">Được chấp nhận</option>
                                 <option value="REJECTED">Bị từ chối</option>
-                                <option value="OVERDUE_WARNING">Cảnh báo hết hạn</option>
-                                <option value="OVERDUE">Đã hết hạn nộp</option>
+                                {/* <option value="OVERDUE_WARNING">Cảnh báo hết hạn</option> */}
+                                {/* <option value="OVERDUE">Đã hết hạn nộp</option> */}
                             </SelectLegend>
                         </div>
                     </div>

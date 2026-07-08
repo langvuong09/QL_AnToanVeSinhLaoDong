@@ -1,7 +1,5 @@
 import { useContext, useState } from "react";
 import DatePicker from "./DateLengend";
-import InputLegend from "./InputLegend";
-import SelectInputLengend from "./SelectInputLengend";
 import SelectLegend from "./SelectLegend";
 import YearInputLengend from "./YearInputLengend";
 import { ReportType } from "../api/ReportType";
@@ -11,9 +9,10 @@ import { Report } from "../api/types/report-type";
 type CreateReportProps = {
     onClose: () => void;
     onSuccess: (v: Report) => void;
+    reports?: Report[];
 }
 
-const CreateReport = ({ onClose, onSuccess }: CreateReportProps) => {
+const CreateReport = ({ onClose, onSuccess, reports }: CreateReportProps) => {
     const notificate = useContext(NotificateContext);
 
     const [submitForm, setSubmitForm] = useState<{
@@ -24,9 +23,9 @@ const CreateReport = ({ onClose, onSuccess }: CreateReportProps) => {
         endDate: string;
         isActive: boolean
     }>({
-        name: "",
+        name: "Báo cáo TNLĐ",
         year: Number(new Date().getFullYear()),
-        period: "",
+        period: "6 tháng",
         startDate: "",
         endDate: "",
         isActive: true
@@ -47,7 +46,7 @@ const CreateReport = ({ onClose, onSuccess }: CreateReportProps) => {
     });
 
     const period = [
-        "3 tháng", "6 tháng", "9 tháng", "Cả năm"
+        "6 tháng", "Cả năm"
     ];
 
     const onSubmit = async () => {
@@ -110,10 +109,48 @@ const CreateReport = ({ onClose, onSuccess }: CreateReportProps) => {
             //     newErrors.startDate = "Ngày bắt đầu không được nhỏ hơn ngày hiện tại";
             //     hasError = true;
             // }
+        
+            const existingSameYear = (reports || []).filter(r => r.year === submitForm.year && r.isActive === true);
+
+            if (existingSameYear.length >= 2) {
+                newErrors.period = `Năm ${submitForm.year} đã có 2 kỳ báo cáo`;
+                hasError = true;
+            }
+
+            const duplicatePeriod = existingSameYear.find(r => r.period === submitForm.period);
+            if (duplicatePeriod) {
+                newErrors.period = `Kỳ báo cáo "${submitForm.period}" đã tồn tại cho năm ${submitForm.year}`;
+                hasError = true;
+            }
+
+            // Prevent overlapping date ranges with existing periods in the same year
+            if (submitForm.startDate && submitForm.endDate) {
+                const newStart = new Date(submitForm.startDate);
+                const newEnd = new Date(submitForm.endDate);
+                newStart.setHours(0,0,0,0);
+                newEnd.setHours(0,0,0,0);
+
+                for (const r of existingSameYear) {
+                    // skip if same exact period (already handled) or missing dates
+                    if (!r.startDate || !r.endDate) continue;
+                    const exStart = new Date(r.startDate);
+                    const exEnd = new Date(r.endDate);
+                    exStart.setHours(0,0,0,0);
+                    exEnd.setHours(0,0,0,0);
+
+                    // Overlap if newStart < exEnd && newEnd > exStart
+                    if (newStart < exEnd && newEnd > exStart) {
+                        newErrors.startDate = "Thời gian bắt đầu trùng với kỳ báo cáo khác";
+                        newErrors.endDate = "Thời gian kết thúc trùng với kỳ báo cáo khác";
+                        hasError = true;
+                        break;
+                    }
+                }
+            }
         }
 
         if (hasError) {
-            notificate?.showNotification({ type: "error", message: "Vui lòng kiểm tra lại thông tin"});
+            notificate?.showNotification({ type: "error", message: "Vui lòng kiểm tra lại thông tin" });
             setError(newErrors);
             return;
         }
@@ -142,25 +179,20 @@ const CreateReport = ({ onClose, onSuccess }: CreateReportProps) => {
                 </div>
                 <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2">
-                        <SelectInputLengend
-                            inputLengend={{
-                                label: "Tên báo cáo",
-                                require: true,
-                                input: {},
-                                errorMess: error.name
-                            }}
-                            freeInput={true}
-                            onChange={(e) => {
-                                setSubmitForm(prev => ({ ...prev, name: e.value }));
-                                setError(prev => ({ ...prev, name: "" }));
-                            }}
-                            items={[
-                                {
-                                    key: "Báo cáo TNLĐ",
-                                    value: "Báo cáo TNLD"
+                        <SelectLegend
+                            label="Tên báo cáo"
+                            require={true}
+                            select={{
+                                value: submitForm.name,
+                                onChange: (e) => {
+                                    setSubmitForm(prev => ({ ...prev, name: e.target.value }));
+                                    setError(prev => ({ ...prev, name: "" }));
                                 }
-                            ]}
-                        />
+                            }}
+                            errorMess={error.name}
+                        >
+                            <option value={"Báo cáo TNLĐ"}>Báo cáo TNLĐ</option>
+                        </SelectLegend>
                     </div>
                     <div className="col-span-1">
                         <YearInputLengend
@@ -178,20 +210,23 @@ const CreateReport = ({ onClose, onSuccess }: CreateReportProps) => {
                             }} />
                     </div>
                     <div className="col-span-1">
-                        <SelectInputLengend
-                            inputLengend={{
-                                label: "Kỳ báo cáo",
-                                require: true,
-                                input: {},
-                                errorMess: error.period
-                            }}
-                            freeInput={true}
-                            onChange={(e) => {
-                                setSubmitForm(prev => ({ ...prev, period: e.value }));
+                        <SelectLegend
+                            label="Kỳ báo cáo"
+                            require={true}
+                            select={{
+                                value: submitForm.period,
+                                onChange: (e) => {
+                                    setSubmitForm(prev => ({ ...prev, period: e.target.value }));
                                 setError(prev => ({ ...prev, period: "" }));
+                                }
+
                             }}
-                            items={period.map(pe => ({ key: pe, value: pe }))}
-                        />
+                            errorMess={error.period}
+                        >
+                            {period.map((pe, idx) => (
+                                <option key={idx} value={pe}>{pe}</option>
+                            ))}
+                        </SelectLegend>
                     </div>
                     <div className="col-span-1">
                         <DatePicker
@@ -234,7 +269,7 @@ const CreateReport = ({ onClose, onSuccess }: CreateReportProps) => {
                                     setSubmitForm(prev => ({ ...prev, isActive: rs }));
                                 }
                             }}
-                        >   
+                        >
                             <option value="true">Hoạt động</option>
                             <option value="false">Không hoạt động</option>
                         </SelectLegend>

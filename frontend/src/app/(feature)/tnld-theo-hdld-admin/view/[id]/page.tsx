@@ -12,6 +12,7 @@ import { Trauma } from "@/src/api/Trauma";
 import { Job } from "@/src/api/Job";
 import ViewReport from "../../../tnld-theo-hdld/_component/ViewReport";
 import TopHero from "@/src/components/TopHero";
+import { AgreementTable } from "@/src/api/types/agreement";
 
 
 const TNLDTheoHDLDAdminViewIdPage = () => {
@@ -23,12 +24,14 @@ const TNLDTheoHDLDAdminViewIdPage = () => {
     }
 
     const [detail, setDetail] = useState<SubmitForm>();
+    const [agg, setAgg] = useState<AgreementTable>();
+
     const fetchDetail = async () => {
         if (!id) return;
         try {
             const cls = new Agreement();
             const result = await cls.GetFeTableById(Array.isArray(id) ? id[0] : id);
-
+            setAgg(result);
             setDetail({
                 title: result.title || "",
                 year: Number(result.year) || 0,
@@ -265,7 +268,7 @@ const TNLDTheoHDLDAdminViewIdPage = () => {
         <main className="flex flex-col min-h-screen pb-10">
             {isPrint && (
                 <div className="fixed top-0 left-0 w-full h-screen bg-gray-800/50 z-100 flex justify-center py-10">
-                    <ViewReport submitForm={detail!} report={report!} onClose={() => setIsPrint(false)} />
+                    <ViewReport submitForm={detail!} report={report!} onClose={() => setIsPrint(false)} detail={agg} />
                 </div>
             )}
 

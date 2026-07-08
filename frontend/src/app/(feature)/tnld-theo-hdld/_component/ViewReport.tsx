@@ -1,15 +1,19 @@
 import { useReactToPrint } from "react-to-print";
 import { SubmitForm } from "../_types/type";
 import { useRef } from "react";
+import { AgreementTable } from "@/src/api/types/agreement";
 
 type ViewReportProps = {
     submitForm: SubmitForm;
     report: Record<string, any[]>;
+    detail?: AgreementTable;
 
     onClose: () => void;
 }
 
-const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
+const ViewReport = ({ submitForm, report, onClose, detail }: ViewReportProps) => {
+    console.log(detail)
+
     const reportRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = useReactToPrint({
@@ -55,35 +59,38 @@ const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
                 </div>
 
                 <div>
-                    <p>Đơn vị báo cáo:</p>
+                    <p>Đơn vị báo cáo: {detail?.doet.name}</p>
                     <div className="flex items-center gap-10">
-                        <div className="flex flex-1">
-                            <p className="flex-1">Địa chỉ:</p>
-                            <p className="flex-1 ps-31">Mã huyện, quận:</p>
+                        <div className="flex flex-2">
+                            <p className="flex-3">Địa chỉ: {detail?.doet.address}, {detail?.doet.district.value}</p>
+                            <p className="flex-1">Mã huyện, quận:</p>
                         </div>
 
                         <div className="flex flex-1">
                             <div className="w-10 h-10 border"></div>
-                            <div className="w-10 h-10 border border-l-0"></div>
-                            <div className="w-10 h-10 border border-l-0"></div>
-                            <div className="w-10 h-10 border border-l-0"></div>
+                            {Array.from({ length: detail?.doet.province.key.padStart(3, '0').length || 0 }, (_, i) => (
+                                <div key={i} className="w-10 h-10 border border-l-0 flex items-center justify-center">{detail?.doet.province.key.padStart(3, '0')[i] !== "0" && detail?.doet.province.key.padStart(3, '0')[i]}</div>
+                            ))}
                         </div>
                     </div>
                 </div>
 
                 <div className="text-center">
                     <h1 className="font-semibold">BÁO CÁO TỔNG HỢP TÌNH HÌNH TAI NẠN LAO ĐỘNG</h1>
-                    <p className="font-semibold">Kỳ báo cáo (6 tháng hoặc cả năm) ............. năm ............. </p>
+                    <p className="font-semibold">Kỳ báo cáo (6 tháng hoặc cả năm) .............  năm ............. </p>
                     <p className="">Ngày báo cáo: .........................</p>
                 </div>
 
                 <div className="flex items-center gap-10">
-                    <span className="flex-1">Thuộc loại hình cơ sở (doanh nghiệp): .......................... Mã loại hình cơ sở:</span>
+                    <div className="flex flex-2">
+                        <p className="flex-3">Thuộc loại hình cơ sở (doanh nghiệp): {detail?.doet.businessType.name}</p>
+                        <p className="flex-1">Mã loại hình cơ sở:</p>
+                    </div>
                     <div className="flex flex-1">
                         <div className="w-10 h-10 border"></div>
-                        <div className="w-10 h-10 border border-l-0"></div>
-                        <div className="w-10 h-10 border border-l-0"></div>
-                        <div className="w-10 h-10 border border-l-0"></div>
+                        {Array.from({ length: detail?.doet.businessType.id.toString().padStart(3, '0').length || 0 }, (_, i) => (
+                            <div key={i} className="w-10 h-10 border border-l-0 flex items-center justify-center">{detail?.doet.businessType.id.toString().padStart(3, '0')[i] !== "0" && detail?.doet.businessType.id.toString().padStart(3, '0')[i]}</div>
+                        ))}
                     </div>
                 </div>
 
@@ -92,18 +99,21 @@ const ViewReport = ({ submitForm, report, onClose }: ViewReportProps) => {
                 </p>
 
                 <div className="flex items-center gap-10">
-                    <span className="flex-1">Lĩnh vực sản xuất chính của cơ sở: ............................... Mã lĩnh vực:</span>
+                    <div className="flex-2 flex">
+                        <p className="flex-3">Lĩnh vực sản xuất chính của cơ sở: {detail?.doet.industry.name}</p>
+                        <p className="flex-1">Mã lĩnh vực:</p>
+                    </div>
                     <div className="flex flex-1">
                         <div className="w-10 h-10 border"></div>
-                        <div className="w-10 h-10 border border-l-0"></div>
-                        <div className="w-10 h-10 border border-l-0"></div>
-                        <div className="w-10 h-10 border border-l-0"></div>
+                        {Array.from({ length: detail?.doet.industry.id.toString().padStart(3, '0').length || 0 }, (_, i) => (
+                            <div key={i} className="w-10 h-10 border border-l-0 flex items-center justify-center">{detail?.doet.industry.id.toString().padStart(3, '0')[i] !== "0" && detail?.doet.industry.id.toString().padStart(3, '0')[i]}</div>
+                        ))}
                     </div>
                 </div>
 
                 <div>
-                    <p>Tổng số lao động của cơ sở: ................. người, trong đó nữ: ................. người</p>
-                    <p>Tổng quỹ lương: .................... triệu đồng</p>
+                    <p>Tổng số lao động của cơ sở: {detail?.totalEmployees} người, trong đó nữ: {detail?.femaleEmployees} người</p>
+                    <p>Tổng quỹ lương: {Number(detail?.totalPayroll).toLocaleString("vi-VN")} đồng</p>
                 </div>
 
                 <div className="space-y-5">
