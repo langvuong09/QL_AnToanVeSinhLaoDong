@@ -15,7 +15,7 @@ import { useContext, useEffect, useRef, useState } from "react"
 import Pagination from "@/src/components/Pagination"
 
 const DEBOUNCE_MS = 500;
-const PERIOD_OPTIONS = ["3 tháng", "6 tháng", "9 tháng", "Cả năm"];
+const PERIOD_OPTIONS = ["6 tháng", "Cả năm"];
 
 export default function ReportPeriodsPage() {
   const notificate = useContext(NotificateContext);
