@@ -126,7 +126,7 @@ export default function BusinessManagementsPage() {
   const [industries, setIndustries] = useState<IIndustry[]>([])
   const [activeBusinessTypes, setActiveBusinessTypes] = useState<IBusinessType[]>([])
   const [activeIndustries, setActiveIndustries] = useState<IIndustry[]>([])
-  const [totalItems, setTotalItems] = useState(0)
+
   const [isImportOpen, setIsImportOpen] = useState(false)
 
   const [filterName, setFilterName] = useState('')
@@ -173,14 +173,13 @@ export default function BusinessManagementsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     const result = await new DoetApi().getAll({
-      page: currentPage,
-      pageSize,
+      page: 1,
+      pageSize: 100000,
       name: filterName || undefined,
       taxCode: filterTaxCode || undefined,
       businessTypeId: filterBusinessType ? Number(filterBusinessType) : undefined,
       industryId: filterIndustry ? Number(filterIndustry) : undefined,
       ward: filterWard || undefined,
-      status: filterStatus || undefined,
     })
     setLoading(false)
 
@@ -190,16 +189,22 @@ export default function BusinessManagementsPage() {
     }
 
     setData((result.data?.items || []).map(mapDoetUserToEnterprise))
-    setTotalItems(result.data?.count || 0)
     setSelectedIds([])
-  }, [currentPage, pageSize, filterName, filterTaxCode, filterBusinessType, filterIndustry, filterWard, filterStatus])
+  }, [filterName, filterTaxCode, filterBusinessType, filterIndustry, filterWard])
 
   useEffect(() => {
     fetchData()
   }, [fetchData])
 
+  const filteredData = data.filter((item) => {
+    if (!filterStatus) return true
+    const isStatusTrue = filterStatus === 'true'
+    return item.status === isStatusTrue
+  })
+
+  const totalItems = filteredData.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const paginatedRows = data
+  const paginatedRows = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const allSelected = paginatedRows.length > 0 && paginatedRows.every((row) => selectedIds.includes(row.id))
 
   const openNew = () => {
