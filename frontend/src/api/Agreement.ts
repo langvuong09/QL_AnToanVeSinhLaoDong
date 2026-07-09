@@ -58,15 +58,34 @@ export class Agreement extends Base {
         throw Error("Lỗi khi cập nhật dữ liệu");
     }
 
-    async UpdateBulkStatus(ids: number[], status: string, note?: string) {
-        const result = await this.execute<AgreementTable>({
-            url: "/bulk/status",
-            method: "PUT",
-            data: {
+    async UpdateBulkStatus(ids: number[], status: string, items?: Array<{id: number; note: string}> | string) {
+        // Handle backward compatibility - if items is a string, it's the old note format
+        let payload: any;
+        
+        if (typeof items === 'string') {
+            // Old format for backward compatibility
+            payload = {
                 ids: ids,
                 status: status,
-                note: note || undefined
-            }
+                note: items || undefined
+            };
+        } else if (Array.isArray(items)) {
+            // New format with items
+            payload = {
+                items: items,
+                status: status
+            };
+        } else {
+            payload = {
+                ids: ids,
+                status: status
+            };
+        }
+
+        const result = await this.execute<any>({
+            url: "/bulk/status",
+            method: "PUT",
+            data: payload
         });
 
         if (result.success) {
