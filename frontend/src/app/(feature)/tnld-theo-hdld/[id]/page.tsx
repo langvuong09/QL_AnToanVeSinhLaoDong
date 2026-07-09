@@ -1399,10 +1399,10 @@ const TNLDTheoHDLDIdPage = () => {
                             <div className="text-sm flex gap-5">
                                 <p>**** Doanh nghiệp xảy ra tai nạn lao động vui lòng nhập theo từng bước</p>
 
-                                <button className="flex items-center gap-2 bg-blue-50 ring-2 ring-blue-600 text-blue-600 text-xs px-2 py-1 rounded hover:bg-blue-100 font-semibold" onClick={handleSyncDetail}>
+                                {/* <button className="flex items-center gap-2 bg-blue-50 ring-2 ring-blue-600 text-blue-600 text-xs px-2 py-1 rounded hover:bg-blue-100 font-semibold" onClick={handleSyncDetail}>
                                     <i className="fa-solid fa-arrow-rotate-right"></i>
                                     <span>Đồng bộ</span>
-                                </button>
+                                </button> */}
 
                                 <button className="flex items-center gap-2 bg-green-50 ring-2 ring-green-600 text-green-600 text-xs px-2 py-1 rounded hover:bg-green-100 font-semibold" onClick={handleAddDetail}>
                                     <i className="fa-regular fa-calendar-plus"></i>

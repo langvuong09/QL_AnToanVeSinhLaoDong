@@ -8,9 +8,12 @@ import SelectLegend from "@/src/components/SelectLegend";
 import TopHero from "@/src/components/TopHero";
 import { OpenAdress, Province, Ward } from "@/src/services/open-address";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import ChangeReportStatus from "./_component/ChangeReportStatus";
 import { AccidentDto } from "@/src/api/types/accident";
+import { Agreement } from "@/src/api/Agreement";
+import { ConfirmContext } from "@/src/contexts/confirm/confirm";
+import { NotificateContext } from "@/src/contexts/notificate/notificate";
 import { TraumaDto } from "@/src/api/types/trauma";
 import { JobDto } from "@/src/api/types/job";
 import { Accident } from "@/src/api/Accident";
@@ -21,6 +24,8 @@ import { BusinessTypeApi, IBusinessType } from "@/src/api/BusinessType";
 const TNLDTheoHDLDAdminPage = () => {
     const router = useRouter();
     const now = new Date();
+    const notificate = useContext(NotificateContext);
+    const confirm = useContext(ConfirmContext);
 
     const [filters, setFilters] = useState({
         businessName: "",
@@ -306,6 +311,39 @@ const TNLDTheoHDLDAdminPage = () => {
         });
     };
 
+    const handleAcceptReports = async () => {
+        if (selectedIds.length === 0) {
+            notificate?.showNotification({ type: "error", message: "Vui lòng chọn ít nhất một báo cáo" });
+            return;
+        }
+
+        const selectedReports = reports.filter(report => selectedIds.includes(report.id));
+        const invalidStatuses = selectedReports.filter(report => report.status !== "SUBMITTED");
+
+        if (invalidStatuses.length > 0) {
+            notificate?.showNotification({ type: "error", message: "Chỉ có thể chấp nhận các báo cáo ở trạng thái chờ duyệt" });
+            return;
+        }
+
+        const confirmed = await confirm.waitConfirm();
+        if (!confirmed) return;
+
+        try {
+            const cls = new Agreement();
+            const items = selectedIds.map(id => ({ id, note: "" }));
+            await cls.UpdateBulkStatus(selectedIds, "APPROVED", items);
+
+            setReports(prev => prev.map(report =>
+                selectedIds.includes(report.id) ? { ...report, status: "APPROVED" } : report
+            ));
+            setSelectedIds([]);
+            setSelectedStatus("");
+            notificate?.showNotification({ type: "success", message: "Đã chấp nhận các báo cáo thành công" });
+        } catch (error) {
+            notificate?.showNotification({ type: "error", message: "Có lỗi xảy ra khi chấp nhận báo cáo" });
+        }
+    }
+
     return (
         <main className="h-screen flex flex-col py-2">
             {selectedIds.length > 0 && (
@@ -317,10 +355,16 @@ const TNLDTheoHDLDAdminPage = () => {
                         <p>Dữ liệu đang được chọn</p>
                     </div>
                     <div className="px-2 py-2 flex gap-2 text-sm">
-                        <button className="px-2 py-1 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition-all" onClick={() => setIsChange(true)}>
-                            Thay đổi
+                        <button className="px-2 py-1 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition-all" onClick={handleAcceptReports}>
+                            Chấp nhận
                         </button>
-                        <button className="px-2 py-1 bg-red-600 text-white rounded font-semibold hover:bg-red-700 transition-all" onClick={() => setSelectedIds([])}>
+                        <button className="px-2 py-1 bg-red-600 text-white rounded font-semibold hover:bg-red-700 transition-all" onClick={() => {
+                            // setSelectedIds([])
+                            setIsChange(true);
+                        }}>
+                            Từ chối
+                        </button>
+                        <button className="px-2 py-1 text-gray-500 rounded font-semibold transition-all" onClick={() => setSelectedIds([])}>
                             Hủy
                         </button>
                     </div>
@@ -330,6 +374,7 @@ const TNLDTheoHDLDAdminPage = () => {
             {isChange && (
                 <ChangeReportStatus
                     ids={selectedIds}
+                    reports={reports}
                     onSuccess={(s) => {
                         setSelectedIds([]);
                         const newReports = reports.map(r => {
@@ -735,9 +780,9 @@ const TNLDTheoHDLDAdminPage = () => {
                                     fillWhite={true}
                                 >
                                     <option value="">Kỳ báo cáo</option>
-                                    <option value="3 tháng">3 tháng</option>
+                                    {/* <option value="3 tháng">3 tháng</option> */}
                                     <option value="6 tháng">6 tháng</option>
-                                    <option value="9 tháng">9 tháng</option>
+                                    {/* <option value="9 tháng">9 tháng</option> */}
                                     <option value="Cả năm">Cả năm</option>
                                 </SelectLegend>
                             </div>
@@ -802,7 +847,7 @@ const TNLDTheoHDLDAdminPage = () => {
                                     {i.status === "SUBMITTED" && (
                                         <div className="text-blue-600 flex items-center gap-1.5 text-xs font-semibold">
                                             <i className="fa-solid fa-circle text-[8px]"></i>
-                                            <span>Đã tiếp nhận</span>
+                                            <span>Đã nộp</span>
                                         </div>
                                     )}
                                     {i.status === "APPROVED" && (
@@ -812,10 +857,15 @@ const TNLDTheoHDLDAdminPage = () => {
                                         </div>
                                     )}
                                     {i.status === "REJECTED" && (
-                                        <div className="text-red-600 flex items-center gap-1.5 text-xs font-semibold">
-                                            <i className="fa-solid fa-circle text-[8px]"></i>
-                                            <span>Bị từ chối</span>
-                                        </div>
+                                        <>
+                                            <div className="text-red-600 flex items-center gap-1.5 text-xs font-semibold">
+                                                <i className="fa-solid fa-circle text-[8px]"></i>
+                                                <span>Bị từ chối</span>
+                                            </div>
+                                            <p className="mt-1 italic text-xs text-gray-500 font-semibold">
+                                                Lý do: {i.note || "Không có"}
+                                            </p>
+                                        </>
                                     )}
                                     {i.status === "OVERDUE_WARNING" && (
                                         <div className="text-yellow-600 flex items-center gap-1.5 text-xs font-semibold">
