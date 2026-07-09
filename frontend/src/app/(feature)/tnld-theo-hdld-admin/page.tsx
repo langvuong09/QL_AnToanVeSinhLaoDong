@@ -139,8 +139,10 @@ const TNLDTheoHDLDAdminPage = () => {
 
     const [report, setReport] = useState<Record<string, any[]>>();
     useEffect(() => {
+        const rs = reports.filter(r => r.status === "APPROVED");
+
         const byJob = jobs.map(job => {
-            const matched = reports.flatMap(re =>
+            const matched = rs.flatMap(re =>
                 re.details?.filter(d => d.jobId === job.id) ?? []
             );
 
@@ -163,7 +165,7 @@ const TNLDTheoHDLDAdminPage = () => {
         });
 
         const byCause = accidents.map(acc => {
-            const matched = reports.flatMap(re =>
+            const matched = rs.flatMap(re =>
                 re.details?.filter(d => d.causeId === acc.id) ?? []
             );
 
@@ -186,7 +188,7 @@ const TNLDTheoHDLDAdminPage = () => {
         });
 
         const byTrauma = traumas.map(trau => {
-            const matched = reports.flatMap(re =>
+            const matched = rs.flatMap(re =>
                 re.details?.filter(d => d.traumaId === trau.id) ?? []
             );
 
@@ -209,7 +211,7 @@ const TNLDTheoHDLDAdminPage = () => {
         });
 
         const byBusinessType = businessTyppes.map(bus => {
-            const matched = reports.filter(re => re.doet.businessTypeId === bus.id);
+            const matched = rs.filter(re => re.doet.businessTypeId === bus.id);
 
             const totalVictims = matched.reduce((s, d) => s + Number(d.m1TotalVictims) + Number(d.m2TotalVictims), 0);
             const fatalVictims = matched.reduce((s, d) => s + Number(d.m1FatalVictims) + Number(d.m2FatalVictims), 0);

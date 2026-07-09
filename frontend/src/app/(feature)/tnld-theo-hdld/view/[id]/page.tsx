@@ -974,7 +974,7 @@ const TNLDTheoHDLDViewIdPage = () => {
                                             window.open(detail.fileIds[0].url, "_blank");
                                         }
                                     }}>
-                                        {detail?.fileIds[0].name}
+                                        {detail?.fileIds[0]?.name ?? ""}
                                     </button>
                                 </div>
                             </span>
