@@ -49,7 +49,6 @@ export default function BusinessIndustriesPage() {
   // Table & Pagination states
   const [data, setData] = useState<IIndustry[]>([])
   const [loading, setLoading] = useState(false)
-  const [totalItems, setTotalItems] = useState(0)
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -78,10 +77,20 @@ export default function BusinessIndustriesPage() {
   const [filterStatus, setFilterStatus] = useState('')
 
   // Local paginated slice of the flattened items
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      if (!filterStatus) return true
+      const isStatusTrue = filterStatus === 'active'
+      return item.isActive === isStatusTrue
+    })
+  }, [data, filterStatus])
+
+  const totalItems = filteredData.length
+
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize
-    return data.slice(startIndex, startIndex + pageSize)
-  }, [data, currentPage, pageSize])
+    return filteredData.slice(startIndex, startIndex + pageSize)
+  }, [filteredData, currentPage, pageSize])
 
   // Load parent options (all active industries up to 1000 items)
   const fetchParentIndustries = async () => {
@@ -104,12 +113,6 @@ export default function BusinessIndustriesPage() {
     setLoading(true)
     try {
       const levelNum = filterLevel ? Number(filterLevel) : undefined
-      const isActive =
-        filterStatus === 'active'
-          ? true
-          : filterStatus === 'inactive'
-          ? false
-          : undefined
 
       const result = await api.getAllForAdmin({
         page: 1,
@@ -117,13 +120,11 @@ export default function BusinessIndustriesPage() {
         code: filterCode.trim() || undefined,
         name: filterName.trim() || undefined,
         level: levelNum,
-        isActive
       })
 
       if (result.success && result.data) {
         const flattened = flattenTree(result.data.items)
         setData(flattened)
-        setTotalItems(flattened.length)
       } else {
         notificate?.showNotification({
           type: 'error',
@@ -149,7 +150,7 @@ export default function BusinessIndustriesPage() {
   // Refetch table data when filters change
   useEffect(() => {
     fetchData()
-  }, [filterCode, filterName, filterLevel, filterStatus])
+  }, [filterCode, filterName, filterLevel])
 
   // Filter handlers
   const handleFilterChange = (field: string, value: string) => {

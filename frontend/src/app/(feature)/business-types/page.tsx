@@ -18,7 +18,6 @@ export default function BusinessTypesPage() {
   // Table & Pagination states
   const [data, setData] = useState<IBusinessType[]>([])
   const [loading, setLoading] = useState(false)
-  const [totalItems, setTotalItems] = useState(0)
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -43,29 +42,19 @@ export default function BusinessTypesPage() {
 
   // Fetch data from real backend API
   const fetchData = async (
-    page = 1,
-    currentFilters = { code: filterCode, name: filterName, status: filterStatus }
+    currentFilters = { code: filterCode, name: filterName }
   ) => {
     setLoading(true)
     try {
-      const isActive =
-        currentFilters.status === 'active'
-          ? true
-          : currentFilters.status === 'inactive'
-          ? false
-          : undefined
-
       const result = await api.getAllForAdmin({
-        page,
-        pageSize,
+        page: 1,
+        pageSize: 100000,
         code: currentFilters.code.trim() || undefined,
         name: currentFilters.name.trim() || undefined,
-        isActive,
       })
 
       if (result.success && result.data) {
         setData(result.data.items)
-        setTotalItems(result.data.count)
       } else {
         notificate?.showNotification({
           type: 'error',
@@ -83,10 +72,10 @@ export default function BusinessTypesPage() {
     }
   }
 
-  // Reload data when page size, current page, or filters change
+  // Reload data when filters change
   useEffect(() => {
-    fetchData(currentPage)
-  }, [currentPage, pageSize, filterCode, filterName, filterStatus])
+    fetchData()
+  }, [filterCode, filterName])
 
   // Filter handlers
   const handleFilterChange = (field: string, value: string) => {
@@ -147,7 +136,7 @@ export default function BusinessTypesPage() {
             message: 'Cập nhật loại hình kinh doanh thành công.'
           })
           setIsModalOpen(false)
-          fetchData(currentPage)
+          fetchData()
         } else {
           notificate?.showNotification({
             type: 'error',
@@ -169,7 +158,7 @@ export default function BusinessTypesPage() {
           })
           setIsModalOpen(false)
           setCurrentPage(1)
-          fetchData(1)
+          fetchData()
         } else {
           notificate?.showNotification({
             type: 'error',
@@ -226,7 +215,7 @@ export default function BusinessTypesPage() {
   }
 
   const handleSelectAll = (checked: boolean) => {
-    setSelectedIds(checked ? data.map((r) => r.id) : [])
+    setSelectedIds(checked ? paginatedRows.map((r) => r.id) : [])
   }
 
   const handleSelectOne = (id: number) => {
@@ -249,7 +238,7 @@ export default function BusinessTypesPage() {
         })
         setSelectedIds([])
         setCurrentPage(1)
-        fetchData(1)
+        fetchData()
       } else {
         notificate?.showNotification({
           type: 'error',
@@ -268,8 +257,22 @@ export default function BusinessTypesPage() {
     }
   }
 
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      if (!filterStatus) return true
+      const isStatusTrue = filterStatus === 'active'
+      return item.isActive === isStatusTrue
+    })
+  }, [data, filterStatus])
+
+  const totalItems = filteredData.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const allSelected = data.length > 0 && data.every((r) => selectedIds.includes(r.id))
+  const paginatedRows = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    return filteredData.slice(startIndex, startIndex + pageSize)
+  }, [filteredData, currentPage, pageSize])
+
+  const allSelected = paginatedRows.length > 0 && paginatedRows.every((r) => selectedIds.includes(r.id))
 
   return (
     <main className="h-screen flex flex-col py-2">
@@ -365,7 +368,7 @@ export default function BusinessTypesPage() {
               Không có dữ liệu
             </div>
           ) : (
-            data.map((item) => (
+            paginatedRows.map((item) => (
               <div
                 key={item.id}
                 className={`grid ${GRID_COLS} border-b border-gray-100 hover:bg-blue-50/40 transition-colors text-sm text-gray-700`}

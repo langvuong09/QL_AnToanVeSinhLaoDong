@@ -87,9 +87,6 @@ export default function GeneralCategoriesPage() {
   // Data list & loading
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [totalItems, setTotalItems] = useState(0)
-
-  // Pagination states
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -135,11 +132,22 @@ export default function GeneralCategoriesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      if (!filterStatus) return true
+      const isStatusTrue = filterStatus === 'active'
+      return item.isActive === isStatusTrue
+    })
+  }, [data, filterStatus])
+
+  const totalItems = filteredData.length
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
+
   // Local paginated slice of flattened items
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize
-    return data.slice(startIndex, startIndex + pageSize)
-  }, [data, currentPage, pageSize])
+    return filteredData.slice(startIndex, startIndex + pageSize)
+  }, [filteredData, currentPage, pageSize])
 
   // Sync / clear state when category changes
   useEffect(() => {
@@ -157,7 +165,7 @@ export default function GeneralCategoriesPage() {
   // Trigger list refetch when filter fields change
   useEffect(() => {
     fetchDataList()
-  }, [filterCode, filterName, filterLevel, filterType, filterStatus])
+  }, [filterCode, filterName, filterLevel, filterType])
 
   // Load parent choices for selects
   const fetchParentOptions = async () => {
@@ -188,12 +196,6 @@ export default function GeneralCategoriesPage() {
     setLoading(true)
     try {
       const levelNum = filterLevel ? Number(filterLevel) : undefined
-      const isActive =
-        filterStatus === 'active'
-          ? true
-          : filterStatus === 'inactive'
-            ? false
-            : undefined
 
       if (currentCategory === 'job') {
         const result = await jobApi.getAllForAdmin({
@@ -202,15 +204,12 @@ export default function GeneralCategoriesPage() {
           code: filterCode.trim() || undefined,
           name: filterName.trim() || undefined,
           level: levelNum,
-          isActive,
         })
         if (result.success && result.data) {
           const flattened = flattenTree(result.data.items)
           setData(flattened)
-          setTotalItems(flattened.length)
         } else {
           setData([])
-          setTotalItems(0)
           notificate?.showNotification({
             type: 'error',
             message: result.message || 'Không thể tải danh mục nghề nghiệp.',
@@ -223,15 +222,12 @@ export default function GeneralCategoriesPage() {
           code: filterCode.trim() || undefined,
           name: filterName.trim() || undefined,
           level: levelNum,
-          isActive,
         })
         if (result.success && result.data) {
           const flattened = flattenTree(result.data.items)
           setData(flattened)
-          setTotalItems(flattened.length)
         } else {
           setData([])
-          setTotalItems(0)
           notificate?.showNotification({
             type: 'error',
             message: result.message || 'Không thể tải danh mục loại chấn thương.',
@@ -243,14 +239,11 @@ export default function GeneralCategoriesPage() {
           pageSize: 1000,
           code: filterCode.trim() || undefined,
           name: filterName.trim() || undefined,
-          isActive,
         })
         if (result.success && result.data) {
           setData(result.data.items)
-          setTotalItems(result.data.items.length)
         } else {
           setData([])
-          setTotalItems(0)
           notificate?.showNotification({
             type: 'error',
             message: result.message || 'Không thể tải danh mục yếu tố gây chấn thương.',
@@ -263,14 +256,11 @@ export default function GeneralCategoriesPage() {
           code: filterCode.trim() || undefined,
           name: filterName.trim() || undefined,
           type: filterType ? (filterType as 'EMPLOYEE' | 'EMPLOYER') : undefined,
-          isActive,
         })
         if (result.success && result.data) {
           setData(result.data.items)
-          setTotalItems(result.data.items.length)
         } else {
           setData([])
-          setTotalItems(0)
           notificate?.showNotification({
             type: 'error',
             message: result.message || 'Không thể tải danh mục nguyên nhân xảy ra TNLĐ.',
@@ -831,7 +821,6 @@ export default function GeneralCategoriesPage() {
     })
   }
 
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const allSelected = paginatedData.length > 0 && paginatedData.every((r) => selectedIds.includes(r.id))
 
   const GRID_COLS = currentCategory === 'trauma' ? GRID_COLS_FLAT : currentCategory === 'accident' ? GRID_COLS_ACCIDENT : GRID_COLS_HIERARCHY
